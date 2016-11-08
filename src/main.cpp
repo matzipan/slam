@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     int                     slam_method = 1;
     SLAM_Thread::RunMode    slam_runmode = SLAM_Thread::SLAM_WAYPOINT;
-    string                  map_fname = "data/example_webmap.mat";
+    string                  map_fname = "../data/example_webmap.mat";
     string                  conf_fname;
 
     SLAM_Conf               conf;

@@ -286,3 +286,123 @@
 --------------- 2016-06-28 11:21:34 ---------------
 ./fastslam.e -method FAST1 
 
+--------------- 2016-10-25 14:48:36 ---------------
+./fastslam.e 
+
+--------------- 2016-10-25 14:50:00 ---------------
+./fastslam.e -method FAST2 
+
+--------------- 2016-10-25 14:59:09 ---------------
+./fastslam.e -method FAST2 -mode interactive 
+
+--------------- 2016-10-25 15:13:03 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/fastslam.e -method FAST1 
+
+--------------- 2016-10-25 15:13:33 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/fastslam.e -method FAST1 
+
+--------------- 2016-10-25 15:14:27 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/fastslam.e -method FAST1 
+
+--------------- 2016-10-25 15:14:55 ---------------
+./fastslam.e -method FAST2 -mode interactive 
+
+--------------- 2016-10-25 15:14:58 ---------------
+./fastslam.e -method FAST2 -mode interactiv 
+
+--------------- 2016-10-25 15:15:02 ---------------
+./fastslam.e -method FAST1 
+
+--------------- 2016-10-25 15:15:25 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/fastslam.e -method FAST2 
+
+--------------- 2016-10-25 17:02:39 ---------------
+./fastslam.e 
+
+--------------- 2016-10-25 17:04:02 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/fastslam.e -method FAST2 
+
+--------------- 2016-11-08 14:28:03 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat -mode interactie 
+
+--------------- 2016-11-08 14:28:05 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat -mode interactie 
+
+--------------- 2016-11-08 14:28:08 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat -mode interactive 
+
+--------------- 2016-11-08 14:28:28 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat 
+
+--------------- 2016-11-08 14:37:46 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat 
+
+--------------- 2016-11-08 14:41:07 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat 
+
+--------------- 2016-11-08 14:54:20 ---------------
+/home/matzipan/.CLion2016.1/system/cmake/generated/fastslam-cpp-63d0ca07/63d0ca07/Debug/fastslam-cpp -m data/example_webmap.dat 
+
+--------------- 2016-11-08 14:55:02 ---------------
+/home/matzipan/.CLion2016.1/system/cmake/generated/fastslam-cpp-63d0ca07/63d0ca07/Debug/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 14:55:15 ---------------
+/home/matzipan/.CLion2016.1/system/cmake/generated/fastslam-cpp-63d0ca07/63d0ca07/Debug/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:08:12 ---------------
+/home/matzipan/.CLion2016.1/system/cmake/generated/fastslam-cpp-63d0ca07/63d0ca07/Debug/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:21:30 ---------------
+./fastslam.e 
+
+--------------- 2016-11-08 15:25:36 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:25:52 ---------------
+./fastslam-cpp 
+
+--------------- 2016-11-08 15:25:59 ---------------
+./fastslam-cpp 
+
+--------------- 2016-11-08 15:26:13 ---------------
+./fastslam.e 
+
+--------------- 2016-11-08 15:26:39 ---------------
+./fastslam-cpp -mode waypoints 
+
+--------------- 2016-11-08 15:26:44 ---------------
+./fastslam-cpp -mode interactive 
+
+--------------- 2016-11-08 15:28:57 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:31:27 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:33:27 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:36:23 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 15:54:33 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 16:00:39 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 16:08:50 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 18:23:57 ---------------
+./fastslam-cpp -m ../data/example_webmap.mat 
+
+--------------- 2016-11-08 18:26:48 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 18:29:29 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat 
+
+--------------- 2016-11-08 18:31:03 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat -method FAST2 
+

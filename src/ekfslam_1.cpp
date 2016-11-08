@@ -13,6 +13,8 @@
 #include "SLAM_Plot.h"
 #include "ekfslam_1.h"
 
+#include "moc_ekfslam_1.cpp"
+
 
 using namespace std;
 using namespace Eigen;

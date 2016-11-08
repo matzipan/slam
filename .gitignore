@@ -1,9 +1,2 @@
-*~
-*.o
-*.e
-*.so
-*.a
-*user
-*user.*
-*.qmake
-moc_*
+build/**
+

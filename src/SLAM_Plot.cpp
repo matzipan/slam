@@ -8,6 +8,7 @@
 
 #include "SLAM_Plot.h"
 
+#include "moc_SLAM_Plot.cpp"
 
 SlamPlot::SlamPlot(QWidget *parent) :
     QMainWindow(parent)
@@ -33,8 +34,6 @@ SlamPlot::SlamPlot(QWidget *parent) :
     statusBar()->clearMessage();
 
     customPlot->replot();
-
-    //startTimer(30);
 }
 
 SlamPlot::~SlamPlot()
@@ -722,8 +721,7 @@ void SlamPlot::plot(void)
     }
 }
 
-void SlamPlot::drawCar(int idx)
-{
+void SlamPlot::drawCar(int idx){
     double  x, y, t, s;
     double  x1, y1, x2, y2;
 

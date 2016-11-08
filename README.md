@@ -1,23 +1,24 @@
-# FastSLAM with GUI
+# SLAM GUI
 
-This program is a pure C++ implementation of FastSLAM 1 and 2. It also integrated a GUI interface which draw current states and observations.
+This program implements EKF SLAM, FastSLAM and FastSLAM 2 and presents them in a Qt GUI.
 
-The source is based on yglee source code (https://github.com/yglee/FastSLAM), and orignal FastSLAM (http://www-personal.acfr.usyd.edu.au/tbailey/software/slam_simulations.htm) . We add Qt GUI and also fixed some bugs from yglee's implementation. 
+It is based on code from [here](https://github.com/bushuhui/fastslam) and [here]((https://github.com/yglee/FastSLAM)).
 
+So far I have added a CMake build system and I am decoupling the algorithm from the GUI in order to do some profiling.
 
-## Requirements:
-* Eigen3 ( sudo apt-get install libeigen3-dev)
-* Qt4 (sudo apt-get install libqt4-core libqt4-dev)
-* QCustomPlot (included, webpage: http://www.workslikeclockwork.com/) 
+## Requirements
+* Qt4: `sudo apt install libqtcore4 libqtgui4 libqt4-dev`
+* CMake: `sudo apt install cmake`
+* Ubuntu 16.04
 
+## Build
+1. `mkdir build && cd build`
+2. `cmake ..`
+3. `make`
 
-## Compile:
-`make`
-
-
-## Usage:
+## Usage
 ```
-./fastslam.e
+./fastslam
     -m                  [s] input map file name
     -mode               [s] runing mode
         waypoints   : following given waypoints
@@ -30,29 +31,17 @@ The source is based on yglee source code (https://github.com/yglee/FastSLAM), an
 ```
 
 
-examples:
+Examples:
 
-`./fastslam.e -method FAST1 -mode interactive` (FastSLAM 1, user interactive)
+`./fastslam -method FAST1 -mode interactive` (FastSLAM 1, user interactive)
 
-`./fastslam.e -method FAST2 -mode waypoints -m data/example_webmap.mat` (FastSLAM 2, following waypoints, map is "example_webmap.mat")
+` ./fastslam -method FAST2 -mode waypoints -m ../data/example_webmap.mat` (FastSLAM 2, following waypoints, map is "example_webmap.mat")
 
-`./fastslam.e -method EKF1 -mode waypoints -m data/example_loop1.mat` (EKF SLAM, following waypoints, map is "example_loop1.mat")
+`./fastslam -method EKF1 -mode waypoints -m ../data/example_loop1.mat` (EKF SLAM, following waypoints, map is "example_loop1.mat")
 
+`./fastslam -fn_screenshot ./screenshot/img -ww 400 -wh 300 -SWITCH_HEADING_KNOWN 0` (Generate video)
 
-
-## Plateform:
-Only test on Ubuntu 10.04 64-bit. 
-
-
-## Issues:
-* Low performance (Even worse than Matlab version)
-* Crash occurs when zooming or moving plot (occasionally)
-
-
-## Screenshot:
--![alt text](https://raw.githubusercontent.com/bushuhui/fastslam/master/figures/Screenshot-2D-SLAM_1.png "Screenshot 1")
--![alt text](https://raw.githubusercontent.com/bushuhui/fastslam/master/figures/Screenshot-2D-SLAM_2.png "Screenshot 2")
-
-
-## Project homepage:
-http://www.adv-ci.com/blog/source/fastslam-gui/
+## Issues
+* Low performance.
+* Crash occurs when zooming or moving plot.
+* Some segmentation faults every once in a while.

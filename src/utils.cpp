@@ -223,10 +223,10 @@ void dbg_printf(int level,
         sprintf(sTail,   "      \033[35m(LINE: %5d, FILE: %s, FUNC: %s)\033[0m", line, fname, func);
     } else if (level == 4 ) {
         sprintf(sHeader, "\033[34m%s\033[0m >> ", func);
-        sprintf(sTail, "");
+        //sprintf(sTail, "");
     } else {
-        sprintf(sHeader, "");
-        sprintf(sTail, "");
+        //sprintf(sHeader, "");
+        //sprintf(sTail, "");
     }
 
     // generate format string

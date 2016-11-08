@@ -10,6 +10,8 @@
 
 #include "utils.h"
 
+#include "moc_SLAM_Thread.cpp"
+
 // global variable
 extern SlamPlot    *g_plot;
 

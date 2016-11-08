@@ -13,6 +13,7 @@
 #include "SLAM_Plot.h"
 #include "fastslam_2.h"
 
+#include "moc_fastslam_2.cpp"
 
 using namespace std;
 using namespace Eigen;
