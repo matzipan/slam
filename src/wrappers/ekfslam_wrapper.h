@@ -28,10 +28,12 @@ class EKFSLAM_Wrapper : public Wrapper_Thread {
 
 public:
     EKFSLAM_Wrapper(QObject *parent = 0);
+
     ~EKFSLAM_Wrapper();
 
 protected:
     void run();
+
     EKFSLAM *algorithm;
 };
 

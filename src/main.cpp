@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <pthread.h>
 
 #include <string>
 
@@ -17,23 +14,20 @@
 #include "src/wrappers/fastslam2_wrapper.h"
 #include "src/wrappers/ekfslam_wrapper.h"
 
-#include "utils.h"
-
 using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // global variables
 ////////////////////////////////////////////////////////////////////////////////
-Plot    *g_plot;
-Conf   *g_conf;
+Plot *g_plot;
+Conf *g_conf;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// print usage help
 ////////////////////////////////////////////////////////////////////////////////
-void print_usage(char *argv[])
-{
+void print_usage(char *argv[]) {
     printf("%s\n", argv[0]);
     printf("    -m                  [s] input map file name\n");
     printf("    -mode               [s] runing mode\n");
@@ -51,35 +45,34 @@ void print_usage(char *argv[])
 ////////////////////////////////////////////////////////////////////////////////
 /// main function
 ////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-    int                     i;
-    int                     ret = 0;
-    Wrapper_Thread             *slam_thread;
+int main(int argc, char *argv[]) {
+    int i;
+    int ret = 0;
+    Wrapper_Thread *slam_thread;
 
-    string                  mode, method;
-    string                  fn_screenshot;
+    string mode, method;
+    string fn_screenshot;
 
-    int                     ww, wh;
+    int ww, wh;
 
-    int                     slam_method = 1;
-    Wrapper_Thread::RunMode    slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
-    string                  map_fname = "../data/example_webmap.mat";
-    string                  conf_fname;
+    int slam_method = 1;
+    Wrapper_Thread::RunMode slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
+    string map_fname = "../data/example_webmap.mat";
+    string conf_fname;
 
-    Conf               conf;
-    StringArray             arrFN;
+    Conf conf;
+    StringArray arrFN;
 
     g_conf = &conf;
 
     dbg_stacktrace_setup();
 
     // parse input arguments
-    for(i=1; i<argc; i++) {
-        if( strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2 ) {
-            map_fname = argv[i+1];
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2) {
+            map_fname = argv[i + 1];
         }
-        if( strcmp(argv[i], "-h") == 0 ) {
+        if (strcmp(argv[i], "-h") == 0) {
             print_usage(argv);
             return 0;
         }
@@ -94,7 +87,7 @@ int main(int argc, char *argv[])
     conf.parse();                           // parse input arguments
 
     // save input arguments
-    if( arrFN[0].size() > 0 ) {
+    if (arrFN[0].size() > 0) {
         save_arguments(argc, argv, arrFN[0]);
     } else {
         save_arguments(argc, argv, "fastslam");
@@ -103,15 +96,15 @@ int main(int argc, char *argv[])
     // get mode
     mode = "waypoints";
     conf.s("mode", mode);
-    if( mode == "waypoints" )   slam_runmode=Wrapper_Thread::SLAM_WAYPOINT;
-    if( mode == "interactive")  slam_runmode=Wrapper_Thread::SLAM_INTERACTIVE;
+    if (mode == "waypoints") slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
+    if (mode == "interactive") slam_runmode = Wrapper_Thread::SLAM_INTERACTIVE;
 
     // get slam method
     method = "EKF1";
     conf.s("method", method);
-    if( method == "FAST1" ) slam_method = 1;
-    if( method == "FAST2" ) slam_method = 2;
-    if( method == "EKF1" )  slam_method = 3;
+    if (method == "FAST1") slam_method = 1;
+    if (method == "FAST2") slam_method = 2;
+    if (method == "EKF1") slam_method = 3;
 
     // get screenshot filename
     fn_screenshot = "";
@@ -138,22 +131,22 @@ int main(int argc, char *argv[])
     w.plot();
 
     // create SLAM thread
-    switch( slam_method ) {
-    case 1:
-        slam_thread = new FastSLAM1_Wrapper;
-        break;
-    case 2:
-        slam_thread = new FastSLAM2_Wrapper;
-        break;
-    case 3:
-        slam_thread = new EKFSLAM_Wrapper;
-        break;
-    default:
-        slam_thread = NULL;
-        break;
+    switch (slam_method) {
+        case 1:
+            slam_thread = new FastSLAM1_Wrapper;
+            break;
+        case 2:
+            slam_thread = new FastSLAM2_Wrapper;
+            break;
+        case 3:
+            slam_thread = new EKFSLAM_Wrapper;
+            break;
+        default:
+            slam_thread = NULL;
+            break;
     }
 
-    if( slam_thread == NULL ) return -1;
+    if (slam_thread == NULL) return -1;
 
     // set run mode
     slam_thread->setRunMode(slam_runmode);

@@ -22,16 +22,18 @@ using namespace std;
 using namespace Eigen;
 
 
-class FastSLAM1_Wrapper : public Wrapper_Thread
-{
+class FastSLAM1_Wrapper : public Wrapper_Thread {
     Q_OBJECT
 
 public:
     FastSLAM1_Wrapper(QObject *parent = 0);
+
     ~FastSLAM1_Wrapper();
 
     void predict(Particle &particle, float V, float G, MatrixXf &Q, float WB, float dt, int addrandom);
+
     float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+
     vector<Particle> sim(MatrixXf &lm, MatrixXf &wp);
 
 

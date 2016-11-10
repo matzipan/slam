@@ -22,21 +22,25 @@ using namespace std;
 using namespace Eigen;
 
 
-class FastSLAM2_Wrapper : public Wrapper_Thread
-{
-    Q_OBJECT
+class FastSLAM2_Wrapper : public Wrapper_Thread {
+Q_OBJECT
 
 public:
     FastSLAM2_Wrapper(QObject *parent = 0);
+
     ~FastSLAM2_Wrapper();
 
 
     void sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+
     float likelihood_given_xv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+
     VectorXf delta_xv(VectorXf &xv1, VectorXf &xv2);
 
-    void predict(Particle &particle,float V,float G, MatrixXf &Q, float WB, float dt, int addrandom);
+    void predict(Particle &particle, float V, float G, MatrixXf &Q, float WB, float dt, int addrandom);
+
     void observe_heading(Particle &particle, float phi, int useheading);
+
     float gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag);
 
     float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
