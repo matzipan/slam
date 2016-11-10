@@ -42,7 +42,6 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
     double time_all;
 
     int m, n;
-    int i;
 
     QString msgAll;
 
@@ -69,7 +68,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
     if (runMode == SLAM_WAYPOINT) {
         m = wp.rows();
         n = wp.cols();
-        for (i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             arrWaypoints_x.push_back(wp(0, i));
             arrWaypoints_y.push_back(wp(1, i));
 
@@ -84,7 +83,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
     // draw landmarks
     m = lm.rows();
     n = lm.cols();
-    for (i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         arrLandmarks_x.push_back(lm(0, i));
         arrLandmarks_y.push_back(lm(1, i));
 

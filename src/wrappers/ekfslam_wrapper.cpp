@@ -295,8 +295,6 @@ void EKFSLAM_Wrapper::run() {
         msleep(10);
     }
 
-    if (VnGn) {
-        delete[] VnGn;
-    }
+    delete[] VnGn;
 }
 

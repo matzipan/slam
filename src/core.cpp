@@ -240,7 +240,7 @@ vector<int> find2(vector<float> &dx, vector<float> &dy, float phi, float rmax) {
     for (unsigned long j = 0; j < dx.size(); j++) {
         if ((abs(dx[j]) < rmax) && (abs(dy[j]) < rmax)
             && ((dx[j] * cos(phi) + dy[j] * sin(phi)) > 0.0)
-            && (((float) pow(dx[j], 2) + (float) pow(dy[j], 2)) < (float) pow(rmax, 2))) {
+            && ((pow(dx[j], 2) + pow(dy[j], 2)) < pow(rmax, 2))) {
             index.push_back(j);
         }
     }
@@ -397,7 +397,7 @@ MatrixXf nRandMat::randn(int m, int n) {
     MatrixXf x(m, n);
 
     int i, j, k;
-    float square, amp, angle;
+    float square, amp = 0, angle = 0;
 
     k = 0;
     for (i = 0; i < m; i++) {
@@ -409,9 +409,9 @@ MatrixXf nRandMat::randn(int m, int n) {
                 amp = sqrt(square);
                 angle = 2. * M_PI * u(k + 1);
                 x(i, j) = amp * std::sin(angle);
-            }
-            else
+            } else {
                 x(i, j) = amp * std::cos(angle);
+            }
 
             k++;
         }
@@ -815,20 +815,20 @@ void read_slam_input_file(const string s, MatrixXf *lm, MatrixXf *wp) {
                     exit(EXIT_FAILURE);
                 }
                 getline(in, str);
-                istringstream line(str);
-                std::vector<string> tokens;
-                copy(istream_iterator<string>(line),
+                istringstream waypoint_line(str);
+                std::vector<string> waypoint_tokens;
+                copy(istream_iterator<string>(waypoint_line),
                      istream_iterator<string>(),
-                     back_inserter<std::vector<string> >(tokens));
-                if (tokens.size() < wp_rows) {
-                    std::cerr << "invalid line for wp coordinate!" << std::endl;
-                    std::cerr << "Error occured on line " << lineno << std::endl;
-                    std::cerr << "line: " << str << std::endl;
+                     back_inserter<std::vector<string> >(waypoint_tokens));
+                if (waypoint_tokens.size() < wp_rows) {
+                    std::cerr << "invalid waypoint_line for wp coordinate!" << std::endl;
+                    std::cerr << "Error occured on waypoint_line " << lineno << std::endl;
+                    std::cerr << "waypoint_line: " << str << std::endl;
                     exit(EXIT_FAILURE);
                 }
 
                 for (unsigned long r = 0; r < lm_rows; r++) {
-                    (*wp)(r, c) = strtof(tokens[r].c_str(), NULL);
+                    (*wp)(r, c) = strtof(waypoint_tokens[r].c_str(), NULL);
                 }
             }
         }

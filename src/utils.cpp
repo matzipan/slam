@@ -1277,7 +1277,7 @@ double CVariant::to_d(void) {
             break;
 
         case VT_STRING:
-            return (double) (atof(d.sVal));
+            return atof(d.sVal);
             break;
 
         case VT_POINTER:

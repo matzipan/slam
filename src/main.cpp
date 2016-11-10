@@ -142,11 +142,8 @@ int main(int argc, char *argv[]) {
             slam_thread = new EKFSLAM_Wrapper;
             break;
         default:
-            slam_thread = NULL;
-            break;
+            return -1;
     }
-
-    if (slam_thread == NULL) return -1;
 
     // set run mode
     slam_thread->setRunMode(slam_runmode);
