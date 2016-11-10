@@ -53,7 +53,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 // SLAM config Variables
 ////////////////////////////////////////////////////////////////////////////////
-class SLAM_Conf : public CParamArray
+class Conf : public CParamArray
 {
 public:
     float           V;
@@ -150,11 +150,11 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
 ////////////////////////////////////////////////////////////////////////////////
 // EKF-SLAM functions
 ////////////////////////////////////////////////////////////////////////////////
-void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float WB, float dt);
-void ekf_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R,
-                vector<int> &idf, int batch);
+void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt);
+void ekf_batch_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R,
+                vector<int> &idf);
 
-void ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int useheading, float sigmaPhi);
+void ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi);
 
 void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R,
                         float gate1, float gate2,

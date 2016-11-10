@@ -9,32 +9,32 @@
 
 #include <Eigen/Dense>
 
-#include "fastslam_core.h"
-#include "SLAM_Plot.h"
-#include "fastslam_1.h"
+#include "src/core.h"
+#include "src/plot.h"
+#include "fastslam1_wrapper.h"
 
-#include "moc_fastslam_1.cpp"
+#include "moc_fastslam1_wrapper.cpp"
 
 using namespace std;
 using namespace Eigen;
 
 // global variable
-extern SlamPlot     *g_plot;
-extern SLAM_Conf    *g_conf;
+extern Plot     *g_plot;
+extern Conf    *g_conf;
 
 
 
-FastSLAM1_Thread::FastSLAM1_Thread(QObject *parent) : SLAM_Thread(parent)
+FastSLAM1_Wrapper::FastSLAM1_Wrapper(QObject *parent) : Wrapper_Thread(parent)
 {
 }
 
-FastSLAM1_Thread::~FastSLAM1_Thread()
+FastSLAM1_Wrapper::~FastSLAM1_Wrapper()
 {
     wait();
 }
 
 
-void FastSLAM1_Thread::run()
+void FastSLAM1_Wrapper::run()
 {
     MatrixXf    lm; //landmark positions
     MatrixXf    wp; //way points
@@ -47,7 +47,7 @@ void FastSLAM1_Thread::run()
 }
 
 
-vector<Particle> FastSLAM1_Thread::sim(MatrixXf &lm, MatrixXf &wp)
+vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp)
 {
     int         pos_i = 0;
     double      time_all;
@@ -361,7 +361,7 @@ vector<Particle> FastSLAM1_Thread::sim(MatrixXf &lm, MatrixXf &wp)
 }
 
 
-void FastSLAM1_Thread::predict(Particle &particle, float V, float G,
+void FastSLAM1_Wrapper::predict(Particle &particle, float V, float G,
                                MatrixXf &Q, float WB,float dt, int addrandom)
 {
     //optional: add random noise to predicted state
@@ -389,7 +389,7 @@ void FastSLAM1_Thread::predict(Particle &particle, float V, float G,
 //
 //compute particle weight for sampling
 //
-float FastSLAM1_Thread::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
+float FastSLAM1_Wrapper::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
 {
     vector<MatrixXf> Hv;
     vector<MatrixXf> Hf;

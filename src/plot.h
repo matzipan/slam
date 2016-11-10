@@ -8,16 +8,16 @@
 
 #include <Eigen/Dense>
 
-#include "qcustomplot.h"
+#include "libs/qcustomplot/qcustomplot.h"
 
 
-class SlamPlot : public QMainWindow
+class Plot : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit SlamPlot(QWidget *parent = 0);
-    ~SlamPlot();
+    explicit Plot(QWidget *parent = 0);
+    ~Plot();
 
     void setupCanvas(void);
     void setupInitData(void);

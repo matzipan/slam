@@ -5,18 +5,18 @@
 
 #include <QtGui>
 
-#include "SLAM_Thread.h"
-#include "SLAM_Plot.h"
+#include "wrapper_thread.h"
+#include "src/plot.h"
 
-#include "utils.h"
+#include "src/utils.h"
 
-#include "moc_SLAM_Thread.cpp"
+#include "moc_wrapper_thread.cpp"
 
 // global variable
-extern SlamPlot    *g_plot;
+extern Plot    *g_plot;
 
 
-SLAM_Thread::SLAM_Thread(QObject *parent) : QThread(parent)
+Wrapper_Thread::Wrapper_Thread(QObject *parent) : QThread(parent)
 {
     isAlive = 1;
 
@@ -31,23 +31,23 @@ SLAM_Thread::SLAM_Thread(QObject *parent) : QThread(parent)
     connect(g_plot, SIGNAL(commandSend(int)),       this,   SLOT(commandRecv(int)));
 }
 
-SLAM_Thread::~SLAM_Thread()
+Wrapper_Thread::~Wrapper_Thread()
 {
     wait();
 }
 
-void SLAM_Thread::stop(void)
+void Wrapper_Thread::stop(void)
 {
     isAlive = 0;
 }
 
-void SLAM_Thread::commandRecv(int cmd)
+void Wrapper_Thread::commandRecv(int cmd)
 {
     commandID   = cmd;
     commandTime = tm_get_millis();
 }
 
-void SLAM_Thread::getCommand(int *cmd)
+void Wrapper_Thread::getCommand(int *cmd)
 {
     u_int64_t       time_now, dt;
 
@@ -62,13 +62,13 @@ void SLAM_Thread::getCommand(int *cmd)
 }
 
 // set run mode
-void SLAM_Thread::setRunMode(RunMode mode)
+void Wrapper_Thread::setRunMode(RunMode mode)
 {
     runMode = mode;
 }
 
 // set map filename
-void SLAM_Thread::setMap(std::string &fname)
+void Wrapper_Thread::setMap(std::string &fname)
 {
     fnMap = fname;
 }

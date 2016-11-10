@@ -9,31 +9,31 @@
 
 #include <Eigen/Dense>
 
-#include "fastslam_core.h"
-#include "SLAM_Plot.h"
-#include "fastslam_2.h"
+#include "src/core.h"
+#include "src/plot.h"
+#include "fastslam2_wrapper.h"
 
-#include "moc_fastslam_2.cpp"
+#include "moc_fastslam2_wrapper.cpp"
 
 using namespace std;
 using namespace Eigen;
 
 // global variable
-extern SlamPlot     *g_plot;
-extern SLAM_Conf    *g_conf;
+extern Plot     *g_plot;
+extern Conf    *g_conf;
 
 
-FastSLAM2_Thread::FastSLAM2_Thread(QObject *parent) : SLAM_Thread(parent)
+FastSLAM2_Wrapper::FastSLAM2_Wrapper(QObject *parent) : Wrapper_Thread(parent)
 {
 }
 
-FastSLAM2_Thread::~FastSLAM2_Thread()
+FastSLAM2_Wrapper::~FastSLAM2_Wrapper()
 {
     wait();
 }
 
 
-void FastSLAM2_Thread::run()
+void FastSLAM2_Wrapper::run()
 {
     MatrixXf    lm; //landmark positions
     MatrixXf    wp; //way points
@@ -46,7 +46,7 @@ void FastSLAM2_Thread::run()
 }
 
 
-vector<Particle> FastSLAM2_Thread::sim(MatrixXf &lm, MatrixXf &wp)
+vector<Particle> FastSLAM2_Wrapper::sim(MatrixXf &lm, MatrixXf &wp)
 {
     int         pos_i = 0;
     double      time_all;
@@ -371,7 +371,7 @@ vector<Particle> FastSLAM2_Thread::sim(MatrixXf &lm, MatrixXf &wp)
     return particles;
 }
 
-void FastSLAM2_Thread::predict(Particle &particle,float V,float G,MatrixXf &Q, float WB,float dt, int addrandom)
+void FastSLAM2_Wrapper::predict(Particle &particle,float V,float G,MatrixXf &Q, float WB,float dt, int addrandom)
 {
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
@@ -425,7 +425,7 @@ void FastSLAM2_Thread::predict(Particle &particle,float V,float G,MatrixXf &Q, f
 }
 
 
-void FastSLAM2_Thread::observe_heading(Particle &particle, float phi, int useheading)
+void FastSLAM2_Wrapper::observe_heading(Particle &particle, float phi, int useheading)
 {
     if (useheading ==0){
         return;
@@ -456,7 +456,7 @@ void FastSLAM2_Thread::observe_heading(Particle &particle, float phi, int usehea
     particle.setPv(Pv);
 }
 
-float FastSLAM2_Thread::gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag)
+float FastSLAM2_Wrapper::gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag)
 {
     int D = v.size();
     MatrixXf Sc = S.llt().matrixL();
@@ -500,7 +500,7 @@ float FastSLAM2_Thread::gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag)
 //
 //compute particle weight for sampling
 //
-float FastSLAM2_Thread::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
+float FastSLAM2_Wrapper::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
 {
     vector<MatrixXf> Hv;
     vector<MatrixXf> Hf;
@@ -533,7 +533,7 @@ float FastSLAM2_Thread::compute_weight(Particle &particle, vector<VectorXf> &z, 
 
 //compute proposal distribution, then sample from it, and compute new particle weight
 //void sample_proposal(Particle &particle, MatrixXf z, vector<int> idf, MatrixXf R)
-void FastSLAM2_Thread::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
+void FastSLAM2_Wrapper::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
 {
     VectorXf xv(particle.xv()); //robot position
     MatrixXf Pv(particle.Pv()); //controls (motion command)
@@ -605,7 +605,7 @@ void FastSLAM2_Thread::sample_proposal(Particle &particle, vector<VectorXf> &z, 
     particle.setW(w);
 }
 
-float FastSLAM2_Thread::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
+float FastSLAM2_Wrapper::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R)
 {
     float w = 1;
     vector<int> idfi;
@@ -636,7 +636,7 @@ float FastSLAM2_Thread::likelihood_given_xv(Particle &particle, vector<VectorXf>
     return w;
 }
 
-VectorXf FastSLAM2_Thread::delta_xv(VectorXf &xv1, VectorXf &xv2)
+VectorXf FastSLAM2_Wrapper::delta_xv(VectorXf &xv1, VectorXf &xv2)
 {
     //compute innovation between two xv estimates, normalising the heading component
     VectorXf dx = xv1-xv2;

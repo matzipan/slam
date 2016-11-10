@@ -9,13 +9,13 @@
 #include <QApplication>
 
 
-#include "SLAM_Plot.h"
-#include "SLAM_Thread.h"
-#include "fastslam_core.h"
+#include "plot.h"
+#include "src/wrappers/wrapper_thread.h"
+#include "core.h"
 
-#include "fastslam_1.h"
-#include "fastslam_2.h"
-#include "ekfslam_1.h"
+#include "src/wrappers/fastslam1_wrapper.h"
+#include "src/wrappers/fastslam2_wrapper.h"
+#include "src/wrappers/ekfslam_wrapper.h"
 
 #include "utils.h"
 
@@ -25,8 +25,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 // global variables
 ////////////////////////////////////////////////////////////////////////////////
-SlamPlot    *g_plot;
-SLAM_Conf   *g_conf;
+Plot    *g_plot;
+Conf   *g_conf;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 {
     int                     i;
     int                     ret = 0;
-    SLAM_Thread             *slam_thread;
+    Wrapper_Thread             *slam_thread;
 
     string                  mode, method;
     string                  fn_screenshot;
@@ -63,11 +63,11 @@ int main(int argc, char *argv[])
     int                     ww, wh;
 
     int                     slam_method = 1;
-    SLAM_Thread::RunMode    slam_runmode = SLAM_Thread::SLAM_WAYPOINT;
+    Wrapper_Thread::RunMode    slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
     string                  map_fname = "../data/example_webmap.mat";
     string                  conf_fname;
 
-    SLAM_Conf               conf;
+    Conf               conf;
     StringArray             arrFN;
 
     g_conf = &conf;
@@ -103,8 +103,8 @@ int main(int argc, char *argv[])
     // get mode
     mode = "waypoints";
     conf.s("mode", mode);
-    if( mode == "waypoints" )   slam_runmode=SLAM_Thread::SLAM_WAYPOINT;
-    if( mode == "interactive")  slam_runmode=SLAM_Thread::SLAM_INTERACTIVE;
+    if( mode == "waypoints" )   slam_runmode=Wrapper_Thread::SLAM_WAYPOINT;
+    if( mode == "interactive")  slam_runmode=Wrapper_Thread::SLAM_INTERACTIVE;
 
     // get slam method
     method = "EKF1";
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // SLAM plot window
-    SlamPlot w;
+    Plot w;
     g_plot = &w;
     w.show();
     w.setGeometry(10, 10, ww, wh);
@@ -140,13 +140,13 @@ int main(int argc, char *argv[])
     // create SLAM thread
     switch( slam_method ) {
     case 1:
-        slam_thread = new FastSLAM1_Thread;
+        slam_thread = new FastSLAM1_Wrapper;
         break;
     case 2:
-        slam_thread = new FastSLAM2_Thread;
+        slam_thread = new FastSLAM2_Wrapper;
         break;
     case 3:
-        slam_thread = new EKFSLAM1_Thread;
+        slam_thread = new EKFSLAM_Wrapper;
         break;
     default:
         slam_thread = NULL;

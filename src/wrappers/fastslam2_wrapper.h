@@ -15,20 +15,20 @@
 
 #include <Eigen/Dense>
 
-#include "fastslam_core.h"
-#include "SLAM_Thread.h"
+#include "src/core.h"
+#include "wrapper_thread.h"
 
 using namespace std;
 using namespace Eigen;
 
 
-class FastSLAM2_Thread : public SLAM_Thread
+class FastSLAM2_Wrapper : public Wrapper_Thread
 {
     Q_OBJECT
 
 public:
-    FastSLAM2_Thread(QObject *parent = 0);
-    ~FastSLAM2_Thread();
+    FastSLAM2_Wrapper(QObject *parent = 0);
+    ~FastSLAM2_Wrapper();
 
 
     void sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);

@@ -6,7 +6,7 @@
 #include <string>
 #include <QtGui>
 
-class SLAM_Thread : public QThread
+class Wrapper_Thread : public QThread
 {
     Q_OBJECT
 
@@ -16,8 +16,8 @@ public:
         SLAM_INTERACTIVE                // user interactive
     };
 
-    SLAM_Thread(QObject *parent = 0);
-    ~SLAM_Thread();
+    Wrapper_Thread(QObject *parent = 0);
+    ~Wrapper_Thread();
 
     void stop(void);
 

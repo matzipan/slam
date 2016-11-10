@@ -406,3 +406,6 @@
 --------------- 2016-11-08 18:31:03 ---------------
 /home/matzipan/Workspace/project/fastslam-cpp/build/fastslam-cpp -m data/example_webmap.mat -method FAST2 
 
+--------------- 2016-11-10 17:05:40 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat 
+

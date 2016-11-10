@@ -2,7 +2,7 @@
 
 This program implements EKF SLAM, FastSLAM and FastSLAM 2 and presents them in a Qt GUI.
 
-It is based on code from [here](https://github.com/bushuhui/fastslam) and [here]((https://github.com/yglee/FastSLAM)).
+It is based on code from [here](https://github.com/bushuhui/fastslam) and [here](https://github.com/yglee/FastSLAM).
 
 So far I have added a CMake build system and I am decoupling the algorithm from the GUI in order to do some profiling.
 

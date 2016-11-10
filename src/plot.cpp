@@ -6,11 +6,11 @@
 #include <QMetaEnum>
 
 
-#include "SLAM_Plot.h"
+#include "plot.h"
 
-#include "moc_SLAM_Plot.cpp"
+#include "moc_plot.cpp"
 
-SlamPlot::SlamPlot(QWidget *parent) :
+Plot::Plot(QWidget *parent) :
     QMainWindow(parent)
 {
     muxData = new QMutex(QMutex::NonRecursive);
@@ -36,12 +36,12 @@ SlamPlot::SlamPlot(QWidget *parent) :
     customPlot->replot();
 }
 
-SlamPlot::~SlamPlot()
+Plot::~Plot()
 {
     delete muxData;
 }
 
-void SlamPlot::keyPressEvent(QKeyEvent *event)
+void Plot::keyPressEvent(QKeyEvent *event)
 {
     int key;
     int cmd = -1;
@@ -89,7 +89,7 @@ void SlamPlot::keyPressEvent(QKeyEvent *event)
     if( cmd > 0 ) emit commandSend(cmd);
 }
 
-void SlamPlot::mousePressEvent(QMouseEvent *event)
+void Plot::mousePressEvent(QMouseEvent *event)
 {
     // 1 - left
     // 2 - right
@@ -101,17 +101,17 @@ void SlamPlot::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void SlamPlot::resizeEvent(QResizeEvent *event)
+void Plot::resizeEvent(QResizeEvent *event)
 {
     customPlot->xAxis->setScaleRatio(customPlot->yAxis, 1.0);
 }
 
-void SlamPlot::timerEvent(QTimerEvent *event)
+void Plot::timerEvent(QTimerEvent *event)
 {
     //plot();
 }
 
-void SlamPlot::canvasMouseMoveEvent(QMouseEvent *event)
+void Plot::canvasMouseMoveEvent(QMouseEvent *event)
 {
     double      fx, fy;
     QString     msg;
@@ -126,7 +126,7 @@ void SlamPlot::canvasMouseMoveEvent(QMouseEvent *event)
 }
 
 
-void SlamPlot::canvsMousePressEvent(QMouseEvent *event)
+void Plot::canvsMousePressEvent(QMouseEvent *event)
 {
 #if 0
     // 1 - left
@@ -184,30 +184,30 @@ void SlamPlot::canvsMousePressEvent(QMouseEvent *event)
 }
 
 
-void SlamPlot::canvasReplot(void)
+void Plot::canvasReplot(void)
 {
     plot();    
 }
 
-void SlamPlot::plotBegin(void)
+void Plot::plotBegin(void)
 {
     muxData->lock();
 }
 
-void SlamPlot::plotEnd(void)
+void Plot::plotEnd(void)
 {
     muxData->unlock();
 }
 
 
-void SlamPlot::canvasShowMessage(QString msg)
+void Plot::canvasShowMessage(QString msg)
 {
     showMessage(msg);
 }
 
 
 
-void SlamPlot::setupInitData(void)
+void Plot::setupInitData(void)
 {
     if ( 0 ) {
         double      t, x, y, x1, y1;
@@ -261,7 +261,7 @@ void SlamPlot::setupInitData(void)
     parmCarEst[3] = 1;              // size
 }
 
-void SlamPlot::setupCanvas(void)
+void Plot::setupCanvas(void)
 {
     connect(customPlot, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(canvsMousePressEvent(QMouseEvent*)));
     connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(canvasMouseMoveEvent(QMouseEvent*)));
@@ -273,7 +273,7 @@ void SlamPlot::setupCanvas(void)
     if( 0 ) {
         customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom)); // period as decimal separator and comma as thousand separator
         customPlot->legend->setVisible(true);
-        QFont legendFont = font();  // start out with SlamPlot's font..
+        QFont legendFont = font();  // start out with Plot's font..
         legendFont.setPointSize(9); // and make a bit smaller for legend
         customPlot->legend->setFont(legendFont);
         customPlot->legend->setBrush(QBrush(QColor(255,255,255,230)));
@@ -387,7 +387,7 @@ void SlamPlot::setupCanvas(void)
     customPlot->yAxis2->setSubTickLength(0, 0);
 }
 
-void SlamPlot::setLandmarks(QVector<double> &arrX, QVector<double> &arrY)
+void Plot::setLandmarks(QVector<double> &arrX, QVector<double> &arrY)
 {
     muxData->lock();
 
@@ -402,7 +402,7 @@ void SlamPlot::setLandmarks(QVector<double> &arrX, QVector<double> &arrY)
     muxData->unlock();
 }
 
-void SlamPlot::setWaypoints(QVector<double> &arrX, QVector<double> &arrY)
+void Plot::setWaypoints(QVector<double> &arrX, QVector<double> &arrY)
 {
     muxData->lock();
 
@@ -417,7 +417,7 @@ void SlamPlot::setWaypoints(QVector<double> &arrX, QVector<double> &arrY)
     muxData->unlock();
 }
 
-void SlamPlot::setParticles(QVector<double> &arrX, QVector<double> &arrY)
+void Plot::setParticles(QVector<double> &arrX, QVector<double> &arrY)
 {
     muxData->lock();
 
@@ -432,7 +432,7 @@ void SlamPlot::setParticles(QVector<double> &arrX, QVector<double> &arrY)
     muxData->unlock();
 }
 
-void SlamPlot::setParticlesFea(QVector<double> &arrX, QVector<double> &arrY)
+void Plot::setParticlesFea(QVector<double> &arrX, QVector<double> &arrY)
 {
     muxData->lock();
 
@@ -448,7 +448,7 @@ void SlamPlot::setParticlesFea(QVector<double> &arrX, QVector<double> &arrY)
 }
 
 
-void SlamPlot::setLaserLines(Eigen::MatrixXf &lnes)
+void Plot::setLaserLines(Eigen::MatrixXf &lnes)
 {
     muxData->lock();
 
@@ -492,7 +492,7 @@ void SlamPlot::setLaserLines(Eigen::MatrixXf &lnes)
 }
 
 // slot for add new covariance ellipse
-void SlamPlot::covEllipseAdd(int n)
+void Plot::covEllipseAdd(int n)
 {
     muxData->lock();
 
@@ -518,7 +518,7 @@ void SlamPlot::covEllipseAdd(int n)
 }
 
 
-void SlamPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx)
+void Plot::setCovEllipse(Eigen::MatrixXf &lnes, int idx)
 {
     muxData->lock();
 
@@ -550,7 +550,7 @@ void SlamPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx)
     muxData->unlock();
 }
 
-void SlamPlot::clearCovEllipse(void)
+void Plot::clearCovEllipse(void)
 {
     muxData->lock();
 
@@ -567,7 +567,7 @@ void SlamPlot::clearCovEllipse(void)
     muxData->unlock();
 }
 
-void SlamPlot::addPos(double x, double y)
+void Plot::addPos(double x, double y)
 {
     muxData->lock();
 
@@ -579,7 +579,7 @@ void SlamPlot::addPos(double x, double y)
     muxData->unlock();
 }
 
-void SlamPlot::addPosEst(double x, double y)
+void Plot::addPosEst(double x, double y)
 {
     muxData->lock();
 
@@ -611,7 +611,7 @@ void SlamPlot::addPosEst(double x, double y)
 }
 
 
-void SlamPlot::setCarPos(double x, double y, double t, int idx)
+void Plot::setCarPos(double x, double y, double t, int idx)
 {
     muxData->lock();
 
@@ -630,7 +630,7 @@ void SlamPlot::setCarPos(double x, double y, double t, int idx)
     muxData->unlock();
 }
 
-void SlamPlot::setCarSize(double s, int idx)
+void Plot::setCarSize(double s, int idx)
 {
     muxData->lock();
 
@@ -644,7 +644,7 @@ void SlamPlot::setCarSize(double s, int idx)
     muxData->unlock();
 }
 
-void SlamPlot::setCarModel(double *parm, int idx)
+void Plot::setCarModel(double *parm, int idx)
 {
     muxData->lock();
 
@@ -660,7 +660,7 @@ void SlamPlot::setCarModel(double *parm, int idx)
     muxData->unlock();
 }
 
-void SlamPlot::setPlotRange(double xmin, double xmax, double ymin, double ymax)
+void Plot::setPlotRange(double xmin, double xmax, double ymin, double ymax)
 {
     muxData->lock();
 
@@ -671,7 +671,7 @@ void SlamPlot::setPlotRange(double xmin, double xmax, double ymin, double ymax)
     muxData->unlock();
 }
 
-void SlamPlot::showMessage(QString &msg)
+void Plot::showMessage(QString &msg)
 {
     QString     _msg;
 
@@ -680,13 +680,13 @@ void SlamPlot::showMessage(QString &msg)
     statusBar()->showMessage(_msg);
 }
 
-void SlamPlot::setScreenShot_fname(std::string &fnBase)
+void Plot::setScreenShot_fname(std::string &fnBase)
 {
     fnScreenShot_base = fnBase;
 }
 
 
-void SlamPlot::clear(void)
+void Plot::clear(void)
 {
     muxData->lock();
 
@@ -708,7 +708,7 @@ void SlamPlot::clear(void)
     muxData->unlock();
 }
 
-void SlamPlot::plot(void)
+void Plot::plot(void)
 {
     static int  idx = 0;
     QString     fnOut;
@@ -721,7 +721,7 @@ void SlamPlot::plot(void)
     }
 }
 
-void SlamPlot::drawCar(int idx){
+void Plot::drawCar(int idx){
     double  x, y, t, s;
     double  x1, y1, x2, y2;
 

@@ -15,7 +15,7 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 
-#include "fastslam_core.h"
+#include "core.h"
 
 using namespace std;
 using namespace Eigen;
@@ -995,8 +995,7 @@ void Particle::setDa(float* da)
 // EKF-SLAM functions
 ////////////////////////////////////////////////////////////////////////////////
 
-void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float WB, float dt)
-{
+void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt) {
     float       s, c;
     float       vts, vtc;
     MatrixXf    Gv(3, 3), Gu(3, 2);         // Jacobians
@@ -1011,7 +1010,7 @@ void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float 
             0, 0, 1;
     Gu <<   dt*c, -vts,
             dt*s, vtc,
-            dt*sin(G)/WB, V*dt*cos(G)/WB;
+            dt*sin(G)/wheel_base, V*dt*cos(G)/wheel_base;
 
     // predict covariance
     //      P(1:3,1:3)= Gv*P(1:3,1:3)*Gv' + Gu*Q*Gu';
@@ -1026,15 +1025,11 @@ void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float 
     // predict state
     x(0) = x(0) + vtc;
     x(1) = x(1) + vts;
-    x(2) = pi_to_pi(x(2) + V*dt*sin(G)/WB);
+    x(2) = pi_to_pi(x(2) + V*dt*sin(G)/wheel_base);
 }
 
-void ekf_observe_heading(VectorXf &x, MatrixXf &P,
-                         float phi,
-                         int useheading,
-                         float sigmaPhi)
-{
-    if( useheading == 0 ) return;
+void ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi) {
+    if(use_heading == 0) { return; }
 
     float       v;
     MatrixXf    H = MatrixXf(1, x.size());
@@ -1043,12 +1038,10 @@ void ekf_observe_heading(VectorXf &x, MatrixXf &P,
     H(2) = 1;
     v = pi_to_pi(phi - x(2));
 
-    KF_joseph_update(x, P, v, sigmaPhi*sigmaPhi, H);
+    KF_joseph_update(x, P, v, sigma_phi*sigma_phi, H);
 }
 
-void ekf_observe_model(VectorXf &x, int idf,
-                       VectorXf &z, MatrixXf &H)
-{
+void ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) {
     int     Nxv, fpos;
     float   dx, dy, d2, d, xd, yd, xd2, yd2;
 
@@ -1078,9 +1071,7 @@ void ekf_observe_model(VectorXf &x, int idf,
     H(1, fpos) = -yd2;      H(1, fpos+1) = xd2;
 }
 
-void ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf,
-                             float &nis, float &nd)
-{
+void ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd) {
     VectorXf        zp;
     MatrixXf        H;
     VectorXf        v(2);
@@ -1097,10 +1088,7 @@ void ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R,
     nd  = nis + log(S.determinant());
 }
 
-void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R,
-                        float gate1, float gate2,
-                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn)
-{
+void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R, float gate1, float gate2, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
     unsigned long Nxv, Nf;
     unsigned long i, j;
     long jbest;
@@ -1123,8 +1111,7 @@ void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf 
         outer = 1e60;
 
         for(j=0; j<Nf; j++) {
-            ekf_compute_association(x, P, z[i], R, j,
-                                    nis, nd);
+            ekf_compute_association(x, P, z[i], R, j, nis, nd);
 
             if( nis < gate1 && nd < nbest ) {
                 nbest = nd;
@@ -1134,11 +1121,11 @@ void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf 
             }
         }
 
-        if( jbest > -1 ) {
+        if(jbest > -1) {
             // add nearest-neighbour to association list
             zf.push_back(z[i]);
             idf.push_back(jbest);
-        } else if ( outer > gate2 ) {
+        } else if (outer > gate2) {
             // z too far to associate, but far enough to be a new feature
             zn.push_back(z[i]);
         }
@@ -1147,9 +1134,7 @@ void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf 
 
 //z is range and bearing of visible landmarks
 // find associations (zf) and new features (zn)
-void ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<int> &idz,
-                          vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn, vector<int> &table)
-{
+void ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<int> &idz, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn, vector<int> &table) {
     vector<int> idn;
     unsigned    i, ii;
 
@@ -1186,12 +1171,7 @@ void ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<int> &idz
     }
 }
 
-
-
-void ekf_batch_update(VectorXf &x, MatrixXf &P,
-                      vector<VectorXf> &zf, MatrixXf &R,
-                      vector<int> &idf)
-{
+void ekf_batch_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R, vector<int> &idf) {
     int         lenz, lenx;
     MatrixXf    H, RR;
     VectorXf    v;
@@ -1222,19 +1202,7 @@ void ekf_batch_update(VectorXf &x, MatrixXf &P,
     KF_cholesky_update(x, P, v, RR, H);
 }
 
-void ekf_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R,
-                vector<int> &idf, int batch)
-{
-    if( batch == 1 )
-        ekf_batch_update(x, P, zf, R, idf);
-}
-
-
-
-
-void ekf_add_one_z(VectorXf &x, MatrixXf &P,
-                 VectorXf &z, MatrixXf &Re)
-{
+void ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re) {
     int     len;
     float   r, b;
     float   s, c;
@@ -1286,11 +1254,10 @@ void ekf_add_one_z(VectorXf &x, MatrixXf &P,
     }
 }
 
-void ekf_augment(VectorXf &x, MatrixXf &P,
-                 vector<VectorXf> &zn, MatrixXf &Re)
-{
-    for(unsigned long i=0; i<zn.size(); i++)
+void ekf_augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re) {
+    for(unsigned long i=0; i<zn.size(); i++) {
         ekf_add_one_z(x, P, zn[i], Re);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1301,8 +1268,7 @@ void ekf_augment(VectorXf &x, MatrixXf &P,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int SLAM_Conf::parse(void)
-{
+int Conf::parse(void) {
     ////////////////////////////////////////////////////////////////////////////
     /// set default values
     ////////////////////////////////////////////////////////////////////////////
