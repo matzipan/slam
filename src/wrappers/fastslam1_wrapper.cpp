@@ -225,7 +225,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
         Gn = VnGn[1];
 
         //Predict step
-        for (i = 0; i < g_conf->NPARTICLES; i++) {
+        for (int i = 0; i < g_conf->NPARTICLES; i++) {
             predict(particles[i], Vn, Gn, Qe, g_conf->WHEELBASE, dt, g_conf->SWITCH_PREDICT_NOISE);
             if (g_conf->SWITCH_HEADING_KNOWN) {
                 for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
@@ -289,7 +289,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
         y_mean = 0;
         t_mean = 0;
         w_max = -1e30;
-        for (i = 0; i < g_conf->NPARTICLES; i++) {
+        for (int i = 0; i < g_conf->NPARTICLES; i++) {
             if (particles[i].w() > w_max) {
                 w_max = particles[i].w();
                 t_mean = particles[i].xv()(2);
@@ -307,7 +307,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
         // Draw particles
         arrParticles_x.clear();
         arrParticles_y.clear();
-        for (i = 0; i < g_conf->NPARTICLES; i++) {
+        for (int i = 0; i < g_conf->NPARTICLES; i++) {
             arrParticles_x.push_back(particles[i].xv()(0));
             arrParticles_y.push_back(particles[i].xv()(1));
         }
@@ -316,7 +316,7 @@ vector<Particle> FastSLAM1_Wrapper::sim(MatrixXf &lm, MatrixXf &wp) {
         // Draw feature particles
         arrParticlesFea_x.clear();
         arrParticlesFea_y.clear();
-        for (i = 0; i < g_conf->NPARTICLES; i++) {
+        for (int i = 0; i < g_conf->NPARTICLES; i++) {
             for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
                 arrParticlesFea_x.push_back(particles[i].xf()[j](0));
                 arrParticlesFea_y.push_back(particles[i].xf()[j](1));
