@@ -162,27 +162,6 @@ void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R);
 
 void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-
-////////////////////////////////////////////////////////////////////////////////
-// EKF-SLAM functions
-////////////////////////////////////////////////////////////////////////////////
-void ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt);
-
-void ekf_batch_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R,
-                      vector<int> &idf);
-
-void ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi);
-
-void ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R,
-                        float gate1, float gate2,
-                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
-
-void ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<int> &idz,
-                              vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn, vector<int> &table);
-
-void ekf_augment(VectorXf &x, MatrixXf &P,
-                 vector<VectorXf> &zn, MatrixXf &Re);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////////////
