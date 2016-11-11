@@ -42,10 +42,6 @@ void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixX
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-// EKF-SLAM functions
-////////////////////////////////////////////////////////////////////////////////
-
 void EKFSLAM::ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt) {
     float s, c;
     float vts, vtc;

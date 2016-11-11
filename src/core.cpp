@@ -13,12 +13,13 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include "core.h"
+#include "particle.h"
 
 using namespace std;
 using namespace Eigen;
 
-void add_control_noise(float V, float G, MatrixXf &Q, int addnoise, float *VnGn) {
-    if (addnoise == 1) {
+void add_control_noise(float V, float G, MatrixXf &Q, int add_noise, float *VnGn) {
+    if (add_noise == 1) {
         VectorXf A(2);
         A(0) = V;
         A(1) = G;
@@ -36,8 +37,7 @@ void predict_true(VectorXf &xv, float V, float G, float WB, float dt) {
     xv(2) = pi_to_pi(xv(2) + V * dt * sin(G) / WB);
 }
 
-void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD,
-                      float &G, float rateG, float maxG, float dt) {
+void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD, float &G, float rateG, float maxG, float dt) {
     /*
         % INPUTS:
         %   x - true position
@@ -65,22 +65,22 @@ void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD,
             return;
         }
 
-        cwp[0] = wp(0, iwp); //-1 since indexed from 0
+        cwp[0] = wp(0, iwp); // -1 since indexed from 0
         cwp[1] = wp(1, iwp);
     }
 
-    //compute change in G to point towards current waypoint
+    // compute change in G to point towards current waypoint
     float deltaG = atan2(cwp[1] - x[1], cwp[0] - x[0]) - x[2] - G;
     deltaG = pi_to_pi(deltaG);
 
-    //limit rate
+    // limit rate
     float maxDelta = rateG * dt;
     if (abs(deltaG) > maxDelta) {
         int sign = (deltaG > 0) ? 1 : ((deltaG < 0) ? -1 : 0);
         deltaG = sign * maxDelta;
     }
 
-    //limit angle
+    // limit angle
     G = G + deltaG;
     if (abs(G) > maxG) {
         int sign2 = (G > 0) ? 1 : ((G < 0) ? -1 : 0);
@@ -91,8 +91,7 @@ void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD,
 
 //z is range and bearing of visible landmarks
 // find associations (zf) and new features (zn)
-void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &table, int Nf,
-                          vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
+void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_association_table, int Nf, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
     idf.clear();
     vector<int> idn;
 
@@ -101,7 +100,7 @@ void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &table
     for (unsigned long i = 0; i < idz.size(); i++) {
         ii = idz[i];
         VectorXf z_i;
-        if (table(ii) == -1) { //new feature
+        if (data_association_table(ii) == -1) { //new feature
             z_i = z[i];
             zn.push_back(z_i);
             idn.push_back(ii);
@@ -109,20 +108,19 @@ void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &table
         else {
             z_i = z[i];
             zf.push_back(z_i);
-            idf.push_back(table(ii));
+            idf.push_back(data_association_table(ii));
         }
     }
 
     assert(idn.size() == zn.size());
     for (unsigned long i = 0; i < idn.size(); i++) {
-        table(idn[i]) = Nf + i;
+        data_association_table(idn[i]) = Nf + i;
     }
 }
 
 
 //z is the list of measurements conditioned on the particle.
-void feature_update(Particle &particle, vector<VectorXf> &z,
-                    vector<int> &idf, MatrixXf &R) {
+void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
     //Having selected a new pose from the proposal distribution,
     //  this pose is assumed perfect and each feature update maybe
     //  computed independently and without pose uncertainty
@@ -317,8 +315,8 @@ MatrixXf line_plot_conversion(MatrixXf &lnes) {
     return p;
 }
 
-//rb is measurements
-//xv is robot pose
+// rb is measurements
+// xv is robot pose
 MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv) {
     if (rb.empty()) {
         return MatrixXf(0, 0);
@@ -334,7 +332,7 @@ MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv) {
         globalMat(1, j) = rb[j][0] * sin(rb[j][1]);
     }
 
-    TransformToGlobal(globalMat, xv);
+    transform_to_global(globalMat, xv);
 
     for (int c = 0; c < lnes.cols(); c++) {
         lnes(0, c) = xv(0);
@@ -372,23 +370,18 @@ void make_covariance_ellipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines) {
     }
 }
 
-//http://moby.ihme.washington.edu/bradbell/mat2cpp/randn.cpp.xml
+// http://moby.ihme.washington.edu/bradbell/mat2cpp/randn.cpp.xml
 MatrixXf nRandMat::randn(int m, int n) {
     // use formula 30.3 of Statistical Distributions (3rd ed)
     // Merran Evans, Nicholas Hastings, and Brian Peacock
     int urows = m * n + 1;
     VectorXf u(urows);
 
-    //u is a random matrix
-#if 1
+    // u is a random matrix
     for (int r = 0; r < urows; r++) {
         // FIXME: better way?
         u(r) = std::rand() * 1.0 / RAND_MAX;
     }
-#else
-    u = ( (VectorXf::Random(urows).array() + 1.0)/2.0 ).matrix();
-#endif
-
 
     MatrixXf x(m, n);
 
@@ -455,24 +448,6 @@ VectorXf multivariate_gauss(VectorXf &x, MatrixXf &P, int n) {
     return S * X + x;
 }
 
-
-void pi_to_pi(VectorXf &angle) {
-    int i, n;
-
-    for (i = 0; i < angle.size(); i++) {
-        if ((angle[i] < (-2 * M_PI)) || (angle[i] > (2 * M_PI))) {
-            n = floor(angle[i] / (2 * M_PI));
-            angle[i] = angle[i] - n * (2 * M_PI);
-        }
-
-        if (angle[i] > M_PI)
-            angle[i] = angle[i] - (2 * M_PI);
-
-        if (angle[i] < -M_PI)
-            angle[i] = angle[i] + (2 * M_PI);
-    }
-}
-
 float pi_to_pi(float ang) {
     int n;
 
@@ -481,21 +456,25 @@ float pi_to_pi(float ang) {
         ang = ang - n * (2 * M_PI);
     }
 
-    if (ang > M_PI)
+    if (ang > M_PI) {
         ang = ang - (2 * M_PI);
+    }
 
-    if (ang < -M_PI)
+    if (ang < -M_PI) {
         ang = ang + (2 * M_PI);
+    }
 
     return ang;
 }
 
 float pi_to_pi2(float ang) {
-    if (ang > M_PI)
+    if (ang > M_PI) {
         ang = ang - (2 * M_PI);
+    }
 
-    if (ang < -M_PI)
+    if (ang < -M_PI) {
         ang = ang + (2 * M_PI);
+    }
 
     return ang;
 }
@@ -536,15 +515,12 @@ void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
     }
 }
 
-void compute_jacobians(
-        Particle &particle,
-        vector<int> &idf,
-        MatrixXf &R,
-        vector<VectorXf> &zp,   // measurement (range, bearing)
-        vector<MatrixXf> *Hv,   // jacobians of function h (deriv of h wrt pose)
-        vector<MatrixXf> *Hf,   // jacobians of function h (deriv of h wrt mean)
-        vector<MatrixXf> *Sf)   // measurement covariance
-{
+void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv, vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
+    // zp - measurement (range, bearing)
+    // Hv - jacobians of function h (deriv of h wrt pose)
+    // Hf - jacobians of function h (deriv of h wrt mean)
+    // Sf - measurement covariance
+
     VectorXf xv = particle.xv();
 
     vector<VectorXf> xf;
@@ -574,12 +550,10 @@ void compute_jacobians(
         zp.push_back(zp_vec);
 
         //Jacobian wrt vehicle states
-        HvMat << -dx / d, -dy / d, 0,
-                dy / d2, -dx / d2, -1;
+        HvMat << -dx / d, -dy / d, 0, dy / d2, -dx / d2, -1;
 
         //Jacobian wrt feature states
-        HfMat << dx / d, dy / d,
-                -dy / d2, dx / d2;
+        HfMat << dx / d, dy / d, -dy / d2, dx / d2;
 
         Hv->push_back(HvMat);
         Hf->push_back(HfMat);
@@ -591,17 +565,16 @@ void compute_jacobians(
 }
 
 
-void resample_particles(vector<Particle> &particles, int Nmin, int doresample) {
+void resample_particles(vector<Particle> &particles, int Nmin, bool do_resample) {
     unsigned long i;
-    unsigned long N = particles.size();
-    VectorXf w(N);
+    VectorXf w(particles.size());
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < particles.size(); i++) {
         w(i) = particles[i].w();
     }
 
     float ws = w.sum();
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < particles.size(); i++) {
         particles[i].setW(w(i) / ws);
     }
 
@@ -613,13 +586,13 @@ void resample_particles(vector<Particle> &particles, int Nmin, int doresample) {
     vector<Particle> old_particles = vector<Particle>(particles);
     particles.resize(keep.size());
 
-    if ((Neff < Nmin) && (doresample == 1)) {
+    if (do_resample && (Neff < Nmin)) {
         for (i = 0; i < keep.size(); i++) {
             particles[i] = old_particles[keep[i]];
         }
 
-        for (i = 0; i < N; i++) {
-            float new_w = 1.0f / (float) N;
+        for (i = 0; i < particles.size(); i++) {
+            float new_w = 1.0f / (float) particles.size();
             particles[i].setW(new_w);
         }
     }
@@ -672,7 +645,7 @@ void stratified_resample(VectorXf w, vector<int> &keep, float &Neff) {
 
     vector<float> select;
     stratified_random(len, select);
-    cumsum(w);
+    cumulative_sum(w);
 
     int ctr = 0;
     for (int i = 0; i < len; i++) {
@@ -683,10 +656,8 @@ void stratified_resample(VectorXf w, vector<int> &keep, float &Neff) {
     }
 }
 
-//
-//returns a cumulative sum array
-//
-void cumsum(VectorXf &w) {
+// returns a cumulative sum array
+void cumulative_sum(VectorXf &w) {
     VectorXf csumVec(w.size());
     for (int i = 0; i < w.size(); i++) {
         float sum = 0;
@@ -696,12 +667,12 @@ void cumsum(VectorXf &w) {
         csumVec(i) = sum;
     }
 
-    w = VectorXf(csumVec); //copy constructor. Double check
+    w = VectorXf(csumVec); // copy constructor. Double check
 }
 
 
-void TransformToGlobal(MatrixXf &p, VectorXf &b) {
-    //rotate
+void transform_to_global(MatrixXf &p, VectorXf &b) {
+    // rotate
     MatrixXf rot(2, 2);
     rot << cos(b(2)), -sin(b(2)), sin(b(2)), cos(b(2));
 
@@ -710,7 +681,7 @@ void TransformToGlobal(MatrixXf &p, VectorXf &b) {
     p_resized.conservativeResize(2, p_resized.cols());
     p_resized = rot * p_resized;
 
-    //translate
+    // translate
     int c;
     for (c = 0; c < p_resized.cols(); c++) {
         p(0, c) = p_resized(0, c) + b(0);
@@ -718,7 +689,7 @@ void TransformToGlobal(MatrixXf &p, VectorXf &b) {
     }
 
     float input;
-    //if p is a pose and not a point
+    // if p is a pose and not a point
     if (p.rows() == 3) {
         for (int k = 0; k < p_resized.cols(); k++) {
             input = p(2, k) + b(2);
@@ -837,103 +808,12 @@ void read_slam_input_file(const string s, MatrixXf *lm, MatrixXf *wp) {
     }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// particle class
-////////////////////////////////////////////////////////////////////////////////
-Particle::Particle() {
-    _w = 1.0;
-    _xv = VectorXf(3);
-    _xv.setZero(3);
-    _Pv = MatrixXf(3, 3);
-    _Pv.setZero(3, 3);
-    _da = NULL;
-}
-
-Particle::Particle(float &w, VectorXf &xv, MatrixXf &Pv,
-                   vector<VectorXf> &xf, vector<MatrixXf> &Pf, float *da) {
-    _w = w;
-    _xv = xv;
-    _Pv = Pv;
-    _xf = xf;
-    _Pf = Pf;
-    _da = da;
-}
-
-Particle::~Particle() {
-}
-
-//getters
-float &Particle::w() {
-    return _w;
-}
-
-VectorXf &Particle::xv() {
-    return _xv;
-}
-
-MatrixXf &Particle::Pv() {
-    return _Pv;
-}
-
-vector<VectorXf> &Particle::xf() {
-    return _xf;
-}
-
-vector<MatrixXf> &Particle::Pf() {
-    return _Pf;
-}
-
-float *Particle::da() {
-    return _da;
-}
-
-//setters
-void Particle::setW(float w) {
-    _w = w;
-}
-
-void Particle::setXv(VectorXf &xv) {
-    _xv = xv;
-}
-
-void Particle::setPv(MatrixXf &Pv) {
-    _Pv = Pv;
-}
-
-void Particle::setXf(vector<VectorXf> &xf) {
-    _xf = xf;
-}
-
-void Particle::setXfi(unsigned long i, VectorXf &vec) {
-    if (i >= _xf.size()) {
-        _xf.resize(i + 1);
-    }
-    _xf[i] = vec;
-}
-
-void Particle::setPf(vector<MatrixXf> &Pf) {
-    _Pf = Pf;
-}
-
-void Particle::setPfi(unsigned long i, MatrixXf &m) {
-    if (i >= _Pf.size()) {
-        _Pf.resize(i + 1);
-    }
-    _Pf[i] = m;
-}
-
-void Particle::setDa(float *da) {
-    _da = da;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // fastslam config Variables
 //      Configuration file
 //      Permits various adjustments to parameters of the FastSLAM algorithm.
 //      See fastslam_sim.h for more information
 ////////////////////////////////////////////////////////////////////////////////
-
 
 int Conf::parse(void) {
     ////////////////////////////////////////////////////////////////////////////

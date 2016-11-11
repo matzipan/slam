@@ -8,6 +8,7 @@
 #include "src/core.h"
 #include "src/plot.h"
 #include "fastslam2_wrapper.h"
+#include "src/particle.h"
 
 using namespace std;
 using namespace Eigen;

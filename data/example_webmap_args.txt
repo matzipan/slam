@@ -409,3 +409,27 @@
 --------------- 2016-11-10 17:05:40 ---------------
 /home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat 
 
+--------------- 2016-11-11 18:46:10 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:46:25 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:46:41 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:48:14 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:48:51 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:49:06 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+
+--------------- 2016-11-11 18:50:12 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST2 
+
+--------------- 2016-11-11 18:54:53 ---------------
+/home/matzipan/Workspace/project/fastslam-cpp/build/slam-gui -m data/example_webmap.mat -method FAST1 
+

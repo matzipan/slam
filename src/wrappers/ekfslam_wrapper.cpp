@@ -124,11 +124,11 @@ void EKFSLAM_Wrapper::run() {
         data_association_table.push_back(-1);
     }
 
-    int iwp = 0;    //index to first waypoint
+    int iwp = 0; //index to first waypoint
     int nloop = g_conf->NUMBER_LOOPS;
-    float V = g_conf->V;  // default velocity
-    float G = 0;      //initial steer angle
-    MatrixXf plines;     //will later change to list of points
+    float V = g_conf->V; // default velocity
+    float G = 0; //initial steer angle
+    MatrixXf plines; //will later change to list of points
     MatrixXf covLines;   // covariance ellipse lines
 
     if (g_conf->SWITCH_SEED_RANDOM != 0) {
@@ -145,7 +145,7 @@ void EKFSLAM_Wrapper::run() {
 
     vector<int> idf;
 
-    vector<VectorXf> z;              //range and bearings of visible landmarks
+    vector<VectorXf> z; //range and bearings of visible landmarks
     vector<VectorXf> zf;
     vector<VectorXf> zn;
 
@@ -226,19 +226,21 @@ void EKFSLAM_Wrapper::run() {
         dtsum += dt;
         bool observe = false;
 
-        vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
-
         if (dtsum >= g_conf->DT_OBSERVE) {
             observe = true;
             dtsum = 0;
 
-            // z is the range and bearing of the observed landmark
+            //Compute true data, then add noise
+            vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
+
+            //z is the range and bearing of the observed landmark
             z = get_observations(xtrue, landmarks, ftag_visible, g_conf->MAX_RANGE);
             add_observation_noise(z, R, g_conf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xtrue);
         }
 
+        // @TODO what happens if this is moved inside the if(OBSERVE) branch?
         algorithm->sim(landmarks, waypoints, x, P, Vn, Gn, Qe,
                        g_conf->WHEELBASE, dt, xtrue(2) + g_conf->sigmaT * unifRand(), g_conf->SWITCH_HEADING_KNOWN,
                        sigma_phi, ftag,

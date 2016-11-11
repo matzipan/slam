@@ -9,56 +9,10 @@
 
 #include "utils.h"
 
+#include "particle.h"
 
 using namespace std;
 using namespace Eigen;
-
-
-////////////////////////////////////////////////////////////////////////////////
-// particle class
-////////////////////////////////////////////////////////////////////////////////
-class Particle {
-public:
-    Particle();
-
-    Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &xf, vector<MatrixXf> &Pf, float *da);
-
-    ~Particle();
-
-    //getters
-    float &w();
-
-    VectorXf &xv();             //robot pose: x,y,theta (heading dir)
-    MatrixXf &Pv();             //controls: velocities
-    vector<VectorXf> &xf();     //2d means of EKF
-    vector<MatrixXf> &Pf();     //covariance matrices for EKF
-    float *da();                //
-
-    //setters
-    void setW(float w);
-
-    void setXv(VectorXf &xv);
-
-    void setPv(MatrixXf &Pv);
-
-    void setXf(vector<VectorXf> &xf);
-
-    void setXfi(unsigned long i, VectorXf &vec);
-
-    void setPf(vector<MatrixXf> &Pf);
-
-    void setPfi(unsigned long i, MatrixXf &m);
-
-    void setDa(float *da);
-
-private:
-    float _w;
-    VectorXf _xv;
-    MatrixXf _Pv;
-    vector<VectorXf> _xf;
-    vector<MatrixXf> _Pf;
-    float *_da;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 // SLAM config Variables
@@ -114,8 +68,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Common functions
 ////////////////////////////////////////////////////////////////////////////////
-void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD,
-                      float &G, float rateG, float maxG, float dt);
+void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD, float &G, float rateG, float maxG, float dt);
 
 void predict_true(VectorXf &xv, float V, float G, float WB, float dt);
 
@@ -127,7 +80,7 @@ vector<VectorXf> compute_range_bearing(VectorXf &x, MatrixXf &lm);
 
 vector<int> find2(vector<float> &dx, vector<float> &dy, float phi, float rmax);
 
-void add_control_noise(float V, float G, MatrixXf &Q, int addnoise, float *VnGn);
+void add_control_noise(float V, float G, MatrixXf &Q, int add_noise, float *VnGn);
 
 void add_observation_noise(vector<VectorXf> &z, MatrixXf &R, int addnoise);
 
@@ -139,24 +92,15 @@ void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, Matr
 ////////////////////////////////////////////////////////////////////////////////
 // FastSLAM functions
 ////////////////////////////////////////////////////////////////////////////////
-void compute_jacobians(Particle &particle,
-                       vector<int> &idf,
-                       MatrixXf &R,
-                       vector<VectorXf> &zp,
-                       vector<MatrixXf> *Hv,
-                       vector<MatrixXf> *Hf,
-                       vector<MatrixXf> *Sf);
+void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv, vector<MatrixXf> *Hf, vector<MatrixXf> *Sf);
 
-
-void resample_particles(vector<Particle> &particles, int Nmin, int doresample);
+void resample_particles(vector<Particle> &particles, int Nmin, bool do_resample);
 
 void stratified_resample(VectorXf w, vector<int> &keep, float &Neff);
 
-void cumsum(VectorXf &w);
+void cumulative_sum(VectorXf &w);
 
-
-void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &table, int Nf, \
-                          vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
+void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_association_table, int Nf, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
 
 void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R);
 
@@ -165,14 +109,13 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
 ////////////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////////////
-void pi_to_pi(VectorXf &angle); //takes in array of floats, returna array
 float pi_to_pi(float ang);
 
 float pi_to_pi2(float ang);
 
 MatrixXf make_symmetric(MatrixXf &P);
 
-void TransformToGlobal(MatrixXf &p, VectorXf &b);
+void transform_to_global(MatrixXf &p, VectorXf &b);
 
 MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv);
 

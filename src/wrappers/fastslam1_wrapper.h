@@ -17,6 +17,7 @@
 
 #include "src/core.h"
 #include "wrapper_thread.h"
+#include "src/algorithms/fastslam1.h"
 
 using namespace std;
 using namespace Eigen;
@@ -34,11 +35,13 @@ public:
 
     float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-    vector<Particle> sim(MatrixXf &lm, MatrixXf &wp);
+    vector<Particle> sim(MatrixXf &landmarks, MatrixXf &waypoints);
 
 
 protected:
     void run();
+
+    FastSLAM1* algorithm;
 };
 
 #endif // __FASTSLAM_1_H__
