@@ -29,6 +29,9 @@ FastSLAM1_Wrapper::~FastSLAM1_Wrapper() {
 void FastSLAM1_Wrapper::run() {
     printf("FastSLAM 1\n\n");
 
+    // FIXME: force predict noise on
+    g_conf->SWITCH_PREDICT_NOISE = 1;
+
     MatrixXf landmarks; //landmark positions
     MatrixXf waypoints; //way points
 
@@ -98,10 +101,8 @@ void FastSLAM1_Wrapper::run() {
     g_plot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
                          y_min - (y_max - y_min) * 0.05, y_max + (y_max - y_min) * 0.05);
 
-    // FIXME: force predict noise on
-    g_conf->SWITCH_PREDICT_NOISE = 1;
 
-    //normally initialized configfile.h
+    // Normally initialized configfile.h
     MatrixXf Q(2, 2), R(2, 2);
 
     Q << pow(g_conf->sigmaV, 2), 0, 0, pow(g_conf->sigmaG, 2);
@@ -156,7 +157,6 @@ void FastSLAM1_Wrapper::run() {
         Re = 2 * R;
     }
 
-    vector<VectorXf> z; //range and bearings of visible landmarks
 
     pos_i = 0;
     time_all = 0.0;
@@ -174,8 +174,9 @@ void FastSLAM1_Wrapper::run() {
     float Vn, Gn;
     float V_ori = V;
     int cmd;
+    vector<VectorXf> z; // Range and bearings of visible landmarks
 
-    //Main loop
+    // Main loop
     while (isAlive) {
         if (runMode == SLAM_WAYPOINT) {
             if (iwp == -1) {
@@ -192,29 +193,29 @@ void FastSLAM1_Wrapper::run() {
         if (runMode == SLAM_INTERACTIVE) {
             getCommand(&cmd);
 
-            // no commands then continue
+            // No commands then continue
             if (cmd == -1) {
                 continue;
             }
 
             switch (cmd) {
                 case 1:
-                    // forward
+                    // Forward
                     V = V_ori;
                     G = 0.0;
                     break;
                 case 2:
-                    // backward
+                    // Backward
                     V = -V_ori;
                     G = 0.0;
                     break;
                 case 3:
-                    // turn left
+                    // Turn left
                     V = V_ori;
                     G = 30.0 * M_PI / 180.0;
                     break;
                 case 4:
-                    // turn right
+                    // Turn right
                     V = V_ori;
                     G = -30.0 * M_PI / 180.0;
                     break;
@@ -224,13 +225,17 @@ void FastSLAM1_Wrapper::run() {
             }
         }
 
-        // get true position
+        // Predict current position and angle
         predict_true(xtrue, V, G, g_conf->WHEELBASE, dt);
 
-        // add process noise
+        // Add process noise
         add_control_noise(V, G, Q, g_conf->SWITCH_CONTROL_NOISE, VnGn);
         Vn = VnGn[0];
         Gn = VnGn[1];
+
+        // @TODO what happens when the if statement is false and the predict happens but not the observation
+        // @TODO why does fastslam1 use Q and fastslam 2 use Qe
+        algorithm->predict(particles, xtrue, Vn, Gn, Q, g_conf->WHEELBASE, dt, g_conf->SWITCH_PREDICT_NOISE == 1, g_conf->SWITCH_HEADING_KNOWN == 1);
 
         dtsum += dt;
         bool observe = false;
@@ -239,24 +244,33 @@ void FastSLAM1_Wrapper::run() {
             observe = true;
             dtsum = 0;
 
-            //Compute true data, then add noise
-            vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
+            vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
 
-            //z is the range and bearing of the observed landmark
+            // Compute true data, then add noise
+            // z is the range and bearing of the observed landmark
             z = get_observations(xtrue, landmarks, ftag_visible, g_conf->MAX_RANGE);
             add_observation_noise(z, R, g_conf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xtrue);
 
-            algorithm->sim(particles, z, ftag_visible, data_association_table, R, g_conf->NEFFECTIVE, g_conf->SWITCH_RESAMPLE == 1);
+            // Compute (known) data associations
+            unsigned long Nf = particles[0].xf().size();
+            vector<int> idf;
+            vector<VectorXf> zf;
+            vector<VectorXf> zn;
+
+            data_associate_known(z, ftag_visible, data_association_table, Nf, zf, idf, zn);
+
+            // @TODO why does fastslam1 use R and fastslam 2 use Re
+            algorithm->update(particles, zf, zn, idf, z, ftag_visible, data_association_table, R, g_conf->NEFFECTIVE, g_conf->SWITCH_RESAMPLE == 1);
         }
 
 
-        // update status bar
+        // Update status bar
         time_all = time_all + dt;
         pos_i++;
 
-        // accelate drawing speed
+        // Accelate drawing speed
         if (pos_i % draw_skip != 0) {
             continue;
         }
@@ -304,17 +318,17 @@ void FastSLAM1_Wrapper::run() {
         }
         g_plot->setParticlesFea(arrParticlesFea_x, arrParticlesFea_y);
 
-        // add new position
+        // Add new position
         if (pos_i % 4 == 0) {
             g_plot->addPos(xtrue(0), xtrue(1));
             g_plot->addPosEst(x_mean, y_mean);
         }
 
-        // draw current position
+        // Draw current position
         g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2));
         g_plot->setCarPos(x_mean, y_mean, t_mean, 1);
 
-        // set laser lines
+        // Set laser lines
         g_plot->setLaserLines(plines);
 
         emit replot();

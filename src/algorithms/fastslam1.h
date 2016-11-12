@@ -19,10 +19,14 @@ public:
 
     ~FastSLAM1();
 
-    void sim (vector<Particle> particles, vector<VectorXf> &z, vector<int> &ftag_vibisle, VectorXf &data_association_table, MatrixXf &R, int neffective, bool do_resample);
+    void predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random, bool heading_known);
+
+    void update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
+                vector<VectorXf> &z, vector<int> &ftag_visible, VectorXf &data_association_table, MatrixXf &R,
+                int neffective, bool do_resample);
 
 protected:
-    void predict(Particle &particle, float V, float G, MatrixXf &Q, float WB, float dt, int addrandom);
+    void predict_state(Particle &particle, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random);
     float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 };
 

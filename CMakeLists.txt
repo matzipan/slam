@@ -16,6 +16,7 @@ set(SOURCE_FILES
         src/wrappers/fastslam2_wrapper.cpp
         src/algorithms/ekfslam.cpp
         src/algorithms/fastslam1.cpp
+        src/algorithms/fastslam2.cpp
         src/particle.cpp
         src/core.cpp
         src/plot.cpp
@@ -24,7 +25,7 @@ set(SOURCE_FILES
         src/main.cpp
         src/algorithms/ekfslam.cpp
         libs/qcustomplot/qcustomplot.cpp
-       )
+        )
 
 set (PKG_DEPS
         QtCore
