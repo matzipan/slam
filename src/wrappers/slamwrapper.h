@@ -40,6 +40,14 @@ public:
     /// Set map filename
     void setMap(std::string &fname);
 
+    /// Loads information and performs initial adjustment on the plot
+    void configurePlot();
+    /// Adds the waypoints and landmarks to the plot
+    void addWaypointsAndLandmarks();
+    /// Adjusts the range of the plot to show all information
+    void setPlotRange();
+
+
 
 signals:
     void replot();
@@ -65,6 +73,8 @@ protected:
     MatrixXf landmarks;
     /// Waypoints
     MatrixXf waypoints;
+
+    int pos_i = 0;
 };
 
 #endif // SLAM_THREAD_H

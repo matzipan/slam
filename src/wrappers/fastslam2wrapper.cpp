@@ -36,19 +36,12 @@ void FastSLAM2Wrapper::run() {
         printf("Sampling from optimal proposal is usually ON for FastSLAM 2.0\n");
     }
 
-    int pos_i = 0;
     double time_all;
-
-    int m, n;
 
     QString msgAll;
 
     QVector<double> arrParticles_x, arrParticles_y;
     QVector<double> arrParticlesFea_x, arrParticlesFea_y;
-
-    QVector<double> arrWaypoints_x, arrWaypoints_y;
-    QVector<double> arrLandmarks_x, arrLandmarks_y;
-    double x_min, x_max, y_min, y_max;
 
     double w_max;
     double x_mean, y_mean, t_mean;
@@ -57,51 +50,9 @@ void FastSLAM2Wrapper::run() {
 
     gConf->i("draw_skip", draw_skip);
 
-    x_min = 1e30;
-    x_max = -1e30;
-    y_min = 1e30;
-    y_max = -1e30;
-
     read_slam_input_file(map, &landmarks, &waypoints);
 
-    // draw waypoints
-    if (runMode == SLAM_WAYPOINT) {
-        m = waypoints.rows();
-        n = waypoints.cols();
-
-        for (int i = 0; i < n; i++) {
-            arrWaypoints_x.push_back(waypoints(0, i));
-            arrWaypoints_y.push_back(waypoints(1, i));
-
-            if (waypoints(0, i) > x_max) { x_max = waypoints(0, i); }
-            if (waypoints(0, i) < x_min) { x_min = waypoints(0, i); }
-            if (waypoints(1, i) > y_max) { y_max = waypoints(1, i); }
-            if (waypoints(1, i) < y_min) { y_min = waypoints(1, i); }
-        }
-
-        gPlot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
-    }
-
-    // draw landmarks
-    m = landmarks.rows();
-    n = landmarks.cols();
-    for (int i = 0; i < n; i++) {
-        arrLandmarks_x.push_back(landmarks(0, i));
-        arrLandmarks_y.push_back(landmarks(1, i));
-
-        if (landmarks(0, i) > x_max) { x_max = landmarks(0, i); }
-        if (landmarks(0, i) < x_min) { x_min = landmarks(0, i); }
-        if (landmarks(1, i) > y_max) { y_max = landmarks(1, i); }
-        if (landmarks(1, i) < y_min) { y_min = landmarks(1, i); }
-    }
-
-    gPlot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
-
-    gPlot->setCarSize(gConf->WHEELBASE, 0);
-    gPlot->setCarSize(gConf->WHEELBASE, 1);
-    gPlot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
-                         y_min - (y_max - y_min) * 0.05, y_max + (y_max - y_min) * 0.05);
-
+    configurePlot();
 
     // Normally initialized configfile.h
     MatrixXf Q(2, 2), R(2, 2);
