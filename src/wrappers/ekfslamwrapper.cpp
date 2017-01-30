@@ -129,10 +129,8 @@ void EKFSLAMWrapper::run() {
         emit showMessage(msgAll);
 
         // Add new position
-        if (currentIteration % 4 == 0) {
-            gPlot->addTruePosition(xTrue(0), xTrue(1));
-            gPlot->addEstimatedPosition(x(0), x(1));
-        }
+        gPlot->addTruePosition(xTrue(0), xTrue(1));
+        gPlot->addEstimatedPosition(x(0), x(1));
 
         // Draw current position
         gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));

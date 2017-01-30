@@ -187,10 +187,8 @@ void FastSLAM1Wrapper::run() {
         gPlot->setParticlesFea(arrParticlesFea_x, arrParticlesFea_y);
 
         // Add new position
-        if (currentIteration % 4 == 0) {
-            gPlot->addTruePosition(xTrue(0), xTrue(1));
-            gPlot->addEstimatedPosition(x_mean, y_mean);
-        }
+        gPlot->addTruePosition(xTrue(0), xTrue(1));
+        gPlot->addEstimatedPosition(x_mean, y_mean);
 
         // Draw current position
         gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
