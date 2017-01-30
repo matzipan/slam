@@ -44,7 +44,7 @@ void FastSLAM2Wrapper::run() {
     QVector<double> arrParticlesFea_x, arrParticlesFea_y;
 
     double w_max;
-    double x_mean, y_mean, t_mean;
+    double x_mean, y_mean, t_max;
 
     int draw_skip = 4;
 
@@ -158,22 +158,20 @@ void FastSLAM2Wrapper::run() {
         // get mean x, y
         x_mean = 0;
         y_mean = 0;
-        t_mean = 0;
+        // The angle corresponding to the particle with the highest weight
+        t_max = 0;
         w_max = -1e30;
         for (int i = 0; i < particles.size(); i++) {
             if (particles[i].w() > w_max) {
                 w_max = particles[i].w();
-                t_mean = particles[i].xv()(2);
+                t_max = particles[i].xv()(2);
             }
             x_mean += particles[i].xv()(0);
             y_mean += particles[i].xv()(1);
-            //t_mean += pi_to_pi(particles[i].xv()(2));
         }
 
         x_mean = x_mean / particles.size();
         y_mean = y_mean / particles.size();
-        //t_mean = t_mean / NPARTICLES;
-        //printf("   x, y, t = %f %f %f\n", x_mean, y_mean, t_mean);
 
         // Draw particles
         arrParticles_x.clear();
@@ -203,7 +201,7 @@ void FastSLAM2Wrapper::run() {
 
         // Draw current position
         gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarEstimatedPosition(x_mean, y_mean, t_mean);
+        gPlot->setCarEstimatedPosition(x_mean, y_mean, t_max);
 
         // Set laser lines
         gPlot->setLaserLines(plines);
