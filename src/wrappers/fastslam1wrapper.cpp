@@ -190,13 +190,13 @@ void FastSLAM1Wrapper::run() {
 
         // Add new position
         if (currentIteration % 4 == 0) {
-            gPlot->addPos(xTrue(0), xTrue(1));
-            gPlot->addPosEst(x_mean, y_mean);
+            gPlot->addTruePosition(xTrue(0), xTrue(1));
+            gPlot->addEstimatedPosition(x_mean, y_mean);
         }
 
         // Draw current position
-        gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarPos(x_mean, y_mean, t_mean, 1);
+        gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
+        gPlot->setCarEstimatedPosition(x_mean, y_mean, t_mean);
 
         // Set laser lines
         gPlot->setLaserLines(plines);

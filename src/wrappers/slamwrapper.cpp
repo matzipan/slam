@@ -89,12 +89,12 @@ void SLAMWrapper::configurePlot() {
     setPlotRange();
 
     // Add initial position
-    gPlot->addPos(xTrue(0), xTrue(1));
-    gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2), 0);
+    gPlot->addTruePosition(xTrue(0), xTrue(1));
+    gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
 
     // Add initial position estimate
-    gPlot->addPosEst(xTrue(0), xTrue(1));
-    gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2), 1);
+    gPlot->addEstimatedPosition(xTrue(0), xTrue(1));
+    gPlot->setCarEstimatedPosition(xTrue(0), xTrue(1), xTrue(2));
 
     emit replot();
 }

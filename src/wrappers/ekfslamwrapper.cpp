@@ -116,11 +116,11 @@ void EKFSLAMWrapper::run() {
                        idf, zn,
                        data_association_table, gConf->SWITCH_BATCH_UPDATE == 1, R);
 
-        // update status bar
+        // Update status bar
         time_all = time_all + dt;
         currentIteration++;
 
-        // accelate drawing speed
+        // Accelate drawing speed
         if (currentIteration % draw_skip != 0) {
             continue;
         }
@@ -128,20 +128,20 @@ void EKFSLAMWrapper::run() {
         msgAll.sprintf("[%6d] %7.3f", currentIteration, time_all);
         emit showMessage(msgAll);
 
-        // add new position
+        // Add new position
         if (currentIteration % 4 == 0) {
-            gPlot->addPos(xTrue(0), xTrue(1));
-            gPlot->addPosEst(x(0), x(1));
+            gPlot->addTruePosition(xTrue(0), xTrue(1));
+            gPlot->addEstimatedPosition(x(0), x(1));
         }
 
-        // draw current position
-        gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarPos(x(0), x(1), x(2), 1);
+        // Draw current position
+        gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
+        gPlot->setCarEstimatedPosition(x(0), x(1), x(2));
 
-        // set laser lines
+        // Set laser lines
         gPlot->setLaserLines(plines);
 
-        // set covariance ellipse lines
+        // Set covariance ellipse lines
         MatrixXf x_(2, 1);
         MatrixXf P_ = P.block(0, 0, 2, 2);
         x_(0) = x(0);

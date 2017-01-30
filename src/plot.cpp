@@ -467,7 +467,7 @@ void Plot::clearCovEllipse(void) {
     muxData->unlock();
 }
 
-void Plot::addPos(double x, double y) {
+void Plot::addTruePosition(double x, double y) {
     muxData->lock();
 
     arrPos_x.push_back(x);
@@ -478,7 +478,7 @@ void Plot::addPos(double x, double y) {
     muxData->unlock();
 }
 
-void Plot::addPosEst(double x, double y) {
+void Plot::addEstimatedPosition(double x, double y) {
     muxData->lock();
 
     arrEstPos_x.push_back(x);
@@ -509,6 +509,14 @@ void Plot::addPosEst(double x, double y) {
     muxData->unlock();
 }
 
+
+void Plot::setCarTruePosition(double x, double y, double t) {
+    setCarPos(x, y, t, 0);
+}
+
+void Plot::setCarEstimatedPosition(double x, double y, double t) {
+    setCarPos(x, y, t, 1);
+}
 
 void Plot::setCarPos(double x, double y, double t, int idx) {
     muxData->lock();

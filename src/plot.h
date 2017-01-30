@@ -37,15 +37,17 @@ public:
 
     void clearCovEllipse(void);
 
-    void addPos(double x, double y);
+    void addTruePosition(double x, double y);
 
-    void addPosEst(double x, double y);
-
-    void setCarPos(double x, double y, double t, int id = 0);
+    void addEstimatedPosition(double x, double y);
 
     void setCarSize(double s, int id = 0);
 
     void setCarModel(double *parm, int id = 0);
+
+    void setCarTruePosition(double x, double y, double t);
+
+    void setCarEstimatedPosition(double x, double y, double t);
 
     void setPlotRange(double xmin, double xmax, double ymin, double ymax);
 
@@ -88,6 +90,8 @@ protected:
     void resizeEvent(QResizeEvent *event);
 
     void timerEvent(QTimerEvent *event);
+
+    void setCarPos(double x, double y, double t, int id = 0);
 
 private:
     QCustomPlot *customPlot;
