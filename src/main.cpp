@@ -7,12 +7,12 @@
 
 
 #include "plot.h"
-#include "src/wrappers/wrapper_thread.h"
+#include "src/wrappers/slamwrapper.h"
 #include "core.h"
 
-#include "src/wrappers/fastslam1_wrapper.h"
-#include "src/wrappers/fastslam2_wrapper.h"
-#include "src/wrappers/ekfslam_wrapper.h"
+#include "src/wrappers/fastslam1wrapper.h"
+#include "src/wrappers/fastslam2wrapper.h"
+#include "src/wrappers/ekfslamwrapper.h"
 
 using namespace std;
 
@@ -20,8 +20,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 // global variables
 ////////////////////////////////////////////////////////////////////////////////
-Plot *g_plot;
-Conf *g_conf;
+Plot *gPlot;
+Conf *gConf;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ void print_usage(char *argv[]) {
 int main(int argc, char *argv[]) {
     int i;
     int ret = 0;
-    Wrapper_Thread *slam_thread;
+    SLAMWrapper *slam_thread;
 
     string mode, method;
     string fn_screenshot;
@@ -56,14 +56,14 @@ int main(int argc, char *argv[]) {
     int ww, wh;
 
     int slam_method = 1;
-    Wrapper_Thread::RunMode slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
+    SLAMWrapper::RunMode slam_runmode = SLAMWrapper::SLAM_WAYPOINT;
     string map_fname = "../data/example_webmap.mat";
     string conf_fname;
 
     Conf conf;
     StringArray arrFN;
 
-    g_conf = &conf;
+    gConf = &conf;
 
     dbg_stacktrace_setup();
 
@@ -96,8 +96,8 @@ int main(int argc, char *argv[]) {
     // get mode
     mode = "waypoints";
     conf.s("mode", mode);
-    if (mode == "waypoints") slam_runmode = Wrapper_Thread::SLAM_WAYPOINT;
-    if (mode == "interactive") slam_runmode = Wrapper_Thread::SLAM_INTERACTIVE;
+    if (mode == "waypoints") slam_runmode = SLAMWrapper::SLAM_WAYPOINT;
+    if (mode == "interactive") slam_runmode = SLAMWrapper::SLAM_INTERACTIVE;
 
     // get slam method
     method = "EKF1";
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
 
     // SLAM plot window
     Plot w;
-    g_plot = &w;
+    gPlot = &w;
     w.show();
     w.setGeometry(10, 10, ww, wh);
     w.setScreenShot_fname(fn_screenshot);
@@ -133,13 +133,13 @@ int main(int argc, char *argv[]) {
     // create SLAM thread
     switch (slam_method) {
         case 1:
-            slam_thread = new FastSLAM1_Wrapper;
+            slam_thread = new FastSLAM1Wrapper;
             break;
         case 2:
-            slam_thread = new FastSLAM2_Wrapper;
+            slam_thread = new FastSLAM2Wrapper;
             break;
         case 3:
-            slam_thread = new EKFSLAM_Wrapper;
+            slam_thread = new EKFSLAMWrapper;
             break;
         default:
             return -1;

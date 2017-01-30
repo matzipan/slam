@@ -11,16 +11,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(SOURCE_FILES
-        src/wrappers/ekfslam_wrapper.cpp
-        src/wrappers/fastslam1_wrapper.cpp
-        src/wrappers/fastslam2_wrapper.cpp
+        src/wrappers/ekfslamwrapper.cpp
+        src/wrappers/fastslam1wrapper.cpp
+        src/wrappers/fastslam2wrapper.cpp
         src/algorithms/ekfslam.cpp
         src/algorithms/fastslam1.cpp
         src/algorithms/fastslam2.cpp
         src/particle.cpp
         src/core.cpp
         src/plot.cpp
-        src/wrappers/wrapper_thread.cpp
+        src/wrappers/slamwrapper.cpp
         src/utils.cpp
         src/main.cpp
         src/algorithms/ekfslam.cpp

@@ -1,5 +1,5 @@
-#ifndef __EKFSLAM_WRAPPER_H__
-#define __EKFSLAM_WRAPPER_H__
+#ifndef __FASTSLAM_2_H__
+#define __FASTSLAM_2_H__
 
 #include <QtGui>
 #include <QMutex>
@@ -16,25 +16,24 @@
 #include <Eigen/Dense>
 
 #include "src/core.h"
-#include "src/algorithms/ekfslam.h"
-#include "wrapper_thread.h"
+#include "slamwrapper.h"
+#include "src/algorithms/fastslam2.h"
 
 using namespace std;
 using namespace Eigen;
 
-
-class EKFSLAM_Wrapper : public Wrapper_Thread {
-    Q_OBJECT
+class FastSLAM2Wrapper : public SLAMWrapper {
+Q_OBJECT
 
 public:
-    EKFSLAM_Wrapper(QObject *parent = 0);
+    FastSLAM2Wrapper(QObject *parent = 0);
 
-    ~EKFSLAM_Wrapper();
+    ~FastSLAM2Wrapper();
 
 protected:
     void run();
 
-    EKFSLAM *algorithm;
+    FastSLAM2 *algorithm;
 };
 
-#endif // __EKFSLAM_WRAPPER_H__
+#endif // __FASTSLAM_2_H__

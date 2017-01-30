@@ -7,30 +7,25 @@
 #include "src/core.h"
 #include "src/plot.h"
 #include "src/algorithms/ekfslam.h"
-#include "ekfslam_wrapper.h"
+#include "ekfslamwrapper.h"
 
 using namespace std;
 using namespace Eigen;
 
 // global variable
-extern Plot *g_plot;
-extern Conf *g_conf;
+extern Plot *gPlot;
+extern Conf *gConf;
 
 
-EKFSLAM_Wrapper::EKFSLAM_Wrapper(QObject *parent) : Wrapper_Thread(parent) {
+EKFSLAMWrapper::EKFSLAMWrapper(QObject *parent) : SLAMWrapper(parent) {
     algorithm = new EKFSLAM();
 }
 
-EKFSLAM_Wrapper::~EKFSLAM_Wrapper() {
-    wait();
-}
+EKFSLAMWrapper::~EKFSLAMWrapper() { }
 
 
-void EKFSLAM_Wrapper::run() {
+void EKFSLAMWrapper::run() {
     printf("EKFSLAM\n\n");
-
-    MatrixXf landmarks; //landmark positions
-    MatrixXf waypoints; //way points
 
     int pos_i = 0;
     double time_all;
@@ -45,14 +40,14 @@ void EKFSLAM_Wrapper::run() {
 
     int draw_skip = 4;
 
-    g_conf->i("draw_skip", draw_skip);
+    gConf->i("draw_skip", draw_skip);
 
     x_min = 1e30;
     x_max = -1e30;
     y_min = 1e30;
     y_max = -1e30;
 
-    read_slam_input_file(fnMap, &landmarks, &waypoints);
+    read_slam_input_file(map, &landmarks, &waypoints);
 
     // draw waypoints
     if (runMode == SLAM_WAYPOINT) {
@@ -69,7 +64,7 @@ void EKFSLAM_Wrapper::run() {
             if (waypoints(1, i) < y_min) { y_min = waypoints(1, i); }
         }
 
-        g_plot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
+        gPlot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
     }
 
     // draw landmarks
@@ -85,22 +80,22 @@ void EKFSLAM_Wrapper::run() {
         if (landmarks(1, i) < y_min) { y_min = landmarks(1, i); }
     }
 
-    g_plot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
+    gPlot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
 
-    g_plot->setCarSize(g_conf->WHEELBASE, 0);
-    g_plot->setCarSize(g_conf->WHEELBASE, 1);
-    g_plot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
+    gPlot->setCarSize(gConf->WHEELBASE, 0);
+    gPlot->setCarSize(gConf->WHEELBASE, 1);
+    gPlot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
                          y_min - (y_max - y_min) * 0.05, y_max + (y_max - y_min) * 0.05);
 
     //normally initialized configfile.h
     MatrixXf Q(2, 2), R(2, 2);
     float sigma_phi;           // radians, heading uncertainty
 
-    Q << pow(g_conf->sigmaV, 2), 0, 0, pow(g_conf->sigmaG, 2);
+    Q << pow(gConf->sigmaV, 2), 0, 0, pow(gConf->sigmaG, 2);
 
-    R << g_conf->sigmaR * g_conf->sigmaR, 0, 0, g_conf->sigmaB * g_conf->sigmaB;
+    R << gConf->sigmaR * gConf->sigmaR, 0, 0, gConf->sigmaB * gConf->sigmaB;
 
-    sigma_phi = g_conf->sigmaT;
+    sigma_phi = gConf->sigmaT;
 
     VectorXf xtrue(3);
     VectorXf x(3, 1);
@@ -110,7 +105,7 @@ void EKFSLAM_Wrapper::run() {
     x.setZero(3);
     P.setZero(3, 3);
 
-    float dt = g_conf->DT_CONTROLS; //change in time btw predicts
+    float dt = gConf->DT_CONTROLS; //change in time btw predicts
     float dtsum = 0; //change in time since last observation
 
     vector<int> ftag; //identifier for each landmark
@@ -125,20 +120,20 @@ void EKFSLAM_Wrapper::run() {
     }
 
     int iwp = 0; //index to first waypoint
-    int nloop = g_conf->NUMBER_LOOPS;
-    float V = g_conf->V; // default velocity
+    int nloop = gConf->NUMBER_LOOPS;
+    float V = gConf->V; // default velocity
     float G = 0; //initial steer angle
     MatrixXf plines; //will later change to list of points
     MatrixXf covLines;   // covariance ellipse lines
 
-    if (g_conf->SWITCH_SEED_RANDOM != 0) {
-        srand(g_conf->SWITCH_SEED_RANDOM);
+    if (gConf->SWITCH_SEED_RANDOM != 0) {
+        srand(gConf->SWITCH_SEED_RANDOM);
     }
 
     MatrixXf Qe = MatrixXf(Q);
     MatrixXf Re = MatrixXf(R);
 
-    if (g_conf->SWITCH_INFLATE_NOISE == 1) {
+    if (gConf->SWITCH_INFLATE_NOISE == 1) {
         Qe = 2 * Q;
         Re = 8 * R;
     }
@@ -153,11 +148,11 @@ void EKFSLAM_Wrapper::run() {
     time_all = 0.0;
 
     // initial position
-    g_plot->addPos(xtrue(0), xtrue(1));
-    g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 0);
+    gPlot->addPos(xtrue(0), xtrue(1));
+    gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 0);
 
-    g_plot->addPosEst(xtrue(0), xtrue(1));
-    g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 1);
+    gPlot->addPosEst(xtrue(0), xtrue(1));
+    gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 1);
 
     emit replot();
 
@@ -173,7 +168,7 @@ void EKFSLAM_Wrapper::run() {
                 break;
             }
 
-            compute_steering(xtrue, waypoints, iwp, g_conf->AT_WAYPOINT, G, g_conf->RATEG, g_conf->MAXG, dt);
+            compute_steering(xtrue, waypoints, iwp, gConf->AT_WAYPOINT, G, gConf->RATEG, gConf->MAXG, dt);
 
             if (iwp == -1 && nloop > 1) {
                 iwp = 0;
@@ -216,17 +211,17 @@ void EKFSLAM_Wrapper::run() {
         }
 
         // get true position
-        predict_true(xtrue, V, G, g_conf->WHEELBASE, dt);
+        predict_true(xtrue, V, G, gConf->WHEELBASE, dt);
 
         // add process noise
-        add_control_noise(V, G, Q, g_conf->SWITCH_CONTROL_NOISE, VnGn);
+        add_control_noise(V, G, Q, gConf->SWITCH_CONTROL_NOISE, VnGn);
         Vn = VnGn[0];
         Gn = VnGn[1];
 
         dtsum += dt;
         bool observe = false;
 
-        if (dtsum >= g_conf->DT_OBSERVE) {
+        if (dtsum >= gConf->DT_OBSERVE) {
             observe = true;
             dtsum = 0;
 
@@ -234,19 +229,19 @@ void EKFSLAM_Wrapper::run() {
             vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
 
             //z is the range and bearing of the observed landmark
-            z = get_observations(xtrue, landmarks, ftag_visible, g_conf->MAX_RANGE);
-            add_observation_noise(z, R, g_conf->SWITCH_SENSOR_NOISE);
+            z = get_observations(xtrue, landmarks, ftag_visible, gConf->MAX_RANGE);
+            add_observation_noise(z, R, gConf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xtrue);
         }
 
         // @TODO what happens if this is moved inside the if(OBSERVE) branch?
         algorithm->sim(landmarks, waypoints, x, P, Vn, Gn, Qe,
-                       g_conf->WHEELBASE, dt, xtrue(2) + g_conf->sigmaT * unifRand(), g_conf->SWITCH_HEADING_KNOWN,
+                       gConf->WHEELBASE, dt, xtrue(2) + gConf->sigmaT * unifRand(), gConf->SWITCH_HEADING_KNOWN,
                        sigma_phi, ftag,
-                       z, Re, g_conf->GATE_REJECT, g_conf->GATE_AUGMENT, g_conf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
+                       z, Re, gConf->GATE_REJECT, gConf->GATE_AUGMENT, gConf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
                        idf, zn,
-                       data_association_table, g_conf->SWITCH_BATCH_UPDATE == 1, R);
+                       data_association_table, gConf->SWITCH_BATCH_UPDATE == 1, R);
 
         // update status bar
         time_all = time_all + dt;
@@ -262,16 +257,16 @@ void EKFSLAM_Wrapper::run() {
 
         // add new position
         if (pos_i % 4 == 0) {
-            g_plot->addPos(xtrue(0), xtrue(1));
-            g_plot->addPosEst(x(0), x(1));
+            gPlot->addPos(xtrue(0), xtrue(1));
+            gPlot->addPosEst(x(0), x(1));
         }
 
         // draw current position
-        g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2));
-        g_plot->setCarPos(x(0), x(1), x(2), 1);
+        gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2));
+        gPlot->setCarPos(x(0), x(1), x(2), 1);
 
         // set laser lines
-        g_plot->setLaserLines(plines);
+        gPlot->setLaserLines(plines);
 
         // set covariance ellipse lines
         MatrixXf x_(2, 1);
@@ -280,7 +275,7 @@ void EKFSLAM_Wrapper::run() {
         x_(1) = x(1);
 
         make_covariance_ellipse(x_, P_, covLines);
-        g_plot->setCovEllipse(covLines, 0);
+        gPlot->setCovEllipse(covLines, 0);
 
         int j = (x.size() - 3) / 2;
         for (int i = 0; i < j; i++) {
@@ -289,7 +284,7 @@ void EKFSLAM_Wrapper::run() {
             P_ = P.block(3 + i * 2, 3 + i * 2, 2, 2);
 
             make_covariance_ellipse(x_, P_, covLines);
-            g_plot->setCovEllipse(covLines, i + 1);
+            gPlot->setCovEllipse(covLines, i + 1);
         }
 
         emit replot();

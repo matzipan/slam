@@ -8,38 +8,27 @@
 #include "src/core.h"
 #include "src/plot.h"
 #include "src/particle.h"
-#include "src/algorithms/fastslam2.h"
-#include "fastslam2_wrapper.h"
+#include "src/algorithms/fastslam1.h"
+#include "fastslam1wrapper.h"
 
 using namespace std;
 using namespace Eigen;
 
 // global variable
-extern Plot *g_plot;
-extern Conf *g_conf;
+extern Plot *gPlot;
+extern Conf *gConf;
 
-
-FastSLAM2_Wrapper::FastSLAM2_Wrapper(QObject *parent) : Wrapper_Thread(parent) {
-    algorithm = new FastSLAM2();
+FastSLAM1Wrapper::FastSLAM1Wrapper(QObject *parent) : SLAMWrapper(parent) {
+    algorithm = new FastSLAM1();
 }
 
-FastSLAM2_Wrapper::~FastSLAM2_Wrapper() {
-    wait();
-}
+FastSLAM1Wrapper::~FastSLAM1Wrapper() { }
 
+void FastSLAM1Wrapper::run() {
+    printf("FastSLAM 1\n\n");
 
-void FastSLAM2_Wrapper::run() {
-    printf("FastSLAM 2\n\n");
-
-    if (g_conf->SWITCH_PREDICT_NOISE) {
-        printf("Sampling from predict noise usually OFF for FastSLAM 2.0\n");
-    }
-    if (g_conf->SWITCH_SAMPLE_PROPOSAL == 0) {
-        printf("Sampling from optimal proposal is usually ON for FastSLAM 2.0\n");
-    }
-
-    MatrixXf landmarks; //landmark positions
-    MatrixXf waypoints; //way points
+    // FIXME: force predict noise on
+    gConf->SWITCH_PREDICT_NOISE = 1;
 
     int pos_i = 0;
     double time_all;
@@ -60,14 +49,14 @@ void FastSLAM2_Wrapper::run() {
 
     int draw_skip = 4;
 
-    g_conf->i("draw_skip", draw_skip);
+    gConf->i("draw_skip", draw_skip);
 
     x_min = 1e30;
     x_max = -1e30;
     y_min = 1e30;
     y_max = -1e30;
 
-    read_slam_input_file(fnMap, &landmarks, &waypoints);
+    read_slam_input_file(map, &landmarks, &waypoints);
 
     // draw waypoints
     if (runMode == SLAM_WAYPOINT) {
@@ -84,7 +73,7 @@ void FastSLAM2_Wrapper::run() {
             if (waypoints(1, i) < y_min) { y_min = waypoints(1, i); }
         }
 
-        g_plot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
+        gPlot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
     }
 
     // draw landmarks
@@ -100,24 +89,24 @@ void FastSLAM2_Wrapper::run() {
         if (landmarks(1, i) < y_min) { y_min = landmarks(1, i); }
     }
 
-    g_plot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
+    gPlot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
 
-    g_plot->setCarSize(g_conf->WHEELBASE, 0);
-    g_plot->setCarSize(g_conf->WHEELBASE, 1);
-    g_plot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
+    gPlot->setCarSize(gConf->WHEELBASE, 0);
+    gPlot->setCarSize(gConf->WHEELBASE, 1);
+    gPlot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
                          y_min - (y_max - y_min) * 0.05, y_max + (y_max - y_min) * 0.05);
 
 
     // Normally initialized configfile.h
     MatrixXf Q(2, 2), R(2, 2);
 
-    Q << pow(g_conf->sigmaV, 2), 0, 0, pow(g_conf->sigmaG, 2);
+    Q << pow(gConf->sigmaV, 2), 0, 0, pow(gConf->sigmaG, 2);
 
-    R << g_conf->sigmaR * g_conf->sigmaR, 0, 0, g_conf->sigmaB * g_conf->sigmaB;
+    R << gConf->sigmaR * gConf->sigmaR, 0, 0, gConf->sigmaB * gConf->sigmaB;
 
 
     //vector of particles (their count will change)
-    vector<Particle> particles(g_conf->NPARTICLES);
+    vector<Particle> particles(gConf->NPARTICLES);
     for (unsigned long i = 0; i < particles.size(); i++) {
         particles[i] = Particle();
     }
@@ -131,7 +120,7 @@ void FastSLAM2_Wrapper::run() {
     VectorXf xtrue(3);
     xtrue.setZero();
 
-    float dt = g_conf->DT_CONTROLS; //change in time btw predicts
+    float dt = gConf->DT_CONTROLS; //change in time btw predicts
     float dtsum = 0; //change in time since last observation
 
     vector<int> ftag; //identifier for each landmark
@@ -146,19 +135,19 @@ void FastSLAM2_Wrapper::run() {
     }
 
     int iwp = 0; //index to first waypoint
-    int nloop = g_conf->NUMBER_LOOPS;
-    float V = g_conf->V; // default velocity
+    int nloop = gConf->NUMBER_LOOPS;
+    float V = gConf->V; // default velocity
     float G = 0; //initial steer angle
     MatrixXf plines; //will later change to list of points
 
-    if (g_conf->SWITCH_SEED_RANDOM != 0) {
-        srand(g_conf->SWITCH_SEED_RANDOM);
+    if (gConf->SWITCH_SEED_RANDOM != 0) {
+        srand(gConf->SWITCH_SEED_RANDOM);
     }
 
     MatrixXf Qe = MatrixXf(Q);
     MatrixXf Re = MatrixXf(R);
 
-    if (g_conf->SWITCH_INFLATE_NOISE == 1) {
+    if (gConf->SWITCH_INFLATE_NOISE == 1) {
         Qe = 2 * Q;
         Re = 2 * R;
     }
@@ -168,11 +157,11 @@ void FastSLAM2_Wrapper::run() {
     time_all = 0.0;
 
     // initial position
-    g_plot->addPos(xtrue(0), xtrue(1));
-    g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 0);
+    gPlot->addPos(xtrue(0), xtrue(1));
+    gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 0);
 
-    g_plot->addPosEst(xtrue(0), xtrue(1));
-    g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 1);
+    gPlot->addPosEst(xtrue(0), xtrue(1));
+    gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2), 1);
 
     emit replot();
 
@@ -189,7 +178,7 @@ void FastSLAM2_Wrapper::run() {
                 break;
             }
 
-            compute_steering(xtrue, waypoints, iwp, g_conf->AT_WAYPOINT, G, g_conf->RATEG, g_conf->MAXG, dt);
+            compute_steering(xtrue, waypoints, iwp, gConf->AT_WAYPOINT, G, gConf->RATEG, gConf->MAXG, dt);
 
             if (iwp == -1 && nloop > 1) {
                 iwp = 0;
@@ -232,21 +221,21 @@ void FastSLAM2_Wrapper::run() {
         }
 
         // Predict current position and angle
-        predict_true(xtrue, V, G, g_conf->WHEELBASE, dt);
+        predict_true(xtrue, V, G, gConf->WHEELBASE, dt);
 
         // Add process noise
-        add_control_noise(V, G, Q, g_conf->SWITCH_CONTROL_NOISE, VnGn);
+        add_control_noise(V, G, Q, gConf->SWITCH_CONTROL_NOISE, VnGn);
         Vn = VnGn[0];
         Gn = VnGn[1];
 
         // @TODO what happens when the if statement is false and the predict happens but not the observation
         // @TODO why does fastslam1 use Q and fastslam 2 use Qe
-        algorithm->predict(particles, xtrue, Vn, Gn, Qe, g_conf->WHEELBASE, dt, g_conf->SWITCH_PREDICT_NOISE == 1, g_conf->SWITCH_HEADING_KNOWN == 1);
+        algorithm->predict(particles, xtrue, Vn, Gn, Q, gConf->WHEELBASE, dt, gConf->SWITCH_PREDICT_NOISE == 1, gConf->SWITCH_HEADING_KNOWN == 1);
 
         dtsum += dt;
         bool observe = false;
 
-        if (dtsum >= g_conf->DT_OBSERVE) {
+        if (dtsum >= gConf->DT_OBSERVE) {
             observe = true;
             dtsum = 0;
 
@@ -254,8 +243,8 @@ void FastSLAM2_Wrapper::run() {
 
             // Compute true data, then add noise
             // z is the range and bearing of the observed landmark
-            z = get_observations(xtrue, landmarks, ftag_visible, g_conf->MAX_RANGE);
-            add_observation_noise(z, R, g_conf->SWITCH_SENSOR_NOISE);
+            z = get_observations(xtrue, landmarks, ftag_visible, gConf->MAX_RANGE);
+            add_observation_noise(z, R, gConf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xtrue);
 
@@ -268,7 +257,7 @@ void FastSLAM2_Wrapper::run() {
             data_associate_known(z, ftag_visible, data_association_table, Nf, zf, idf, zn);
 
             // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, z, ftag_visible, data_association_table, Re, g_conf->NEFFECTIVE, g_conf->SWITCH_RESAMPLE == 1);
+            algorithm->update(particles, zf, zn, idf, z, ftag_visible, data_association_table, R, gConf->NEFFECTIVE, gConf->SWITCH_RESAMPLE == 1);
         }
 
 
@@ -311,7 +300,7 @@ void FastSLAM2_Wrapper::run() {
             arrParticles_x.push_back(particles[i].xv()(0));
             arrParticles_y.push_back(particles[i].xv()(1));
         }
-        g_plot->setParticles(arrParticles_x, arrParticles_y);
+        gPlot->setParticles(arrParticles_x, arrParticles_y);
 
         // Draw feature particles
         arrParticlesFea_x.clear();
@@ -322,20 +311,20 @@ void FastSLAM2_Wrapper::run() {
                 arrParticlesFea_y.push_back(particles[i].xf()[j](1));
             }
         }
-        g_plot->setParticlesFea(arrParticlesFea_x, arrParticlesFea_y);
+        gPlot->setParticlesFea(arrParticlesFea_x, arrParticlesFea_y);
 
         // Add new position
         if (pos_i % 4 == 0) {
-            g_plot->addPos(xtrue(0), xtrue(1));
-            g_plot->addPosEst(x_mean, y_mean);
+            gPlot->addPos(xtrue(0), xtrue(1));
+            gPlot->addPosEst(x_mean, y_mean);
         }
 
         // Draw current position
-        g_plot->setCarPos(xtrue(0), xtrue(1), xtrue(2));
-        g_plot->setCarPos(x_mean, y_mean, t_mean, 1);
+        gPlot->setCarPos(xtrue(0), xtrue(1), xtrue(2));
+        gPlot->setCarPos(x_mean, y_mean, t_mean, 1);
 
         // Set laser lines
-        g_plot->setLaserLines(plines);
+        gPlot->setLaserLines(plines);
 
         emit replot();
 
