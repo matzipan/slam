@@ -18,11 +18,12 @@
 #include "src/core.h"
 #include "slamwrapper.h"
 #include "src/algorithms/fastslam2.h"
+#include "ParticleSLAMWrapper.h"
 
 using namespace std;
 using namespace Eigen;
 
-class FastSLAM2Wrapper : public SLAMWrapper {
+class FastSLAM2Wrapper : public ParticleSLAMWrapper {
 Q_OBJECT
 
 public:

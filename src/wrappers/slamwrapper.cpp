@@ -40,6 +40,9 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     x = VectorXf(3);
     x.setZero(3);
 
+    drawSkip = 4;
+    gConf->i("drawSkip", drawSkip);
+
     qRegisterMetaType<QString>("QString");
 
     connect(this, SIGNAL(replot()), gPlot, SLOT(canvasReplot()));
@@ -48,9 +51,7 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     connect(gPlot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
 }
 
-SLAMWrapper::~SLAMWrapper() {
-    wait();
-}
+SLAMWrapper::~SLAMWrapper() { }
 
 void SLAMWrapper::stop() {
     isAlive = 0;
@@ -77,8 +78,10 @@ void SLAMWrapper::setRunMode(RunMode mode) {
     runMode = mode;
 }
 
-void SLAMWrapper::setMap(string &fileName) {
-    map = fileName;
+void SLAMWrapper::loadMap(string &filename) {
+    map = filename;
+
+    read_slam_input_file(map, &landmarks, &waypoints);
 }
 
 void SLAMWrapper::configurePlot() {

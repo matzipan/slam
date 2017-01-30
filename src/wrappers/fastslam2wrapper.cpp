@@ -19,11 +19,13 @@ extern Plot *gPlot;
 extern Conf *gConf;
 
 
-FastSLAM2Wrapper::FastSLAM2Wrapper(QObject *parent) : SLAMWrapper(parent) {
+FastSLAM2Wrapper::FastSLAM2Wrapper(QObject *parent) : ParticleSLAMWrapper(parent) {
     algorithm = new FastSLAM2();
 }
 
-FastSLAM2Wrapper::~FastSLAM2Wrapper() { }
+FastSLAM2Wrapper::~FastSLAM2Wrapper() {
+    wait();
+}
 
 
 void FastSLAM2Wrapper::run() {
@@ -36,8 +38,8 @@ void FastSLAM2Wrapper::run() {
         printf("Sampling from optimal proposal is usually ON for FastSLAM 2.0\n");
     }
 
-
-    QString msgAll;
+    configurePlot();
+    initializeParticles();
 
     QVector<double> arrParticles_x, arrParticles_y;
     QVector<double> arrParticlesFea_x, arrParticlesFea_y;
@@ -45,27 +47,8 @@ void FastSLAM2Wrapper::run() {
     double w_max;
     double x_mean, y_mean, t_max;
 
-    int draw_skip = 4;
 
-    gConf->i("draw_skip", draw_skip);
 
-    read_slam_input_file(map, &landmarks, &waypoints);
-
-    configurePlot();
-
-    //vector of particles (their count will change)
-    vector<Particle> particles(gConf->NPARTICLES);
-    for (unsigned long i = 0; i < particles.size(); i++) {
-        particles[i] = Particle();
-    }
-
-    //initialize particle weights as uniform
-    float uniformw = 1.0 / (float) particles.size();
-    for (int p = 0; p < particles.size(); p++) {
-        particles[p].setW(uniformw);
-    }
-
-    float dtsum = 0; //change in time since last observation
 
     vector<int> ftag; //identifier for each landmark
     for (int i = 0; i < landmarks.cols(); i++) {
@@ -111,12 +94,12 @@ void FastSLAM2Wrapper::run() {
         // @TODO why does fastslam1 use Q and fastslam 2 use Qe
         algorithm->predict(particles, xTrue, Vn, Gn, Qe, gConf->WHEELBASE, dt, gConf->SWITCH_PREDICT_NOISE == 1, gConf->SWITCH_HEADING_KNOWN == 1);
 
-        dtsum += dt;
+        dtSum += dt;
         bool observe = false;
 
-        if (dtsum >= gConf->DT_OBSERVE) {
+        if (dtSum >= gConf->DT_OBSERVE) {
             observe = true;
-            dtsum = 0;
+            dtSum = 0;
 
             vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
 
@@ -144,12 +127,12 @@ void FastSLAM2Wrapper::run() {
         currentIteration++;
 
         // Accelate drawing speed
-        if (currentIteration % draw_skip != 0) {
+        if (currentIteration % drawSkip != 0) {
             continue;
         }
 
-        msgAll.sprintf("[%6d]", currentIteration);
-        emit showMessage(msgAll);
+        plotMessage.sprintf("[%6d]", currentIteration);
+        emit showMessage(plotMessage);
 
         // get mean x, y
         x_mean = 0;

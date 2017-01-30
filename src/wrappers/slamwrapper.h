@@ -41,7 +41,7 @@ public:
     /// Set run mode
     void setRunMode(RunMode mode);
     /// Set map filename
-    void setMap(string &fileName);
+    void loadMap(string &filename);
 
     /// Loads information and performs initial adjustment on the plot
     void configurePlot();
@@ -77,6 +77,7 @@ protected:
     RunMode runMode;
 
     string map;
+    QString plotMessage;
 
     /// Landmark positions
     MatrixXf landmarks;
@@ -109,6 +110,9 @@ protected:
     float sigmaPhi;
     /// Change in time between predicts
     float dt;
+    /// Change in time since last observation
+    float dtSum = 0;
+    int drawSkip;
 };
 
 #endif // SLAM_THREAD_H

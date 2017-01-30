@@ -21,27 +21,19 @@ EKFSLAMWrapper::EKFSLAMWrapper(QObject *parent) : SLAMWrapper(parent) {
     algorithm = new EKFSLAM();
 }
 
-EKFSLAMWrapper::~EKFSLAMWrapper() { }
+EKFSLAMWrapper::~EKFSLAMWrapper() {
+    wait();
+}
 
 
 void EKFSLAMWrapper::run() {
     printf("EKFSLAM\n\n");
-
-    QString msgAll;
-
-    int draw_skip = 4;
-
-    gConf->i("draw_skip", draw_skip);
-
-    read_slam_input_file(map, &landmarks, &waypoints);
 
     configurePlot();
 
     MatrixXf P(3, 3);
 
     P.setZero(3, 3);
-
-    float dtsum = 0; //change in time since last observation
 
     vector<int> ftag; //identifier for each landmark
     for (int i = 0; i < landmarks.cols(); i++) {
@@ -87,12 +79,12 @@ void EKFSLAMWrapper::run() {
             continue;
         }
 
-        dtsum += dt;
+        dtSum += dt;
         bool observe = false;
 
-        if (dtsum >= gConf->DT_OBSERVE) {
+        if (dtSum >= gConf->DT_OBSERVE) {
             observe = true;
-            dtsum = 0;
+            dtSum = 0;
 
             //Compute true data, then add noise
             vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
@@ -116,12 +108,12 @@ void EKFSLAMWrapper::run() {
         currentIteration++;
 
         // Accelate drawing speed
-        if (currentIteration % draw_skip != 0) {
+        if (currentIteration % drawSkip != 0) {
             continue;
         }
 
-        msgAll.sprintf("[%6d]", currentIteration);
-        emit showMessage(msgAll);
+        plotMessage.sprintf("[%6d]", currentIteration);
+        emit showMessage(plotMessage);
 
         // Add new position
         gPlot->addTruePosition(xTrue(0), xTrue(1));

@@ -18,14 +18,14 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// global variables
+// Global variables
 ////////////////////////////////////////////////////////////////////////////////
 Plot *gPlot;
 Conf *gConf;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print usage help
+/// Print usage help
 ////////////////////////////////////////////////////////////////////////////////
 void print_usage(char *argv[]) {
     printf("%s\n", argv[0]);
@@ -43,21 +43,21 @@ void print_usage(char *argv[]) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// main function
+/// Main function
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
     int i;
-    int ret = 0;
-    SLAMWrapper *slam_thread;
+    int returnValue = 0;
+    SLAMWrapper *slamThread;
 
     string mode, method;
     string fn_screenshot;
 
     int ww, wh;
 
-    int slam_method = 1;
-    SLAMWrapper::RunMode slam_runmode = SLAMWrapper::SLAM_WAYPOINT;
-    string map_fname = "../data/example_webmap.mat";
+    int slamMethod = 1;
+    SLAMWrapper::RunMode slamRunMode = SLAMWrapper::SLAM_WAYPOINT;
+    string mapFilename = "../data/example_webmap.mat";
     string conf_fname;
 
     Conf conf;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     // parse input arguments
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2) {
-            map_fname = argv[i + 1];
+            mapFilename = argv[i + 1];
         }
         if (strcmp(argv[i], "-h") == 0) {
             print_usage(argv);
@@ -78,35 +78,35 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("map: %s\n", map_fname.c_str());
-    arrFN = path_splitext(map_fname);
+    printf("map: %s\n", mapFilename.c_str());
+    arrFN = path_splitext(mapFilename);
     conf_fname = arrFN[0] + ".ini";
 
-    conf.load(conf_fname);                  // first load conf file
-    conf.set_args(argc, argv);              // set input arguments
-    conf.parse();                           // parse input arguments
+    conf.load(conf_fname);                  // First load conf file
+    conf.set_args(argc, argv);              // Set input arguments
+    conf.parse();                           // Parse input arguments
 
-    // save input arguments
+    // Save input arguments
     if (arrFN[0].size() > 0) {
         save_arguments(argc, argv, arrFN[0]);
     } else {
         save_arguments(argc, argv, "fastslam");
     }
 
-    // get mode
+    // Get mode
     mode = "waypoints";
     conf.s("mode", mode);
-    if (mode == "waypoints") slam_runmode = SLAMWrapper::SLAM_WAYPOINT;
-    if (mode == "interactive") slam_runmode = SLAMWrapper::SLAM_INTERACTIVE;
+    if (mode == "waypoints") slamRunMode = SLAMWrapper::SLAM_WAYPOINT;
+    if (mode == "interactive") slamRunMode = SLAMWrapper::SLAM_INTERACTIVE;
 
-    // get slam method
+    // Get SLAM method
     method = "EKF1";
     conf.s("method", method);
-    if (method == "FAST1") slam_method = 1;
-    if (method == "FAST2") slam_method = 2;
-    if (method == "EKF1") slam_method = 3;
+    if (method == "FAST1") slamMethod = 1;
+    if (method == "FAST2") slamMethod = 2;
+    if (method == "EKF1") slamMethod = 3;
 
-    // get screenshot filename
+    // Get screenshot filename
     fn_screenshot = "";
     conf.s("fn_screenshot", fn_screenshot);
 
@@ -116,13 +116,12 @@ int main(int argc, char *argv[]) {
     conf.i("ww", ww);
     conf.i("wh", wh);
 
-    // print parameters
+    // Print parameters
     conf.print();
 
-    // Begin QT application
-    QApplication a(argc, argv);
+    QApplication application(argc, argv);
 
-    // SLAM plot window
+    // Configure plot window
     Plot w;
     gPlot = &w;
     w.show();
@@ -131,35 +130,35 @@ int main(int argc, char *argv[]) {
     w.plot();
 
     // create SLAM thread
-    switch (slam_method) {
+    switch (slamMethod) {
         case 1:
-            slam_thread = new FastSLAM1Wrapper;
+            slamThread = new FastSLAM1Wrapper;
             break;
         case 2:
-            slam_thread = new FastSLAM2Wrapper;
+            slamThread = new FastSLAM2Wrapper;
             break;
         case 3:
-            slam_thread = new EKFSLAMWrapper;
+            slamThread = new EKFSLAMWrapper;
             break;
         default:
             return -1;
     }
 
-    // set run mode
-    slam_thread->setRunMode(slam_runmode);
-    // set map
-    slam_thread->setMap(map_fname);
+    // Set run mode
+    slamThread->setRunMode(slamRunMode);
+    // Set map
+    slamThread->loadMap(mapFilename);
 
-    // begin SLAM simulation
-    slam_thread->start();
+    // Begin SLAM simulation
+    slamThread->start();
 
-    // begin GUI loop
-    ret = a.exec();
+    // Begin GUI loop
+    returnValue = application.exec();
 
-    // stop SLAM thread
-    slam_thread->stop();
+    // Stop SLAM thread
+    slamThread->stop();
 
-    delete slam_thread;
+    delete slamThread;
 
-    return ret;
+    return returnValue;
 }

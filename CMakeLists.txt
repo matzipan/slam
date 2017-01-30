@@ -25,7 +25,7 @@ set(SOURCE_FILES
         src/main.cpp
         src/algorithms/ekfslam.cpp
         libs/qcustomplot/qcustomplot.cpp
-        )
+        src/wrappers/ParticleSLAMWrapper.cpp)
 
 set (PKG_DEPS
         QtCore
