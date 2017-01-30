@@ -7,6 +7,7 @@
 #include <QtGui>
 #include <Eigen/Dense>
 
+using namespace std;
 using namespace Eigen;
 
 class SLAMWrapper : public QThread {
@@ -32,13 +33,15 @@ public:
      *   - 2 - Backward
      *   - 3 - Turn Left
      *   - 4 - Turn Right
+     *
+     *   @return command value according to above list
      */
-    void getCommand(int *command);
+    int getCurrentCommand();
 
     /// Set run mode
     void setRunMode(RunMode mode);
     /// Set map filename
-    void setMap(std::string &fname);
+    void setMap(string &fileName);
 
     /// Loads information and performs initial adjustment on the plot
     void configurePlot();
@@ -47,6 +50,12 @@ public:
     /// Adjusts the range of the plot to show all information
     void setPlotRange();
 
+    /**
+     *     Integrate steering to predict control
+     *
+     *     @return -1 if there are no more waypoints, 0 if there are no commands, otherwise 1.
+     */
+    int control();
 
 
 signals:
@@ -67,14 +76,39 @@ protected:
     uint64_t commandTime;
     RunMode runMode;
 
-    std::string map;
+    string map;
 
     /// Landmark positions
     MatrixXf landmarks;
     /// Waypoints
     MatrixXf waypoints;
 
-    int pos_i = 0;
+    int currentIteration = 0;
+
+    // @TODO need to find a description for this item
+    // @TODO is this really needed?
+    float *VnGn = new float[2];
+    // @TODO need to find a description for this item
+    float Vn, Gn;
+    /// Velocity
+    float V;
+    /// Steer angle
+    float G;
+    int nLoop;
+    /// Index to first waypoint
+    int indexOfFirstWaypoint = 0;
+    /// True position
+    VectorXf xTrue;
+    /// Predicted position
+    VectorXf x;
+    // @TODO need to find a description for this item
+    MatrixXf Q;
+    // @TODO need to find a description for this item
+    MatrixXf R;
+    /// Heading uncertainty, in radians
+    float sigmaPhi;
+    /// Change in time between predicts
+    float dt;
 };
 
 #endif // SLAM_THREAD_H

@@ -19,6 +19,27 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     commandId = -1;
     commandTime = 0;
 
+    Q = MatrixXf(2, 2);
+    Q << pow(gConf->sigmaV, 2), 0, 0, pow(gConf->sigmaG, 2);
+
+    R = MatrixXf(2, 2);
+    R << pow(gConf->sigmaR, 2), 0, 0, pow(gConf->sigmaB, 2);
+
+    sigmaPhi = gConf->sigmaT;
+
+    // Setting initial velocity
+    V = gConf->V;
+    // Setting initial steer angle
+    G = 0;
+    nLoop = gConf->NUMBER_LOOPS;
+    dt = gConf->DT_CONTROLS;
+
+    xTrue = VectorXf(3);
+    xTrue.setZero(3);
+
+    x = VectorXf(3);
+    x.setZero(3);
+
     qRegisterMetaType<QString>("QString");
 
     connect(this, SIGNAL(replot()), gPlot, SLOT(canvasReplot()));
@@ -40,16 +61,15 @@ void SLAMWrapper::commandRecieve(int command) {
     commandTime = tm_get_millis();
 }
 
-void SLAMWrapper::getCommand(int *command) {
-    u_int64_t timeNow, dt;
+int SLAMWrapper::getCurrentCommand() {
+    u_int64_t timeNow;
 
     timeNow = tm_get_millis();
-    dt = timeNow - commandTime;
 
-    if (dt < 30) {
-        *command = commandId;
+    if (timeNow - commandTime < 30) {
+        return commandId;
     } else {
-        *command = -1;
+        return -1;
     }
 }
 
@@ -57,8 +77,8 @@ void SLAMWrapper::setRunMode(RunMode mode) {
     runMode = mode;
 }
 
-void SLAMWrapper::setMap(std::string &fname) {
-    map = fname;
+void SLAMWrapper::setMap(string &fileName) {
+    map = fileName;
 }
 
 void SLAMWrapper::configurePlot() {
@@ -67,68 +87,138 @@ void SLAMWrapper::configurePlot() {
 
     addWaypointsAndLandmarks();
     setPlotRange();
+
+    // Add initial position
+    gPlot->addPos(xTrue(0), xTrue(1));
+    gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2), 0);
+
+    // Add initial position estimate
+    gPlot->addPosEst(xTrue(0), xTrue(1));
+    gPlot->setCarPos(xTrue(0), xTrue(1), xTrue(2), 1);
+
+    emit replot();
 }
 
 void SLAMWrapper::addWaypointsAndLandmarks() {
-    uint m, n;
+    uint n;
 
-    QVector<double> arrWaypoints_x, arrWaypoints_y;
-    QVector<double> arrLandmarks_x, arrLandmarks_y;
+    QVector<double> waypointXs, waypointYs;
+    QVector<double> landmarkXs, landmarkYs;
 
     // draw waypoints
     if (runMode == SLAM_WAYPOINT) {
         n = waypoints.cols();
 
-        for (int i = 0; i < n; i++) {
-            arrWaypoints_x.push_back(waypoints(0, i));
-            arrWaypoints_y.push_back(waypoints(1, i));
+        for (uint i = 0; i < n; i++) {
+            waypointXs.push_back(waypoints(0, i));
+            waypointYs.push_back(waypoints(1, i));
         }
 
-        gPlot->setWaypoints(arrWaypoints_x, arrWaypoints_y);
+        gPlot->setWaypoints(waypointXs, waypointYs);
     }
 
-    // draw landmarks
+    // Draw landmarks
     n = landmarks.cols();
-    for (int i = 0; i < n; i++) {
-        arrLandmarks_x.push_back(landmarks(0, i));
-        arrLandmarks_y.push_back(landmarks(1, i));
+    for (uint i = 0; i < n; i++) {
+        landmarkXs.push_back(landmarks(0, i));
+        landmarkYs.push_back(landmarks(1, i));
     }
 
-    gPlot->setLandmarks(arrLandmarks_x, arrLandmarks_y);
+    gPlot->setLandmarks(landmarkXs, landmarkYs);
 
 }
 
 void SLAMWrapper::setPlotRange() {
-    uint m, n;
-    double x_min = 1e30;
-    double x_max = -1e30;
-    double y_min = 1e30;
-    double y_max = -1e30;
+    uint n;
+    double xMin = 1e30;
+    double xMax = -1e30;
+    double yMin = 1e30;
+    double yMax = -1e30;
 
-    // Draw waypoints
+    // Find waypoints range
     if (runMode == SLAM_WAYPOINT) {
-        m = waypoints.rows();
         n = waypoints.cols();
 
-        for (int i = 0; i < n; i++) {
-            if (waypoints(0, i) > x_max) { x_max = waypoints(0, i); }
-            if (waypoints(0, i) < x_min) { x_min = waypoints(0, i); }
-            if (waypoints(1, i) > y_max) { y_max = waypoints(1, i); }
-            if (waypoints(1, i) < y_min) { y_min = waypoints(1, i); }
+        for (uint i = 0; i < n; i++) {
+            if (waypoints(0, i) > xMax) { xMax = waypoints(0, i); }
+            if (waypoints(0, i) < xMin) { xMin = waypoints(0, i); }
+            if (waypoints(1, i) > yMax) { yMax = waypoints(1, i); }
+            if (waypoints(1, i) < yMin) { yMin = waypoints(1, i); }
         }
     }
 
-    // draw landmarks
-    m = landmarks.rows();
+    // Find landmarks range
     n = landmarks.cols();
-    for (int i = 0; i < n; i++) {
-        if (landmarks(0, i) > x_max) { x_max = landmarks(0, i); }
-        if (landmarks(0, i) < x_min) { x_min = landmarks(0, i); }
-        if (landmarks(1, i) > y_max) { y_max = landmarks(1, i); }
-        if (landmarks(1, i) < y_min) { y_min = landmarks(1, i); }
+    for (uint i = 0; i < n; i++) {
+        if (landmarks(0, i) > xMax) { xMax = landmarks(0, i); }
+        if (landmarks(0, i) < xMin) { xMin = landmarks(0, i); }
+        if (landmarks(1, i) > yMax) { yMax = landmarks(1, i); }
+        if (landmarks(1, i) < yMin) { yMin = landmarks(1, i); }
     }
 
-    gPlot->setPlotRange(x_min - (x_max - x_min) * 0.05, x_max + (x_max - x_min) * 0.05,
-                        y_min - (y_max - y_min) * 0.05, y_max + (y_max - y_min) * 0.05);
+    gPlot->setPlotRange(xMin - (xMax - xMin) * 0.05, xMax + (xMax - xMin) * 0.05,
+                        yMin - (yMax - yMin) * 0.05, yMax + (yMax - yMin) * 0.05);
 
+}
+
+int SLAMWrapper::control() {
+    switch(runMode) {
+        case SLAM_WAYPOINT:
+            if (indexOfFirstWaypoint == -1) {
+                return -1;
+            }
+
+            compute_steering(xTrue, waypoints, indexOfFirstWaypoint, gConf->AT_WAYPOINT, G, gConf->RATEG, gConf->MAXG, dt);
+
+            if (indexOfFirstWaypoint == -1 && nLoop > 1) {
+                indexOfFirstWaypoint = 0;
+                nLoop--;
+            }
+            break;
+
+        case SLAM_INTERACTIVE:
+            int command = getCurrentCommand();
+
+            // No commands, then continue
+            if (command == -1) {
+                return 0;
+            }
+
+            switch (command) {
+                case 1:
+                    // Forward
+                    V = gConf->V;
+                    G = 0.0;
+                    break;
+                case 2:
+                    // Backward
+                    V = -gConf->V;
+                    G = 0.0;
+                    break;
+                case 3:
+                    // Turn left
+                    V = gConf->V;
+                    G = 30.0 * M_PI / 180.0;
+                    break;
+                case 4:
+                    // Turn right
+                    V = gConf->V;
+                    G = -30.0 * M_PI / 180.0;
+                    break;
+                default:
+                    V = gConf->V;
+                    G = 0.0;
+            }
+            break;
+    }
+
+    // Predict current position and angle
+    predict_true(xTrue, V, G, gConf->WHEELBASE, dt);
+
+    // Add process noise
+    add_control_noise(V, G, Q, gConf->SWITCH_CONTROL_NOISE, VnGn);
+    Vn = VnGn[0];
+    Gn = VnGn[1];
+
+    return 1;
 }

@@ -36,51 +36,48 @@ void predict_true(VectorXf &xv, float V, float G, float WB, float dt) {
     xv(1) = xv(1) + V * dt * sin(G + xv(2));
     xv(2) = pi_to_pi(xv(2) + V * dt * sin(G) / WB);
 }
+/**
+ *
+ * @param[in] xTrue - true position
+ * @param[in] waypoints
+ * @param[in] indexOfFirstWaypoint - index to current waypoint
+ * @param[in] minimumDistance - minimum distance to current waypoint before switching to next
+ * @param[out] G - output - current steering angle
+ * @param[in] rateG - maximum steering rate (radians/second)
+ * @param[in] maxG - maximum steering angle (radians)
+ * @param[in] dt - timestep
+ */
+void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G, float rateG, float maxG, float dt) {
+    // Determine if current waypoint reached
+    Vector2d currentWaypoint;
+    currentWaypoint[0] = waypoints(0, indexOfFirstWaypoint);    //-1 since indexed from 0
+    currentWaypoint[1] = waypoints(1, indexOfFirstWaypoint);
 
-void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD, float &G, float rateG, float maxG, float dt) {
-    /*
-        % INPUTS:
-        %   x - true position
-        %   wp - waypoints
-        %   iwp - index to current waypoint
-        %   minD - minimum distance to current waypoint before switching to next        
-        %   rateG - max steering rate (rad/s)
-        %   maxG - max steering angle (rad)
-        %   dt - timestep
-        % Output:
-        %   G - current steering angle
-    */
+    float d2 = pow(currentWaypoint[0] - xTrue[0], 2) + pow(currentWaypoint[1] - xTrue[1], 2);
 
-    //determine if current waypoint reached
-    Vector2d cwp;
-    cwp[0] = wp(0, iwp);    //-1 since indexed from 0
-    cwp[1] = wp(1, iwp);
-
-    float d2 = pow((cwp[0] - x[0]), 2) + pow((cwp[1] - x[1]), 2);
-
-    if (d2 < minD * minD) {
-        iwp++; //switch to next
-        if (iwp >= wp.cols()) {
-            iwp = -1;
+    if (d2 < minimumDistance * minimumDistance) {
+        indexOfFirstWaypoint++; //switch to next
+        if (indexOfFirstWaypoint >= waypoints.cols()) {
+            indexOfFirstWaypoint = -1;
             return;
         }
 
-        cwp[0] = wp(0, iwp); // -1 since indexed from 0
-        cwp[1] = wp(1, iwp);
+        currentWaypoint[0] = waypoints(0, indexOfFirstWaypoint); // -1 since indexed from 0
+        currentWaypoint[1] = waypoints(1, indexOfFirstWaypoint);
     }
 
-    // compute change in G to point towards current waypoint
-    float deltaG = atan2(cwp[1] - x[1], cwp[0] - x[0]) - x[2] - G;
+    // Compute change in G to point towards current waypoint
+    float deltaG = atan2(currentWaypoint[1] - xTrue[1], currentWaypoint[0] - xTrue[0]) - xTrue[2] - G;
     deltaG = pi_to_pi(deltaG);
 
-    // limit rate
+    // Limit rate
     float maxDelta = rateG * dt;
     if (abs(deltaG) > maxDelta) {
         int sign = (deltaG > 0) ? 1 : ((deltaG < 0) ? -1 : 0);
         deltaG = sign * maxDelta;
     }
 
-    // limit angle
+    // Limit angle
     G = G + deltaG;
     if (abs(G) > maxG) {
         int sign2 = (G > 0) ? 1 : ((G < 0) ? -1 : 0);
@@ -246,11 +243,8 @@ void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, Matr
     MatrixXf S = H * PHt + R;
 
     // FIXME: why use conjugate()?
-    S = (S + S.transpose()) * 0.5; //make symmetric
+    S = (S + S.transpose()) * 0.5; // Make symmetric
     MatrixXf SChol = S.llt().matrixU();
-    //SChol.transpose();
-    //SChol.conjugate();
-
 
     MatrixXf SCholInv = SChol.inverse(); //tri matrix
     MatrixXf W1 = PHt * SCholInv;

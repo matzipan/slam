@@ -68,7 +68,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Common functions
 ////////////////////////////////////////////////////////////////////////////////
-void compute_steering(VectorXf &x, MatrixXf &wp, int &iwp, float minD, float &G, float rateG, float maxG, float dt);
+void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G, float rateG, float maxG, float dt);
 
 void predict_true(VectorXf &xv, float V, float G, float WB, float dt);
 
