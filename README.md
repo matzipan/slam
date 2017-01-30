@@ -7,9 +7,9 @@ It is based on code from [here](https://github.com/bushuhui/fastslam) and [here]
 So far I have added a CMake build system and I am decoupling the algorithm from the GUI in order to do some profiling.
 
 ## Requirements
-* Qt4: `sudo apt install libqtcore4 libqtgui4 libqt4-dev`
-* CMake: `sudo apt install cmake`
 * Ubuntu 16.04
+* CMake: `sudo apt install cmake`
+* Qt4: `sudo apt install libqtcore4 libqtgui4 libqt4-dev`
 
 ## Build
 1. `mkdir build && cd build`
