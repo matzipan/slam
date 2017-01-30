@@ -36,7 +36,6 @@ void FastSLAM2Wrapper::run() {
         printf("Sampling from optimal proposal is usually ON for FastSLAM 2.0\n");
     }
 
-    double time_all;
 
     QString msgAll;
 
@@ -93,8 +92,6 @@ void FastSLAM2Wrapper::run() {
         Re = 2 * R;
     }
 
-    time_all = 0.0;
-
     vector<VectorXf> z; // Range and bearings of visible landmarks
 
     // Main loop
@@ -144,7 +141,6 @@ void FastSLAM2Wrapper::run() {
 
 
         // Update status bar
-        time_all = time_all + dt;
         currentIteration++;
 
         // Accelate drawing speed
@@ -152,7 +148,7 @@ void FastSLAM2Wrapper::run() {
             continue;
         }
 
-        msgAll.sprintf("[%6d] %7.3f", currentIteration, time_all);
+        msgAll.sprintf("[%6d]", currentIteration);
         emit showMessage(msgAll);
 
         // get mean x, y
@@ -205,8 +201,6 @@ void FastSLAM2Wrapper::run() {
         gPlot->setLaserLines(plines);
 
         emit replot();
-
-        msleep(10);
     }
 
     delete[] VnGn;

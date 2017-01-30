@@ -27,8 +27,6 @@ EKFSLAMWrapper::~EKFSLAMWrapper() { }
 void EKFSLAMWrapper::run() {
     printf("EKFSLAM\n\n");
 
-    double time_all;
-
     QString msgAll;
 
     int draw_skip = 4;
@@ -77,8 +75,6 @@ void EKFSLAMWrapper::run() {
     vector<VectorXf> zf;
     vector<VectorXf> zn;
 
-    time_all = 0.0;
-
     // Main loop
     while (isAlive) {
         int controlStatus = control();
@@ -117,7 +113,6 @@ void EKFSLAMWrapper::run() {
                        data_association_table, gConf->SWITCH_BATCH_UPDATE == 1, R);
 
         // Update status bar
-        time_all = time_all + dt;
         currentIteration++;
 
         // Accelate drawing speed
@@ -125,7 +120,7 @@ void EKFSLAMWrapper::run() {
             continue;
         }
 
-        msgAll.sprintf("[%6d] %7.3f", currentIteration, time_all);
+        msgAll.sprintf("[%6d]", currentIteration);
         emit showMessage(msgAll);
 
         // Add new position
@@ -159,8 +154,6 @@ void EKFSLAMWrapper::run() {
         }
 
         emit replot();
-
-        msleep(10);
     }
 
     delete[] VnGn;
