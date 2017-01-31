@@ -14,11 +14,7 @@
 using namespace std;
 using namespace Eigen;
 
-// global variable
-extern Plot *gPlot;
-extern Conf *gConf;
-
-FastSLAM1Wrapper::FastSLAM1Wrapper(QObject *parent) : ParticleSLAMWrapper(parent) {
+FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, Plot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot, parent) {
     algorithm = new FastSLAM1();
 }
 
@@ -35,7 +31,7 @@ void FastSLAM1Wrapper::run() {
     initializeDataAssociationTable();
 
     // FIXME: force predict noise on
-    gConf->SWITCH_PREDICT_NOISE = 1;
+    conf->SWITCH_PREDICT_NOISE = 1;
 
     // Main loop
     while (isAlive) {
@@ -51,12 +47,12 @@ void FastSLAM1Wrapper::run() {
 
         // @TODO what happens when the if statement is false and the predict happens but not the observation
         // @TODO why does fastslam1 use Q and fastslam 2 use Qe
-        algorithm->predict(particles, xTrue, Vn, Gn, Q, gConf->WHEELBASE, dt, gConf->SWITCH_PREDICT_NOISE == 1, gConf->SWITCH_HEADING_KNOWN == 1);
+        algorithm->predict(particles, xTrue, Vn, Gn, Q, conf->WHEELBASE, dt, conf->SWITCH_PREDICT_NOISE == 1, conf->SWITCH_HEADING_KNOWN == 1);
 
         dtSum += dt;
         bool observe = false;
 
-        if (dtSum >= gConf->DT_OBSERVE) {
+        if (dtSum >= conf->DT_OBSERVE) {
             observe = true;
             dtSum = 0;
 
@@ -64,8 +60,8 @@ void FastSLAM1Wrapper::run() {
 
             // Compute true data, then add noise
             // z is the range and bearing of the observed landmark
-            z = get_observations(xTrue, landmarks, ftag_visible, gConf->MAX_RANGE);
-            add_observation_noise(z, R, gConf->SWITCH_SENSOR_NOISE);
+            z = get_observations(xTrue, landmarks, ftag_visible, conf->MAX_RANGE);
+            add_observation_noise(z, R, conf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xTrue);
 
@@ -78,7 +74,7 @@ void FastSLAM1Wrapper::run() {
             data_associate_known(z, ftag_visible, dataAssociationTable, Nf, zf, idf, zn);
 
             // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, z, ftag_visible, dataAssociationTable, R, gConf->NEFFECTIVE, gConf->SWITCH_RESAMPLE == 1);
+            algorithm->update(particles, zf, zn, idf, z, ftag_visible, dataAssociationTable, R, conf->NEFFECTIVE, conf->SWITCH_RESAMPLE == 1);
         }
 
 
@@ -100,15 +96,15 @@ void FastSLAM1Wrapper::run() {
         computeEstimatedPosition(x, y, t);
 
         // Add new position
-        gPlot->addTruePosition(xTrue(0), xTrue(1));
-        gPlot->addEstimatedPosition(x, y);
+        plot->addTruePosition(xTrue(0), xTrue(1));
+        plot->addEstimatedPosition(x, y);
 
         // Draw current position
-        gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarEstimatedPosition(x, y, t);
+        plot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
+        plot->setCarEstimatedPosition(x, y, t);
 
         // Set laser lines
-        gPlot->setLaserLines(plines);
+        plot->setLaserLines(plines);
 
         emit replot();
     }

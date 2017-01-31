@@ -27,7 +27,7 @@ class FastSLAM2Wrapper : public ParticleSLAMWrapper {
 Q_OBJECT
 
 public:
-    FastSLAM2Wrapper(QObject *parent = 0);
+    FastSLAM2Wrapper(Conf *conf, Plot *plot, QObject *parent = 0);
 
     ~FastSLAM2Wrapper();
 

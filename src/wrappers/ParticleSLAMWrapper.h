@@ -13,7 +13,7 @@ class ParticleSLAMWrapper : public SLAMWrapper {
 Q_OBJECT
 
 public:
-    ParticleSLAMWrapper(QObject *parent = 0);
+    ParticleSLAMWrapper(Conf *conf, Plot *plot, QObject *parent);
 
     ~ParticleSLAMWrapper();
 

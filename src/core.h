@@ -135,7 +135,7 @@ namespace nRandMat {
     MatrixXf rand(int m, int n);
 }
 
-void read_slam_input_file(const string s, MatrixXf *lm, MatrixXf *wp);
+void readInputFile(const string s, MatrixXf *lm, MatrixXf *wp);
 
 
 #endif // end of __FASTSLAM_CORE_H__

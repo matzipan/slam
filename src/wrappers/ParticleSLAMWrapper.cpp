@@ -7,11 +7,8 @@
 
 #include "ParticleSLAMWrapper.h"
 
-extern Conf *gConf;
-extern Plot *gPlot;
-
-ParticleSLAMWrapper::ParticleSLAMWrapper(QObject *parent) : SLAMWrapper(parent) {
-    particles = vector<Particle>(gConf->NPARTICLES);
+ParticleSLAMWrapper::ParticleSLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
+    particles = vector<Particle>(conf->NPARTICLES);
 }
 
 ParticleSLAMWrapper::~ParticleSLAMWrapper() { }
@@ -43,7 +40,7 @@ void ParticleSLAMWrapper::drawParticles() {
         particleXs.push_back(particles[i].xv()(0));
         particleYs.push_back(particles[i].xv()(1));
     }
-    gPlot->setParticles(particleXs, particleYs);
+    plot->setParticles(particleXs, particleYs);
 }
 
 void ParticleSLAMWrapper::drawFeatureParticles() {
@@ -55,7 +52,7 @@ void ParticleSLAMWrapper::drawFeatureParticles() {
             featureParticleYs.push_back(particles[i].xf()[j](1));
         }
     }
-    gPlot->setParticlesFea(featureParticleXs, featureParticleYs);
+    plot->setParticlesFea(featureParticleXs, featureParticleYs);
 }
 
 void ParticleSLAMWrapper::computeEstimatedPosition(double &x, double &y, double &t) {

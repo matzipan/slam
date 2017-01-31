@@ -55,7 +55,7 @@ public:
 
     void plot(void);
 
-    void setScreenShot_fname(std::string &fnBase);
+    void setScreenshotFilename(std::string fnBase);
 
     void showMessage(QString &msg);
 

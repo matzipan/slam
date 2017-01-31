@@ -10,22 +10,27 @@
 
 #include "moc_slamwrapper.cpp"
 
-extern Plot *gPlot;
-extern Conf *gConf;
+SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(parent) {
+    this->conf = conf;
+    this->plot = plot;
 
-SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
+    if (conf->s("mode") == "interactive") { setRunMode(SLAMWrapper::SLAM_INTERACTIVE); }
+    else { setRunMode(SLAMWrapper::SLAM_WAYPOINT); }
+
+    loadMap();
+
     isAlive = 1;
 
     commandId = -1;
     commandTime = 0;
 
     Q = MatrixXf(2, 2);
-    Q << pow(gConf->sigmaV, 2), 0, 0, pow(gConf->sigmaG, 2);
+    Q << pow(conf->sigmaV, 2), 0, 0, pow(conf->sigmaG, 2);
 
     R = MatrixXf(2, 2);
-    R << pow(gConf->sigmaR, 2), 0, 0, pow(gConf->sigmaB, 2);
+    R << pow(conf->sigmaR, 2), 0, 0, pow(conf->sigmaB, 2);
 
-    if (gConf->SWITCH_INFLATE_NOISE == 1) {
+    if (conf->SWITCH_INFLATE_NOISE == 1) {
         Qe = 2 * Q;
         Re = 2 * R;
     } else {
@@ -33,14 +38,14 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
         Re = MatrixXf(R);
     }
 
-    sigmaPhi = gConf->sigmaT;
+    sigmaPhi = conf->sigmaT;
 
     // Setting initial velocity
-    V = gConf->V;
+    V = conf->V;
     // Setting initial steer angle
     G = 0;
-    nLoop = gConf->NUMBER_LOOPS;
-    dt = gConf->DT_CONTROLS;
+    nLoop = conf->NUMBER_LOOPS;
+    dt = conf->DT_CONTROLS;
 
     xTrue = VectorXf(3);
     xTrue.setZero(3);
@@ -48,18 +53,18 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     x = VectorXf(3);
     x.setZero(3);
 
-    drawSkip = 4;
-    gConf->i("drawSkip", drawSkip);
+    drawSkip = 4; //@TODO use methods isntead of this
+    conf->i("drawSkip", drawSkip);
 
     qRegisterMetaType<QString>("QString");
 
-    connect(this, SIGNAL(replot()), gPlot, SLOT(canvasReplot()));
-    connect(this, SIGNAL(showMessage(QString)), gPlot, SLOT(canvasShowMessage(QString)));
+    connect(this, SIGNAL(replot()), plot, SLOT(canvasReplot()));
+    connect(this, SIGNAL(showMessage(QString)), plot, SLOT(canvasShowMessage(QString)));
 
-    connect(gPlot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
+    connect(plot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
 
-    if (gConf->SWITCH_SEED_RANDOM != 0) {
-        srand(gConf->SWITCH_SEED_RANDOM);
+    if (conf->SWITCH_SEED_RANDOM != 0) {
+        srand(conf->SWITCH_SEED_RANDOM);
     }
 }
 
@@ -90,10 +95,10 @@ void SLAMWrapper::setRunMode(RunMode mode) {
     runMode = mode;
 }
 
-void SLAMWrapper::loadMap(string &filename) {
-    map = filename;
+void SLAMWrapper::loadMap() {
+    string map = conf->s("m");
 
-    read_slam_input_file(map, &landmarks, &waypoints);
+    readInputFile(map, &landmarks, &waypoints);
 }
 
 void SLAMWrapper::initializeLandmarkIdentifiers() {
@@ -104,19 +109,19 @@ void SLAMWrapper::initializeLandmarkIdentifiers() {
 
 
 void SLAMWrapper::configurePlot() {
-    gPlot->setCarSize(gConf->WHEELBASE, 0);
-    gPlot->setCarSize(gConf->WHEELBASE, 1);
+    plot->setCarSize(conf->WHEELBASE, 0);
+    plot->setCarSize(conf->WHEELBASE, 1);
 
     addWaypointsAndLandmarks();
     setPlotRange();
 
     // Add initial position
-    gPlot->addTruePosition(xTrue(0), xTrue(1));
-    gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
+    plot->addTruePosition(xTrue(0), xTrue(1));
+    plot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
 
     // Add initial position estimate
-    gPlot->addEstimatedPosition(xTrue(0), xTrue(1));
-    gPlot->setCarEstimatedPosition(xTrue(0), xTrue(1), xTrue(2));
+    plot->addEstimatedPosition(xTrue(0), xTrue(1));
+    plot->setCarEstimatedPosition(xTrue(0), xTrue(1), xTrue(2));
 
     emit replot();
 }
@@ -136,7 +141,7 @@ void SLAMWrapper::addWaypointsAndLandmarks() {
             waypointYs.push_back(waypoints(1, i));
         }
 
-        gPlot->setWaypoints(waypointXs, waypointYs);
+        plot->setWaypoints(waypointXs, waypointYs);
     }
 
     // Draw landmarks
@@ -146,7 +151,7 @@ void SLAMWrapper::addWaypointsAndLandmarks() {
         landmarkYs.push_back(landmarks(1, i));
     }
 
-    gPlot->setLandmarks(landmarkXs, landmarkYs);
+    plot->setLandmarks(landmarkXs, landmarkYs);
 
 }
 
@@ -178,7 +183,7 @@ void SLAMWrapper::setPlotRange() {
         if (landmarks(1, i) < yMin) { yMin = landmarks(1, i); }
     }
 
-    gPlot->setPlotRange(xMin - (xMax - xMin) * 0.05, xMax + (xMax - xMin) * 0.05,
+    plot->setPlotRange(xMin - (xMax - xMin) * 0.05, xMax + (xMax - xMin) * 0.05,
                         yMin - (yMax - yMin) * 0.05, yMax + (yMax - yMin) * 0.05);
 
 }
@@ -190,7 +195,7 @@ int SLAMWrapper::control() {
                 return -1;
             }
 
-            compute_steering(xTrue, waypoints, indexOfFirstWaypoint, gConf->AT_WAYPOINT, G, gConf->RATEG, gConf->MAXG, dt);
+            compute_steering(xTrue, waypoints, indexOfFirstWaypoint, conf->AT_WAYPOINT, G, conf->RATEG, conf->MAXG, dt);
 
             if (indexOfFirstWaypoint == -1 && nLoop > 1) {
                 indexOfFirstWaypoint = 0;
@@ -209,36 +214,36 @@ int SLAMWrapper::control() {
             switch (command) {
                 case 1:
                     // Forward
-                    V = gConf->V;
+                    V = conf->V;
                     G = 0.0;
                     break;
                 case 2:
                     // Backward
-                    V = -gConf->V;
+                    V = -conf->V;
                     G = 0.0;
                     break;
                 case 3:
                     // Turn left
-                    V = gConf->V;
+                    V = conf->V;
                     G = 30.0 * M_PI / 180.0;
                     break;
                 case 4:
                     // Turn right
-                    V = gConf->V;
+                    V = conf->V;
                     G = -30.0 * M_PI / 180.0;
                     break;
                 default:
-                    V = gConf->V;
+                    V = conf->V;
                     G = 0.0;
             }
             break;
     }
 
     // Predict current position and angle
-    predict_true(xTrue, V, G, gConf->WHEELBASE, dt);
+    predict_true(xTrue, V, G, conf->WHEELBASE, dt);
 
     // Add process noise
-    add_control_noise(V, G, Q, gConf->SWITCH_CONTROL_NOISE, VnGn);
+    add_control_noise(V, G, Q, conf->SWITCH_CONTROL_NOISE, VnGn);
     Vn = VnGn[0];
     Gn = VnGn[1];
 

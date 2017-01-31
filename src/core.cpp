@@ -693,7 +693,7 @@ void transform_to_global(MatrixXf &p, VectorXf &b) {
 }
 
 
-void read_slam_input_file(const string s, MatrixXf *lm, MatrixXf *wp) {
+void readInputFile(const string s, MatrixXf *lm, MatrixXf *wp) {
     if (access(s.c_str(), R_OK) == -1) {
         std::cerr << "Unable to read input file" << s << std::endl;
         exit(EXIT_FAILURE);

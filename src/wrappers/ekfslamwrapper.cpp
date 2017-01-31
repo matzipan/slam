@@ -12,12 +12,8 @@
 using namespace std;
 using namespace Eigen;
 
-// global variable
-extern Plot *gPlot;
-extern Conf *gConf;
 
-
-EKFSLAMWrapper::EKFSLAMWrapper(QObject *parent) : SLAMWrapper(parent) {
+EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
     algorithm = new EKFSLAM();
 }
 
@@ -55,7 +51,7 @@ void EKFSLAMWrapper::run() {
         dtSum += dt;
         bool observe = false;
 
-        if (dtSum >= gConf->DT_OBSERVE) {
+        if (dtSum >= conf->DT_OBSERVE) {
             observe = true;
             dtSum = 0;
 
@@ -63,19 +59,19 @@ void EKFSLAMWrapper::run() {
             vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
 
             //z is the range and bearing of the observed landmark
-            z = get_observations(xTrue, landmarks, ftag_visible, gConf->MAX_RANGE);
-            add_observation_noise(z, R, gConf->SWITCH_SENSOR_NOISE);
+            z = get_observations(xTrue, landmarks, ftag_visible, conf->MAX_RANGE);
+            add_observation_noise(z, R, conf->SWITCH_SENSOR_NOISE);
 
             plines = make_laser_lines(z, xTrue);
         }
 
         // @TODO what happens if this is moved inside the if(OBSERVE) branch?
         algorithm->sim(landmarks, waypoints, x, P, Vn, Gn, Qe,
-                       gConf->WHEELBASE, dt, xTrue(2) + gConf->sigmaT * unifRand(), gConf->SWITCH_HEADING_KNOWN,
+                       conf->WHEELBASE, dt, xTrue(2) + conf->sigmaT * unifRand(), conf->SWITCH_HEADING_KNOWN,
                        sigmaPhi, ftag,
-                       z, Re, gConf->GATE_REJECT, gConf->GATE_AUGMENT, gConf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
+                       z, Re, conf->GATE_REJECT, conf->GATE_AUGMENT, conf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
                        idf, zn,
-                       dataAssociationTable, gConf->SWITCH_BATCH_UPDATE == 1, R);
+                       dataAssociationTable, conf->SWITCH_BATCH_UPDATE == 1, R);
 
         // Update status bar
         currentIteration++;
@@ -89,15 +85,15 @@ void EKFSLAMWrapper::run() {
         emit showMessage(plotMessage);
 
         // Add new position
-        gPlot->addTruePosition(xTrue(0), xTrue(1));
-        gPlot->addEstimatedPosition(x(0), x(1));
+        plot->addTruePosition(xTrue(0), xTrue(1));
+        plot->addEstimatedPosition(x(0), x(1));
 
         // Draw current position
-        gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarEstimatedPosition(x(0), x(1), x(2));
+        plot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
+        plot->setCarEstimatedPosition(x(0), x(1), x(2));
 
         // Set laser lines
-        gPlot->setLaserLines(plines);
+        plot->setLaserLines(plines);
 
         drawCovarianceEllipseLines();
 
@@ -122,7 +118,7 @@ void EKFSLAMWrapper::drawCovarianceEllipseLines() {
     x_(1) = x(1);
 
     make_covariance_ellipse(x_, P_, covarianceEllipseLines);
-    gPlot->setCovEllipse(covarianceEllipseLines, 0);
+    plot->setCovEllipse(covarianceEllipseLines, 0);
 
     int j = (x.size() - 3) / 2;
     for (int i = 0; i < j; i++) {
@@ -131,6 +127,6 @@ void EKFSLAMWrapper::drawCovarianceEllipseLines() {
         P_ = P.block(3 + i * 2, 3 + i * 2, 2, 2);
 
         make_covariance_ellipse(x_, P_, covarianceEllipseLines);
-        gPlot->setCovEllipse(covarianceEllipseLines, i + 1);
+        plot->setCovEllipse(covarianceEllipseLines, i + 1);
     }
 }

@@ -582,7 +582,7 @@ void Plot::showMessage(QString &msg) {
     statusBar()->showMessage(_msg);
 }
 
-void Plot::setScreenShot_fname(std::string &fnBase) {
+void Plot::setScreenshotFilename(std::string fnBase) {
     fnScreenShot_base = fnBase;
 }
 

@@ -6,6 +6,10 @@
 #include <string>
 #include <QtGui>
 #include <Eigen/Dense>
+#include <src/plot.h>
+
+#include "../core.h"
+
 
 using namespace std;
 using namespace Eigen;
@@ -21,7 +25,7 @@ public:
         SLAM_INTERACTIVE
     };
 
-    SLAMWrapper(QObject *parent = 0);
+    SLAMWrapper(Conf *conf, Plot *plot, QObject *parent = 0);
 
     ~SLAMWrapper();
 
@@ -30,8 +34,7 @@ public:
     /// Set run mode
     void setRunMode(RunMode mode);
     /// Set map filename
-    void loadMap(string &filename);
-
+    void loadMap();
 
 signals:
     void replot();
@@ -70,6 +73,9 @@ protected:
      */
     int getCurrentCommand();
 
+    Conf *conf;
+    Plot *plot;
+
     /// Is finished?
     int isAlive;
 
@@ -78,7 +84,6 @@ protected:
     uint64_t commandTime;
     RunMode runMode;
 
-    string map;
     QString plotMessage;
 
     /// Landmark positions
