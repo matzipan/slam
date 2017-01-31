@@ -34,6 +34,13 @@ public:
 protected:
     void run();
 
+    void initializeDataAssociationTable();
+
+    void drawCovarianceEllipseLines();
+
+    vector<int> dataAssociationTable;
+    MatrixXf P;
+
     EKFSLAM *algorithm;
 };
 

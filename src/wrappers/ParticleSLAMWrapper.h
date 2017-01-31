@@ -19,8 +19,22 @@ public:
 
 protected:
     void initializeParticles();
+    void initializeDataAssociationTable();
+
+    void drawParticles();
+    void drawFeatureParticles();
+
+    /**
+     * Compute estimated position over all the particles.
+     *
+     * @param [out] x - x coordinate
+     * @param [out] y - y coordinate
+     * @param [out] t - angle
+     */
+    void computeEstimatedPosition(double &x, double &y, double &t);
 
     vector<Particle> particles;
+    VectorXf dataAssociationTable;
 
 };
 

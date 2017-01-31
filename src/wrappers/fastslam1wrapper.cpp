@@ -31,42 +31,11 @@ void FastSLAM1Wrapper::run() {
 
     configurePlot();
     initializeParticles();
+    initializeLandmarkIdentifiers();
+    initializeDataAssociationTable();
 
     // FIXME: force predict noise on
     gConf->SWITCH_PREDICT_NOISE = 1;
-
-    QVector<double> arrParticles_x, arrParticles_y;
-    QVector<double> arrParticlesFea_x, arrParticlesFea_y;
-
-    double w_max;
-    double x_mean, y_mean, t_max;
-
-    vector<int> ftag; //identifier for each landmark
-    for (int i = 0; i < landmarks.cols(); i++) {
-        ftag.push_back(i);
-    }
-
-    //data ssociation table
-    VectorXf data_association_table(landmarks.cols());
-    for (int s = 0; s < data_association_table.size(); s++) {
-        data_association_table[s] = -1;
-    }
-
-    MatrixXf plines; //will later change to list of points
-
-    if (gConf->SWITCH_SEED_RANDOM != 0) {
-        srand(gConf->SWITCH_SEED_RANDOM);
-    }
-
-    MatrixXf Qe = MatrixXf(Q);
-    MatrixXf Re = MatrixXf(R);
-
-    if (gConf->SWITCH_INFLATE_NOISE == 1) {
-        Qe = 2 * Q;
-        Re = 2 * R;
-    }
-
-    vector<VectorXf> z; // Range and bearings of visible landmarks
 
     // Main loop
     while (isAlive) {
@@ -106,10 +75,10 @@ void FastSLAM1Wrapper::run() {
             vector<VectorXf> zf;
             vector<VectorXf> zn;
 
-            data_associate_known(z, ftag_visible, data_association_table, Nf, zf, idf, zn);
+            data_associate_known(z, ftag_visible, dataAssociationTable, Nf, zf, idf, zn);
 
             // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, z, ftag_visible, data_association_table, R, gConf->NEFFECTIVE, gConf->SWITCH_RESAMPLE == 1);
+            algorithm->update(particles, zf, zn, idf, z, ftag_visible, dataAssociationTable, R, gConf->NEFFECTIVE, gConf->SWITCH_RESAMPLE == 1);
         }
 
 
@@ -124,51 +93,19 @@ void FastSLAM1Wrapper::run() {
         plotMessage.sprintf("[%6d]", currentIteration);
         emit showMessage(plotMessage);
 
-        // get mean x, y
-        x_mean = 0;
-        y_mean = 0;
-        // The angle corresponding to the particle with the highest weight
-        t_max = 0;
-        w_max = -1e30;
-        for (int i = 0; i < particles.size(); i++) {
-            if (particles[i].w() > w_max) {
-                w_max = particles[i].w();
-                t_max = particles[i].xv()(2);
-            }
-            x_mean += particles[i].xv()(0);
-            y_mean += particles[i].xv()(1);
-        }
+        drawParticles();
+        drawFeatureParticles();
 
-        x_mean = x_mean / particles.size();
-        y_mean = y_mean / particles.size();
-
-        // Draw particles
-        arrParticles_x.clear();
-        arrParticles_y.clear();
-        for (int i = 0; i < particles.size(); i++) {
-            arrParticles_x.push_back(particles[i].xv()(0));
-            arrParticles_y.push_back(particles[i].xv()(1));
-        }
-        gPlot->setParticles(arrParticles_x, arrParticles_y);
-
-        // Draw feature particles
-        arrParticlesFea_x.clear();
-        arrParticlesFea_y.clear();
-        for (int i = 0; i < particles.size(); i++) {
-            for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
-                arrParticlesFea_x.push_back(particles[i].xf()[j](0));
-                arrParticlesFea_y.push_back(particles[i].xf()[j](1));
-            }
-        }
-        gPlot->setParticlesFea(arrParticlesFea_x, arrParticlesFea_y);
+        double x, y, t;
+        computeEstimatedPosition(x, y, t);
 
         // Add new position
         gPlot->addTruePosition(xTrue(0), xTrue(1));
-        gPlot->addEstimatedPosition(x_mean, y_mean);
+        gPlot->addEstimatedPosition(x, y);
 
         // Draw current position
         gPlot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
-        gPlot->setCarEstimatedPosition(x_mean, y_mean, t_max);
+        gPlot->setCarEstimatedPosition(x, y, t);
 
         // Set laser lines
         gPlot->setLaserLines(plines);
@@ -176,5 +113,5 @@ void FastSLAM1Wrapper::run() {
         emit replot();
     }
 
-    delete[] VnGn;
+    delete[] VnGn; //@TODO is this really needed? Is it a memory leak?
 }

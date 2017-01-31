@@ -30,40 +30,13 @@ void EKFSLAMWrapper::run() {
     printf("EKFSLAM\n\n");
 
     configurePlot();
+    initializeLandmarkIdentifiers();
+    initializeDataAssociationTable();
 
-    MatrixXf P(3, 3);
-
+    P = MatrixXf(3, 3);
     P.setZero(3, 3);
 
-    vector<int> ftag; //identifier for each landmark
-    for (int i = 0; i < landmarks.cols(); i++) {
-        ftag.push_back(i);
-    }
-
-    //data ssociation table
-    vector<int> data_association_table;
-    for (int i = 0; i < landmarks.cols(); i++) {
-        data_association_table.push_back(-1);
-    }
-
-    MatrixXf plines; //will later change to list of points
-    MatrixXf covLines;   // covariance ellipse lines
-
-    if (gConf->SWITCH_SEED_RANDOM != 0) {
-        srand(gConf->SWITCH_SEED_RANDOM);
-    }
-
-    MatrixXf Qe = MatrixXf(Q);
-    MatrixXf Re = MatrixXf(R);
-
-    if (gConf->SWITCH_INFLATE_NOISE == 1) {
-        Qe = 2 * Q;
-        Re = 8 * R;
-    }
-
     vector<int> idf;
-
-    vector<VectorXf> z; //range and bearings of visible landmarks
     vector<VectorXf> zf;
     vector<VectorXf> zn;
 
@@ -102,7 +75,7 @@ void EKFSLAMWrapper::run() {
                        sigmaPhi, ftag,
                        z, Re, gConf->GATE_REJECT, gConf->GATE_AUGMENT, gConf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
                        idf, zn,
-                       data_association_table, gConf->SWITCH_BATCH_UPDATE == 1, R);
+                       dataAssociationTable, gConf->SWITCH_BATCH_UPDATE == 1, R);
 
         // Update status bar
         currentIteration++;
@@ -126,28 +99,38 @@ void EKFSLAMWrapper::run() {
         // Set laser lines
         gPlot->setLaserLines(plines);
 
-        // Set covariance ellipse lines
-        MatrixXf x_(2, 1);
-        MatrixXf P_ = P.block(0, 0, 2, 2);
-        x_(0) = x(0);
-        x_(1) = x(1);
-
-        make_covariance_ellipse(x_, P_, covLines);
-        gPlot->setCovEllipse(covLines, 0);
-
-        int j = (x.size() - 3) / 2;
-        for (int i = 0; i < j; i++) {
-            x_(0) = x(3 + i * 2);
-            x_(1) = x(3 + i * 2 + 1);
-            P_ = P.block(3 + i * 2, 3 + i * 2, 2, 2);
-
-            make_covariance_ellipse(x_, P_, covLines);
-            gPlot->setCovEllipse(covLines, i + 1);
-        }
+        drawCovarianceEllipseLines();
 
         emit replot();
     }
 
-    delete[] VnGn;
+    delete[] VnGn; //@TODO is this really needed? Is it a memory leak?
 }
 
+void EKFSLAMWrapper::initializeDataAssociationTable() {
+    for (int i = 0; i < landmarks.cols(); i++) {
+        dataAssociationTable.push_back(-1);
+    }
+}
+
+void EKFSLAMWrapper::drawCovarianceEllipseLines() {
+    MatrixXf covarianceEllipseLines;
+
+    MatrixXf x_(2, 1);
+    MatrixXf P_ = P.block(0, 0, 2, 2);
+    x_(0) = x(0);
+    x_(1) = x(1);
+
+    make_covariance_ellipse(x_, P_, covarianceEllipseLines);
+    gPlot->setCovEllipse(covarianceEllipseLines, 0);
+
+    int j = (x.size() - 3) / 2;
+    for (int i = 0; i < j; i++) {
+        x_(0) = x(3 + i * 2);
+        x_(1) = x(3 + i * 2 + 1);
+        P_ = P.block(3 + i * 2, 3 + i * 2, 2, 2);
+
+        make_covariance_ellipse(x_, P_, covarianceEllipseLines);
+        gPlot->setCovEllipse(covarianceEllipseLines, i + 1);
+    }
+}

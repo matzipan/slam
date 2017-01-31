@@ -27,21 +27,23 @@ public:
 
     void stop(void);
 
-    /**
-     * Available commands:
-     *   - 1 - Forward
-     *   - 2 - Backward
-     *   - 3 - Turn Left
-     *   - 4 - Turn Right
-     *
-     *   @return command value according to above list
-     */
-    int getCurrentCommand();
-
     /// Set run mode
     void setRunMode(RunMode mode);
     /// Set map filename
     void loadMap(string &filename);
+
+
+signals:
+    void replot();
+    void showMessage(QString msg);
+
+public slots:
+    virtual void commandRecieve(int command);
+
+protected:
+    virtual void run() = 0;
+
+    void initializeLandmarkIdentifiers();
 
     /// Loads information and performs initial adjustment on the plot
     void configurePlot();
@@ -57,16 +59,16 @@ public:
      */
     int control();
 
-
-signals:
-    void replot();
-    void showMessage(QString msg);
-
-public slots:
-    virtual void commandRecieve(int command);
-
-protected:
-    virtual void run() = 0;
+    /**
+     * Available commands:
+     *   - 1 - Forward
+     *   - 2 - Backward
+     *   - 3 - Turn Left
+     *   - 4 - Turn Right
+     *
+     *   @return command value according to above list
+     */
+    int getCurrentCommand();
 
     /// Is finished?
     int isAlive;
@@ -106,6 +108,10 @@ protected:
     MatrixXf Q;
     // @TODO need to find a description for this item
     MatrixXf R;
+    // @TODO need to find a description for this item
+    MatrixXf Qe;
+    // @TODO need to find a description for this item
+    MatrixXf Re;
     /// Heading uncertainty, in radians
     float sigmaPhi;
     /// Change in time between predicts
@@ -113,6 +119,12 @@ protected:
     /// Change in time since last observation
     float dtSum = 0;
     int drawSkip;
+    /// Identifier for each landmark
+    vector<int> ftag;
+    MatrixXf plines; // Old comment: will later change to list of point
+
+    /// Range and bearings of visible landmarks
+    vector<VectorXf> z;
 };
 
 #endif // SLAM_THREAD_H

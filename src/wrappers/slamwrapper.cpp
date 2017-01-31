@@ -25,6 +25,14 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     R = MatrixXf(2, 2);
     R << pow(gConf->sigmaR, 2), 0, 0, pow(gConf->sigmaB, 2);
 
+    if (gConf->SWITCH_INFLATE_NOISE == 1) {
+        Qe = 2 * Q;
+        Re = 2 * R;
+    } else {
+        Qe = MatrixXf(Q);
+        Re = MatrixXf(R);
+    }
+
     sigmaPhi = gConf->sigmaT;
 
     // Setting initial velocity
@@ -49,6 +57,10 @@ SLAMWrapper::SLAMWrapper(QObject *parent) : QThread(parent) {
     connect(this, SIGNAL(showMessage(QString)), gPlot, SLOT(canvasShowMessage(QString)));
 
     connect(gPlot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
+
+    if (gConf->SWITCH_SEED_RANDOM != 0) {
+        srand(gConf->SWITCH_SEED_RANDOM);
+    }
 }
 
 SLAMWrapper::~SLAMWrapper() { }
@@ -83,6 +95,13 @@ void SLAMWrapper::loadMap(string &filename) {
 
     read_slam_input_file(map, &landmarks, &waypoints);
 }
+
+void SLAMWrapper::initializeLandmarkIdentifiers() {
+    for (int i = 0; i < landmarks.cols(); i++) {
+        ftag.push_back(i);
+    }
+}
+
 
 void SLAMWrapper::configurePlot() {
     gPlot->setCarSize(gConf->WHEELBASE, 0);
