@@ -60,7 +60,7 @@ void EKFSLAMWrapper::run() {
             dtSum = 0;
 
             //Compute true data, then add noise
-            vector<int> ftag_visible = vector<int>(ftag); //modify the copy, not the ftag
+            vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
 
             //z is the range and bearing of the observed landmark
             z = get_observations(xTrue, landmarks, ftag_visible, gConf->MAX_RANGE);

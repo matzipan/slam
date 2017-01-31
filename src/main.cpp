@@ -65,8 +65,6 @@ int main(int argc, char *argv[]) {
 
     gConf = &conf;
 
-    dbg_stacktrace_setup();
-
     // parse input arguments
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2) {

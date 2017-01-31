@@ -71,13 +71,13 @@ void SLAMWrapper::stop() {
 
 void SLAMWrapper::commandRecieve(int command) {
     commandId = command;
-    commandTime = tm_get_millis();
+    commandTime = getMillisecondsTime();
 }
 
 int SLAMWrapper::getCurrentCommand() {
-    u_int64_t timeNow;
+    unsigned long timeNow;
 
-    timeNow = tm_get_millis();
+    timeNow = getMillisecondsTime();
 
     if (timeNow - commandTime < 30) {
         return commandId;
