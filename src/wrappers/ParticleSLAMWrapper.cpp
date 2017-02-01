@@ -56,7 +56,7 @@ void ParticleSLAMWrapper::drawFeatureParticles() {
 }
 
 void ParticleSLAMWrapper::computeEstimatedPosition(double &x, double &y, double &t) {
-    // Compute x and y as the mean of x and y over all the particles and the t is the angle corresponding to the particle
+    // Compute xEstimated and y as the mean of xEstimated and y over all the particles and the t is the angle corresponding to the particle
     // with the highest weight.
     double wMax;
 

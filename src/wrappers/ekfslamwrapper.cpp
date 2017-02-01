@@ -29,6 +29,7 @@ void EKFSLAMWrapper::run() {
     initializeLandmarkIdentifiers();
     initializeDataAssociationTable();
 
+    //@TODO what is this?
     P = MatrixXf(3, 3);
     P.setZero(3, 3);
 
@@ -55,21 +56,24 @@ void EKFSLAMWrapper::run() {
             observe = true;
             dtSum = 0;
 
-            //Compute true data, then add noise
-            vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
+            // Modify the copy, not the landmarkIdentifiers
+            vector<int> visibleLandmarkIdentifiers = vector<int>(landmarkIdentifiers);
 
-            //z is the range and bearing of the observed landmark
-            z = get_observations(xTrue, landmarks, ftag_visible, conf->MAX_RANGE);
-            add_observation_noise(z, R, conf->SWITCH_SENSOR_NOISE);
+            // Compute true data, then add noise
+            landmarksRangeBearing = getObservations(landmarks, xTrue, visibleLandmarkIdentifiers, conf->MAX_RANGE);
+            if(conf->SWITCH_SENSOR_NOISE) {
+                addObservationNoise(landmarksRangeBearing, R);
+            }
 
-            plines = make_laser_lines(z, xTrue);
+            plines = makeLaserLines(landmarksRangeBearing, xTrue);
         }
 
         // @TODO what happens if this is moved inside the if(OBSERVE) branch?
-        algorithm->sim(landmarks, waypoints, x, P, Vn, Gn, Qe,
+        // @TODO still to clean up
+        algorithm->sim(landmarks, waypoints, xEstimated, P, Vn, Gn, Qe,
                        conf->WHEELBASE, dt, xTrue(2) + conf->sigmaT * unifRand(), conf->SWITCH_HEADING_KNOWN,
-                       sigmaPhi, ftag,
-                       z, Re, conf->GATE_REJECT, conf->GATE_AUGMENT, conf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
+                       sigmaPhi, landmarkIdentifiers,
+                       landmarksRangeBearing, Re, conf->GATE_REJECT, conf->GATE_AUGMENT, conf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
                        idf, zn,
                        dataAssociationTable, conf->SWITCH_BATCH_UPDATE == 1, R);
 
@@ -86,11 +90,11 @@ void EKFSLAMWrapper::run() {
 
         // Add new position
         plot->addTruePosition(xTrue(0), xTrue(1));
-        plot->addEstimatedPosition(x(0), x(1));
+        plot->addEstimatedPosition(xEstimated(0), xEstimated(1));
 
         // Draw current position
         plot->setCarTruePosition(xTrue(0), xTrue(1), xTrue(2));
-        plot->setCarEstimatedPosition(x(0), x(1), x(2));
+        plot->setCarEstimatedPosition(xEstimated(0), xEstimated(1), xEstimated(2));
 
         // Set laser lines
         plot->setLaserLines(plines);
@@ -114,19 +118,19 @@ void EKFSLAMWrapper::drawCovarianceEllipseLines() {
 
     MatrixXf x_(2, 1);
     MatrixXf P_ = P.block(0, 0, 2, 2);
-    x_(0) = x(0);
-    x_(1) = x(1);
+    x_(0) = xEstimated(0);
+    x_(1) = xEstimated(1);
 
-    make_covariance_ellipse(x_, P_, covarianceEllipseLines);
+    makeCovarianceEllipse(x_, P_, covarianceEllipseLines);
     plot->setCovEllipse(covarianceEllipseLines, 0);
 
-    int j = (x.size() - 3) / 2;
+    int j = (xEstimated.size() - 3) / 2;
     for (int i = 0; i < j; i++) {
-        x_(0) = x(3 + i * 2);
-        x_(1) = x(3 + i * 2 + 1);
+        x_(0) = xEstimated(3 + i * 2);
+        x_(1) = xEstimated(3 + i * 2 + 1);
         P_ = P.block(3 + i * 2, 3 + i * 2, 2, 2);
 
-        make_covariance_ellipse(x_, P_, covarianceEllipseLines);
+        makeCovarianceEllipse(x_, P_, covarianceEllipseLines);
         plot->setCovEllipse(covarianceEllipseLines, i + 1);
     }
 }

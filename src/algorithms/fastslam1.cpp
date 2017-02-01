@@ -41,7 +41,7 @@ void FastSLAM1::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
         A(0) = V;
         A(1) = G;
         VectorXf VG(2);
-        VG = multivariate_gauss(A, Q, 1);
+        VG = multivariateGauss(A, Q, 1);
         V = VG(0);
         G = VG(1);
     }
@@ -49,7 +49,7 @@ void FastSLAM1::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
     // Predict state
     VectorXf xv = particle.xv();
     VectorXf xv_temp(3);
-    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), pi_to_pi2(xv(2) + V * dt * sin(G / wheel_base));
+    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheel_base));
     particle.setXv(xv_temp);
 }
 
@@ -84,7 +84,7 @@ float FastSLAM1::compute_weight(Particle &particle, vector<VectorXf> &z, vector<
 
     for (unsigned long j = 0; j < z.size(); j++) {
         VectorXf v_j = z[j] - zp[j];
-        v_j[1] = pi_to_pi(v_j[1]);
+        v_j[1] = trigonometricOffset(v_j[1]);
         v.push_back(v_j);
     }
 

@@ -94,10 +94,9 @@ protected:
     int currentIteration = 0;
 
     // @TODO need to find a description for this item
-    // @TODO is this really needed?
-    float *VnGn = new float[2];
+    float Vn;
     // @TODO need to find a description for this item
-    float Vn, Gn;
+    float Gn;
     /// Velocity
     float V;
     /// Steer angle
@@ -108,7 +107,7 @@ protected:
     /// True position
     VectorXf xTrue;
     /// Predicted position
-    VectorXf x;
+    VectorXf xEstimated;
     // @TODO need to find a description for this item
     MatrixXf Q;
     // @TODO need to find a description for this item
@@ -125,11 +124,11 @@ protected:
     float dtSum = 0;
     int drawSkip;
     /// Identifier for each landmark
-    vector<int> ftag;
+    vector<int> landmarkIdentifiers;
     MatrixXf plines; // Old comment: will later change to list of point
 
-    /// Range and bearings of visible landmarks
-    vector<VectorXf> z;
+    /// Range and bearing for each of the observed landmarks
+    vector<VectorXf> landmarksRangeBearing;
 };
 
 #endif // SLAM_THREAD_H

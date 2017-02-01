@@ -10,39 +10,39 @@
 using namespace std;
 using namespace Eigen;
 
-EKFSLAM::EKFSLAM() { }
+EKFSLAM::EKFSLAM() {}
 
-EKFSLAM::~EKFSLAM() { }
+EKFSLAM::~EKFSLAM() {}
 
 void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float Vn, float Gn, MatrixXf &Qe,
                   float wheel_base, float dt, float phi, int use_heading, float sigma_phi, vector<int> ftag,
                   vector<VectorXf> z, MatrixXf Re, float gate_reject, float gate_augment, bool association_known,
                   bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
                   vector<int> data_association_table,
-                  bool batch_update, MatrixXf R) {
-    // predict position & heading
-    ekf_predict(x, P, Vn, Gn, Qe, wheel_base, dt);
+                  bool doBatchUpdate, MatrixXf R) {
+    // Predict position & heading
+    predict(x, P, Vn, Gn, Qe, wheel_base, dt);
 
-    // correct x and P by other sensor (low noise, IMU ...)
-    ekf_observe_heading(x, P, phi, use_heading, sigma_phi);
+    // Correct xEstimated and P by other sensor (low noise, IMU ...)
+    observeHeading(x, P, phi, use_heading, sigma_phi);
 
     if (observe) {
         if (association_known) {
-            ekf_data_associate_known(x, z, ftag, zf, idf, zn, data_association_table);
+            dataAssociateKnown(x, z, ftag, zf, idf, zn, data_association_table);
         } else {
-            ekf_data_associate(x, P, z, Re, gate_reject, gate_augment, zf, idf, zn);
+            dataAssociate(x, P, z, Re, gate_reject, gate_augment, zf, idf, zn);
         }
 
-        if (batch_update) {
-            ekf_batch_update(x, P, zf, R, idf);
+        if (doBatchUpdate) {
+            batchUpdate(x, P, zf, R, idf);
         }
 
-        ekf_augment(x, P, zn, Re);
+        augment(x, P, zn, Re);
     }
 }
 
 
-void EKFSLAM::ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt) {
+void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt) {
     float s, c;
     float vts, vtc;
     MatrixXf Gv(3, 3), Gu(3, 2);         // Jacobians
@@ -72,10 +72,10 @@ void EKFSLAM::ekf_predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &
     // predict state
     x(0) = x(0) + vtc;
     x(1) = x(1) + vts;
-    x(2) = pi_to_pi(x(2) + V * dt * sin(G) / wheel_base);
+    x(2) = trigonometricOffset(x(2) + V * dt * sin(G) / wheel_base);
 }
 
-void EKFSLAM::ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi) {
+void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi) {
     if (use_heading == 0) { return; }
 
     float v;
@@ -83,7 +83,7 @@ void EKFSLAM::ekf_observe_heading(VectorXf &x, MatrixXf &P, float phi, int use_h
 
     H.setZero(1, x.size());
     H(2) = 1;
-    v = pi_to_pi(phi - x(2));
+    v = trigonometricOffset(phi - x(2));
 
     KF_joseph_update(x, P, v, sigma_phi * sigma_phi, H);
 }
@@ -101,7 +101,7 @@ void EKFSLAM::ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) 
 
     dx = x(fpos) - x(0);
     dy = x(fpos + 1) - x(1);
-    d2 = dx*dx + dy*dy;
+    d2 = dx * dx + dy * dy;
     d = sqrtf(d2);
     xd = dx / d;
     yd = dy / d;
@@ -124,7 +124,8 @@ void EKFSLAM::ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) 
     H(1, fpos + 1) = xd2;
 }
 
-void EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd) {
+void
+EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd) {
     VectorXf zp;
     MatrixXf H;
     VectorXf v(2);
@@ -133,7 +134,7 @@ void EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, Mat
     ekf_observe_model(x, idf, zp, H);
 
     v = z - zp;
-    v(1) = pi_to_pi(v(1));
+    v(1) = trigonometricOffset(v(1));
 
     S = H * P * H.transpose() + R;
 
@@ -141,8 +142,8 @@ void EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, Mat
     nd = nis + log(S.determinant());
 }
 
-void EKFSLAM::ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R, float gate1, float gate2,
-                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
+void EKFSLAM::dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R, float gate1, float gate2,
+                            vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
     unsigned long Nxv, Nf;
     unsigned long i, j;
     long jbest;
@@ -180,16 +181,16 @@ void EKFSLAM::ekf_data_associate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, 
             zf.push_back(z[i]);
             idf.push_back(jbest);
         } else if (outer > gate2) {
-            // z too far to associate, but far enough to be a new feature
+            // landmarksRangeBearing too far to associate, but far enough to be a new feature
             zn.push_back(z[i]);
         }
     }
 }
 
-//z is range and bearing of visible landmarks
+//landmarksRangeBearing is range and bearing of visible landmarks
 // find associations (zf) and new features (zn)
-void EKFSLAM::ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<int> &idz, vector<VectorXf> &zf,
-                              vector<int> &idf, vector<VectorXf> &zn, vector<int> &table) {
+void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &z, vector<int> &idz, vector<VectorXf> &zf,
+                                 vector<int> &idf, vector<VectorXf> &zn, vector<int> &table) {
     vector<int> idn;
     unsigned i, ii;
 
@@ -226,7 +227,7 @@ void EKFSLAM::ekf_data_associate_known(VectorXf &x, vector<VectorXf> &z, vector<
     }
 }
 
-void EKFSLAM::ekf_batch_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R, vector<int> &idf) {
+void EKFSLAM::batchUpdate(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R, vector<int> &idf) {
     int lenz, lenx;
     MatrixXf H, RR;
     VectorXf v;
@@ -249,7 +250,7 @@ void EKFSLAM::ekf_batch_update(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, M
         H.block(i * 2, 0, 2, lenx) = H_;
 
         v(2 * i) = zf[i](0) - zp(0);
-        v(2 * i + 1) = pi_to_pi(zf[i](1) - zp(1));
+        v(2 * i + 1) = trigonometricOffset(zf[i](1) - zp(1));
 
         RR.block(i * 2, i * 2, 2, 2) = R;
     }
@@ -271,8 +272,8 @@ void EKFSLAM::ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re)
     s = sin(x(2) + b);
     c = cos(x(2) + b);
 
-    // augment x
-    //      x = [x; x(1)+r*c; x(2)+r*s];
+    // augment xEstimated
+    //      xEstimated = [xEstimated; xEstimated(1)+r*c; xEstimated(2)+r*s];
     x.conservativeResize(len + 2);
     x(len) = x(0) + r * c;
     x(len + 1) = x(1) + r * s;
@@ -310,7 +311,7 @@ void EKFSLAM::ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re)
     }
 }
 
-void EKFSLAM::ekf_augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re) {
+void EKFSLAM::augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re) {
     for (unsigned long i = 0; i < zn.size(); i++) {
         ekf_add_one_z(x, P, zn[i], Re);
     }

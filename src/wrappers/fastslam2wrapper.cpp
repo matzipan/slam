@@ -68,14 +68,15 @@ void FastSLAM2Wrapper::run() {
             observe = true;
             dtSum = 0;
 
-            vector<int> ftag_visible = vector<int>(ftag); // Modify the copy, not the ftag
+            vector<int> ftag_visible = vector<int>(landmarkIdentifiers); // Modify the copy, not the landmarkIdentifiers
 
             // Compute true data, then add noise
-            // z is the range and bearing of the observed landmark
-            z = get_observations(xTrue, landmarks, ftag_visible, conf->MAX_RANGE);
-            add_observation_noise(z, R, conf->SWITCH_SENSOR_NOISE);
+            landmarksRangeBearing = getObservations(landmarks, xTrue, ftag_visible, conf->MAX_RANGE);
+            if(conf->SWITCH_SENSOR_NOISE) {
+                addObservationNoise(landmarksRangeBearing, R);
+            }
 
-            plines = make_laser_lines(z, xTrue);
+            plines = makeLaserLines(landmarksRangeBearing, xTrue);
 
             // Compute (known) data associations
             unsigned long Nf = particles[0].xf().size();
@@ -83,10 +84,10 @@ void FastSLAM2Wrapper::run() {
             vector<VectorXf> zf;
             vector<VectorXf> zn;
 
-            data_associate_known(z, ftag_visible, dataAssociationTable, Nf, zf, idf, zn);
+            data_associate_known(landmarksRangeBearing, ftag_visible, dataAssociationTable, Nf, zf, idf, zn);
 
             // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, z, ftag_visible, dataAssociationTable, Re, conf->NEFFECTIVE, conf->SWITCH_RESAMPLE == 1);
+            algorithm->update(particles, zf, zn, idf, landmarksRangeBearing, ftag_visible, dataAssociationTable, Re, conf->NEFFECTIVE, conf->SWITCH_RESAMPLE == 1);
         }
 
 

@@ -65,24 +65,33 @@ public:
     virtual int parse(void);
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Common functions
-////////////////////////////////////////////////////////////////////////////////
-void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G, float rateG, float maxG, float dt);
+/**
+ *
+ * @param [in] x - true position
+ * @param [in] waypoints
+ * @param [in] indexOfFirstWaypoint - index to current waypoint
+ * @param [in] minimumDistance - minimum distance to current waypoint before switching to next
+ * @param [in/out] G - steering angle
+ * @param [in] maximumSteeringAngleRate - maximum steering rate (radians/second)
+ * @param [in] maximumSteeringAngle - maximum steering angle (radians)
+ * @param [in] dt - timestep
+ */
+void updateSteering(VectorXf &x, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G,
+                    float maximumSteeringAngleRate, float maximumSteeringAngle, float dt);
 
-void predict_true(VectorXf &xv, float V, float G, float WB, float dt);
+void predictTruePosition(VectorXf &x, float V, float G, float wheelBase, float dt);
 
-vector<VectorXf> get_observations(VectorXf &x, MatrixXf lm, vector<int> &idf, float rmax);
+vector<VectorXf> getObservations(MatrixXf landmarks, VectorXf &x, vector<int> &landmarkIdentifiers, float maximumRange);
 
-void get_visible_landmarks(VectorXf &x, MatrixXf &lm, vector<int> &idf, float rmax);
+void getVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, vector<int> &landmarkIdentifiers, float maximumVisibilityRange);
 
-vector<VectorXf> compute_range_bearing(VectorXf &x, MatrixXf &lm);
+vector<VectorXf> computeRangeBearing(MatrixXf &landmarks, VectorXf &x);
 
-vector<int> find2(vector<float> &dx, vector<float> &dy, float phi, float rmax);
+vector<int> findVisibleLandmarks(vector<float> &dx, vector<float> &dy, float vehicleAngle, float maximumVisibiltyRange);
 
-void add_control_noise(float V, float G, MatrixXf &Q, int add_noise, float *VnGn);
+void addControlNoise(float V, float G, MatrixXf &Q, float &Vn, float &Gn);
 
-void add_observation_noise(vector<VectorXf> &z, MatrixXf &R, int addnoise);
+void addObservationNoise(vector<VectorXf> &z, MatrixXf &R);
 
 void KF_joseph_update(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H);
 
@@ -106,28 +115,27 @@ void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R);
 
 void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-////////////////////////////////////////////////////////////////////////////////
-// Utils
-////////////////////////////////////////////////////////////////////////////////
-float pi_to_pi(float ang);
 
-float pi_to_pi2(float ang);
+/**
+ * Reduce angle from a real number to offset on unit circle [0, 2*PI)
+ * @param ang - angle in radians
+ * @return angle in radians between [0, 2*PI)
+ */
+float trigonometricOffset(float ang);
 
 MatrixXf make_symmetric(MatrixXf &P);
 
 void transform_to_global(MatrixXf &p, VectorXf &b);
 
-MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv);
+MatrixXf makeLaserLines(vector<VectorXf> &rb, VectorXf &x);
 
-MatrixXf line_plot_conversion(MatrixXf &lnes);
-
-void make_covariance_ellipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines);
+void makeCovarianceEllipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines);
 
 void stratified_random(unsigned long N, vector<float> &di);
 
 double unifRand();
 
-VectorXf multivariate_gauss(VectorXf &x, MatrixXf &P, int n);
+VectorXf multivariateGauss(VectorXf &x, MatrixXf &P, int n);
 
 namespace nRandMat {
     MatrixXf randn(int m, int n);

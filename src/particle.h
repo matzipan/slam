@@ -22,7 +22,7 @@ public:
     //getters
     float &w();
 
-    VectorXf &xv();             //robot pose: x,y,theta (heading dir)
+    VectorXf &xv();             //robot pose: xEstimated,y,theta (heading dir)
     MatrixXf &Pv();             //controls: velocities
     vector<VectorXf> &xf();     //2d means of EKF
     vector<MatrixXf> &Pf();     //covariance matrices for EKF

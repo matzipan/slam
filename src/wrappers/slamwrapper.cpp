@@ -50,8 +50,8 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
     xTrue = VectorXf(3);
     xTrue.setZero(3);
 
-    x = VectorXf(3);
-    x.setZero(3);
+    xEstimated = VectorXf(3);
+    xEstimated.setZero(3);
 
     drawSkip = 4; //@TODO use methods isntead of this
     conf->i("drawSkip", drawSkip);
@@ -103,7 +103,7 @@ void SLAMWrapper::loadMap() {
 
 void SLAMWrapper::initializeLandmarkIdentifiers() {
     for (int i = 0; i < landmarks.cols(); i++) {
-        ftag.push_back(i);
+        landmarkIdentifiers.push_back(i);
     }
 }
 
@@ -132,7 +132,7 @@ void SLAMWrapper::addWaypointsAndLandmarks() {
     QVector<double> waypointXs, waypointYs;
     QVector<double> landmarkXs, landmarkYs;
 
-    // draw waypoints
+    // Draw waypoints
     if (runMode == SLAM_WAYPOINT) {
         n = waypoints.cols();
 
@@ -195,7 +195,7 @@ int SLAMWrapper::control() {
                 return -1;
             }
 
-            compute_steering(xTrue, waypoints, indexOfFirstWaypoint, conf->AT_WAYPOINT, G, conf->RATEG, conf->MAXG, dt);
+            updateSteering(xTrue, waypoints, indexOfFirstWaypoint, conf->AT_WAYPOINT, G, conf->RATEG, conf->MAXG, dt);
 
             if (indexOfFirstWaypoint == -1 && nLoop > 1) {
                 indexOfFirstWaypoint = 0;
@@ -240,12 +240,12 @@ int SLAMWrapper::control() {
     }
 
     // Predict current position and angle
-    predict_true(xTrue, V, G, conf->WHEELBASE, dt);
+    predictTruePosition(xTrue, V, G, conf->WHEELBASE, dt);
 
-    // Add process noise
-    add_control_noise(V, G, Q, conf->SWITCH_CONTROL_NOISE, VnGn);
-    Vn = VnGn[0];
-    Gn = VnGn[1];
+    if(conf->SWITCH_CONTROL_NOISE) {
+        // Add process noise
+        addControlNoise(V, G, Q, Vn, Gn);
+    }
 
     return 1;
 }

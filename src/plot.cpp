@@ -122,7 +122,7 @@ void Plot::canvsMousePressEvent(QMouseEvent *event) {
 
     double      fx, fy;
 
-    fx = customPlot->xAxis->pixelToCoord(event->pos().x());
+    fx = customPlot->xAxis->pixelToCoord(event->pos().xEstimated());
     fy = customPlot->yAxis->pixelToCoord(event->pos().y());
 
     // add to estimated position
@@ -190,12 +190,12 @@ void Plot::canvasShowMessage(QString msg) {
 
 void Plot::setupInitData(void) {
     // setupt car parameters
-    parmCarModel[0] = 0;            // pos - x
+    parmCarModel[0] = 0;            // pos - xEstimated
     parmCarModel[1] = 0;            // pos - y
     parmCarModel[2] = 0;            // angle
     parmCarModel[3] = 1;            // size
 
-    parmCarEst[0] = 0;              // pos - x
+    parmCarEst[0] = 0;              // pos - xEstimated
     parmCarEst[1] = 0;              // pos - y
     parmCarEst[2] = 0;              // angle
     parmCarEst[3] = 1;              // size

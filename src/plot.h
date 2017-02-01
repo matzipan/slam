@@ -104,11 +104,11 @@ private:
     QVector<double> arrLandmarks_x, arrLandmarks_y;
     QVector<double> arrParticlesFea_x, arrParticlesFea_y;
 
-    double parmCarModel[4];        // 0 - pos x
+    double parmCarModel[4];        // 0 - pos xEstimated
     // 1 - pos y
     // 2 - theta
     // 3 - size
-    double parmCarEst[4];          // 0 - pos x
+    double parmCarEst[4];          // 0 - pos xEstimated
     // 1 - pos y
     // 2 - theta
     // 3 - size

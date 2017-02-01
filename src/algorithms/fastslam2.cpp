@@ -34,7 +34,7 @@ void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector
     if (!zn.empty()) {
         for (int i = 0; i < particles.size(); i++) {
             if (zf.empty()) { // Sample from proposal distribution if we have not already done so above
-                VectorXf xv = multivariate_gauss(particles[i].xv(), particles[i].Pv(), 1);
+                VectorXf xv = multivariateGauss(particles[i].xv(), particles[i].Pv(), 1);
                 particles[i].setXv(xv);
                 MatrixXf pv(3, 3);
                 pv.setZero();
@@ -81,14 +81,14 @@ void FastSLAM2::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
         A(0) = V;
         A(1) = G;
         VectorXf VG(2);
-        VG = multivariate_gauss(A, Q, 1);
+        VG = multivariateGauss(A, Q, 1);
         V = VG(0);
         G = VG(1);
     }
 
     // Predict state
     VectorXf xv_temp(3);
-    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), pi_to_pi2(xv(2) + V * dt * sin(G / wheel_base));
+    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheel_base));
     particle.setXv(xv_temp);
 }
 
@@ -101,7 +101,7 @@ void FastSLAM2::observe_heading(Particle &particle, float phi) {
     MatrixXf H(1, 3);
     H << 0, 0, 1;
 
-    float v = pi_to_pi(phi - xv(2));
+    float v = trigonometricOffset(phi - xv(2));
     KF_joseph_update(xv, Pv, v, pow(sigma_phi, 2), H);
 
     particle.setXv(xv);
@@ -160,7 +160,7 @@ float FastSLAM2::compute_weight(Particle &particle, vector<VectorXf> &z, vector<
 
     for (unsigned long j = 0; j < z.size(); j++) {
         VectorXf v_j = z[j] - zp[j];
-        v_j[1] = pi_to_pi(v_j[1]);
+        v_j[1] = trigonometricOffset(v_j[1]);
         v.push_back(v_j);
     }
 
@@ -187,13 +187,13 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
 
-    // FIXME: z is std vector, get first item's rows?
+    // FIXME: landmarksRangeBearing is std vector, get first item's rows?
     vector<VectorXf> zp;
     MatrixXf Hvi;
     MatrixXf Hfi;
     MatrixXf Sfi;
 
-    // FIXME: z is std vector, get first item's rows?
+    // FIXME: landmarksRangeBearing is std vector, get first item's rows?
     VectorXf vi(z[0].rows());
 
     // Process each feature, incrementally refine proposal distribution
@@ -211,7 +211,7 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
         Sfi = Sf[0].inverse();
 
         vi = z[i] - zp[0];
-        vi[1] = pi_to_pi(vi[1]);
+        vi[1] = trigonometricOffset(vi[1]);
 
         // Proposal covariance
         MatrixXf Pv_inv = Pv.llt().solve(MatrixXf::Identity(Pv.rows(), Pv.cols()));
@@ -225,13 +225,13 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
     }
 
     // Sample from proposal distribution
-    VectorXf xvs = multivariate_gauss(xv, Pv, 1);
+    VectorXf xvs = multivariateGauss(xv, Pv, 1);
     particle.setXv(xvs);
     MatrixXf zeros(3, 3);
     zeros.setZero();
     particle.setPv(zeros);
 
-    // Compute sample weight: w = w* p(z|xk) p(xk|xk-1) / proposal
+    // Compute sample weight: w = w* p(landmarksRangeBearing|xk) p(xk|xk-1) / proposal
     VectorXf v1 = delta_xv(xv0, xvs);
     VectorXf v2 = delta_xv(xv, xvs);
 
@@ -263,7 +263,7 @@ float FastSLAM2::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, ve
         for (unsigned k = 0; k < z[0].rows(); k++) {
             v(k) = z[i][k] - zp[0][k];
         }
-        v(1) = pi_to_pi(v(1));
+        v(1) = trigonometricOffset(v(1));
 
         w = w * gauss_evaluate(v, Sf[0], 0);
     }
@@ -273,7 +273,7 @@ float FastSLAM2::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, ve
 VectorXf FastSLAM2::delta_xv(VectorXf &xv1, VectorXf &xv2) {
     // Compute innovation between two xv estimates, normalising the heading component
     VectorXf dx = xv1 - xv2;
-    dx(2) = pi_to_pi(dx(2));
+    dx(2) = trigonometricOffset(dx(2));
     return dx;
 }
 

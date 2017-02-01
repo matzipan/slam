@@ -18,42 +18,31 @@
 using namespace std;
 using namespace Eigen;
 
-void add_control_noise(float V, float G, MatrixXf &Q, int add_noise, float *VnGn) {
-    if (add_noise == 1) {
-        VectorXf A(2);
-        A(0) = V;
-        A(1) = G;
-        VectorXf C(2);
-        C = multivariate_gauss(A, Q, 1);
-        VnGn[0] = C(0);
-        VnGn[1] = C(1);
-    }
+void addControlNoise(float V, float G, MatrixXf &Q, float &Vn, float &Gn) {
+    VectorXf A(2);
+    A(0) = V;
+    A(1) = G;
+    VectorXf C(2);
+    C = multivariateGauss(A, Q, 1);
+    Vn = C(0);
+    Gn = C(1);
 }
 
 
-void predict_true(VectorXf &xv, float V, float G, float WB, float dt) {
-    xv(0) = xv(0) + V * dt * cos(G + xv(2));
-    xv(1) = xv(1) + V * dt * sin(G + xv(2));
-    xv(2) = pi_to_pi(xv(2) + V * dt * sin(G) / WB);
+void predictTruePosition(VectorXf &x, float V, float G, float wheelBase, float dt) {
+    x(0) = x(0) + V * dt * cos(G + x(2));
+    x(1) = x(1) + V * dt * sin(G + x(2));
+    x(2) = trigonometricOffset(x(2) + V * dt * sin(G) / wheelBase);
 }
-/**
- *
- * @param[in] xTrue - true position
- * @param[in] waypoints
- * @param[in] indexOfFirstWaypoint - index to current waypoint
- * @param[in] minimumDistance - minimum distance to current waypoint before switching to next
- * @param[out] G - output - current steering angle
- * @param[in] rateG - maximum steering rate (radians/second)
- * @param[in] maxG - maximum steering angle (radians)
- * @param[in] dt - timestep
- */
-void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G, float rateG, float maxG, float dt) {
+
+void updateSteering(VectorXf &x, MatrixXf &waypoints, int &indexOfFirstWaypoint, float minimumDistance, float &G,
+                    float maximumSteeringAngleRate, float maximumSteeringAngle, float dt) {
     // Determine if current waypoint reached
     Vector2d currentWaypoint;
     currentWaypoint[0] = waypoints(0, indexOfFirstWaypoint);    //-1 since indexed from 0
     currentWaypoint[1] = waypoints(1, indexOfFirstWaypoint);
 
-    float d2 = pow(currentWaypoint[0] - xTrue[0], 2) + pow(currentWaypoint[1] - xTrue[1], 2);
+    float d2 = pow(currentWaypoint[0] - x[0], 2) + pow(currentWaypoint[1] - x[1], 2);
 
     if (d2 < minimumDistance * minimumDistance) {
         indexOfFirstWaypoint++; //switch to next
@@ -67,11 +56,11 @@ void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWay
     }
 
     // Compute change in G to point towards current waypoint
-    float deltaG = atan2(currentWaypoint[1] - xTrue[1], currentWaypoint[0] - xTrue[0]) - xTrue[2] - G;
-    deltaG = pi_to_pi(deltaG);
+    float deltaG = atan2(currentWaypoint[1] - x[1], currentWaypoint[0] - x[0]) - x[2] - G;
+    deltaG = trigonometricOffset(deltaG);
 
     // Limit rate
-    float maxDelta = rateG * dt;
+    float maxDelta = maximumSteeringAngleRate * dt;
     if (abs(deltaG) > maxDelta) {
         int sign = (deltaG > 0) ? 1 : ((deltaG < 0) ? -1 : 0);
         deltaG = sign * maxDelta;
@@ -79,14 +68,14 @@ void compute_steering(VectorXf &xTrue, MatrixXf &waypoints, int &indexOfFirstWay
 
     // Limit angle
     G = G + deltaG;
-    if (abs(G) > maxG) {
+    if (abs(G) > maximumSteeringAngle) {
         int sign2 = (G > 0) ? 1 : ((G < 0) ? -1 : 0);
-        G = sign2 * maxG;
+        G = sign2 * maximumSteeringAngle;
     }
 }
 
 
-//z is range and bearing of visible landmarks
+//landmarksRangeBearing is range and bearing of visible landmarks
 // find associations (zf) and new features (zn)
 void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_association_table, int Nf, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
     idf.clear();
@@ -116,7 +105,7 @@ void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_
 }
 
 
-//z is the list of measurements conditioned on the particle.
+//landmarksRangeBearing is the list of measurements conditioned on the particle.
 void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
     //Having selected a new pose from the proposal distribution,
     //  this pose is assumed perfect and each feature update maybe
@@ -139,7 +128,7 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
     vector<VectorXf> v; //difference btw two measurements (used to update mean)
     for (unsigned long i = 0; i < z.size(); i++) {
         VectorXf measure_diff = z[i] - zp[i];
-        measure_diff[1] = pi_to_pi(measure_diff[1]);
+        measure_diff[1] = trigonometricOffset(measure_diff[1]);
         v.push_back(measure_diff);
     }
 
@@ -164,78 +153,104 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
     }
 }
 
-vector<VectorXf> get_observations(VectorXf &x, MatrixXf lm, vector<int> &idf, float rmax) {
-    get_visible_landmarks(x, lm, idf, rmax);
-    return compute_range_bearing(x, lm);
+/**
+ *
+ * @param landmarks [in] - all landmarks
+ * @param x [in] - position
+ * @param landmarkIdentifiers - [in/out] inputs all landmark identifiers and outputs visible landmark identifiers
+ * @param maximumRange - [in] maximum observation range
+ * @return
+ */
+vector<VectorXf> getObservations(MatrixXf landmarks, VectorXf &x, vector<int> &landmarkIdentifiers, float maximumRange) {
+    getVisibleLandmarks(landmarks, x, landmarkIdentifiers, maximumRange);
+    return computeRangeBearing(landmarks, x);
 }
 
-void get_visible_landmarks(VectorXf &x, MatrixXf &lm, vector<int> &idf, float rmax) {
-    //select set of landmarks that are visible within vehicle's
-    //semi-circular field of view
+/**
+ *
+ * @param landmarks [in] - all landmarks
+ * @param x [in] - position
+ * @param landmarkIdentifiers - [in/out] inputs all landmark identifiers and outputs visible landmark identifiers
+ * @param maximumVisibilityRange - [in] maximum observation range
+ */
+void getVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, vector<int> &landmarkIdentifiers, float maximumVisibilityRange) {
+    // Select set of landmarks that are visible within vehicle's
+    // Semi-circular field of view
     vector<float> dx;
     vector<float> dy;
 
-    for (int c = 0; c < lm.cols(); c++) {
-        dx.push_back(lm(0, c) - x(0));
-        dy.push_back(lm(1, c) - x(1));
+    for (int c = 0; c < landmarks.cols(); c++) {
+        dx.push_back(landmarks(0, c) - x(0));
+        dy.push_back(landmarks(1, c) - x(1));
     }
 
-    float phi = x(2);
+    float vehicleAngle = x(2);
 
-    //distant points are eliminated
-    vector<int> ii = find2(dx, dy, phi, rmax);
+    //@TODO move code from above into find visiblelandmarks
 
-    MatrixXf lm_new(lm.rows(), ii.size());
+    // Eliminate distant points
+    vector<int> visibleLandmarks = findVisibleLandmarks(dx, dy, vehicleAngle, maximumVisibilityRange);
+
+    MatrixXf landmarksNew(landmarks.rows(), visibleLandmarks.size());
     unsigned j, k;
-    for (j = 0; j < lm.rows(); j++) {
-        for (k = 0; k < ii.size(); k++) {
-            lm_new(j, k) = lm(j, ii[k]);
+    for (j = 0; j < landmarks.rows(); j++) {
+        for (k = 0; k < visibleLandmarks.size(); k++) {
+            landmarksNew(j, k) = landmarks(j, visibleLandmarks[k]);
         }
     }
-    lm = MatrixXf(lm_new);
+    landmarks = MatrixXf(landmarksNew);
 
-    vector<int> idf_backup(idf);
-    idf.clear();
-    for (unsigned long i = 0; i < ii.size(); i++) {
-        idf.push_back(idf_backup[ii[i]]);
+    vector<int> landmarkIdentifiersAux(landmarkIdentifiers);
+    landmarkIdentifiers.clear();
+    for (unsigned long i = 0; i < visibleLandmarks.size(); i++) {
+        landmarkIdentifiers.push_back(landmarkIdentifiersAux[visibleLandmarks[i]]);
     }
 }
 
-vector<VectorXf> compute_range_bearing(VectorXf &x, MatrixXf &lm) {
+vector<VectorXf> computeRangeBearing(MatrixXf &landmarks, VectorXf &x) {
     vector<float> dx;
     vector<float> dy;
 
-    for (int c = 0; c < lm.cols(); c++) {
-        dx.push_back(lm(0, c) - x(0));
-        dy.push_back(lm(1, c) - x(1));
+    for (int c = 0; c < landmarks.cols(); c++) {
+        dx.push_back(landmarks(0, c) - x(0));
+        dy.push_back(landmarks(1, c) - x(1));
     }
 
-    assert(dx.size() == lm.cols());
-    assert(dy.size() == lm.cols());
+    assert(dx.size() == landmarks.cols());
+    assert(dy.size() == landmarks.cols());
 
-    float phi = x(2);
+    float vehicleAngle = x(2);
     vector<VectorXf> z;
 
-    for (int i = 0; i < lm.cols(); i++) {
-        VectorXf zvec(2);
-        zvec << sqrt(pow(dx[i], 2) + pow(dy[i], 2)), atan2(dy[i], dx[i]) - phi;
-        z.push_back(zvec);
+    for (int i = 0; i < landmarks.cols(); i++) {
+        VectorXf rangeBearing(2);
+        rangeBearing << sqrt(pow(dx[i], 2) + pow(dy[i], 2)), atan2(dy[i], dx[i]) - vehicleAngle;
+        z.push_back(rangeBearing);
     }
 
     return z;
 }
 
-vector<int> find2(vector<float> &dx, vector<float> &dy, float phi, float rmax) {
-    vector<int> index;
-    //incremental tests for bounding semi-circle
+/**
+ * Incremental tests for bounding semi-circle.
+ *
+ * @param dx
+ * @param dy
+ * @param vehicleAngle
+ * @param maximumVisibiltyRange - [in] maximum observation range
+ * @return
+ */
+vector<int> findVisibleLandmarks(vector<float> &dx, vector<float> &dy, float vehicleAngle, float maximumVisibiltyRange) {
+    vector<int> visibleLandmarks;
+
     for (unsigned long j = 0; j < dx.size(); j++) {
-        if ((abs(dx[j]) < rmax) && (abs(dy[j]) < rmax)
-            && ((dx[j] * cos(phi) + dy[j] * sin(phi)) > 0.0)
-            && ((pow(dx[j], 2) + pow(dy[j], 2)) < pow(rmax, 2))) {
-            index.push_back(j);
+        if ((abs(dx[j]) < maximumVisibiltyRange) && (abs(dy[j]) < maximumVisibiltyRange)
+            && ((dx[j] * cos(vehicleAngle) + dy[j] * sin(vehicleAngle)) > 0.0)
+            && ((pow(dx[j], 2) + pow(dy[j], 2)) < pow(maximumVisibiltyRange, 2))) {
+            visibleLandmarks.push_back(j);
         }
     }
-    return index;
+    return visibleLandmarks;
 }
 
 void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf &H) {
@@ -291,33 +306,19 @@ MatrixXf make_symmetric(MatrixXf &P) {
 }
 
 
-MatrixXf line_plot_conversion(MatrixXf &lnes) {
-    int len = lnes.cols() * 3 - 1;
-    MatrixXf p(2, len);
-
-    for (int j = 0; j < len; j += 3) {
-        int k = floor((j + 1) / 3); //reverse of len calculation
-        p(0, j) = lnes(0, k);
-        p(1, j) = lnes(1, k);
-        p(0, j + 1) = lnes(2, k);
-        p(1, j + 1) = lnes(3, k);
-        if (j + 2 < len) {
-            p(0, j + 2) = 0;
-            p(1, j + 2) = 0;
-        }
-    }
-    return p;
-}
-
-// rb is measurements
-// xv is robot pose
-MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv) {
+/**
+ *
+ * @param rb measurements
+ * @param x robot pose
+ * @return
+ */
+MatrixXf makeLaserLines(vector<VectorXf> &rb, VectorXf &x) {
     if (rb.empty()) {
         return MatrixXf(0, 0);
     }
 
     unsigned long len = rb.size();
-    MatrixXf lnes(4, len);
+    MatrixXf lines(4, len);
 
     MatrixXf globalMat(2, rb.size());
     int j;
@@ -326,21 +327,20 @@ MatrixXf make_laser_lines(vector<VectorXf> &rb, VectorXf &xv) {
         globalMat(1, j) = rb[j][0] * sin(rb[j][1]);
     }
 
-    transform_to_global(globalMat, xv);
+    transform_to_global(globalMat, x);
 
-    for (int c = 0; c < lnes.cols(); c++) {
-        lnes(0, c) = xv(0);
-        lnes(1, c) = xv(1);
-        lnes(2, c) = globalMat(0, c);
-        lnes(3, c) = globalMat(1, c);
+    for (int c = 0; c < lines.cols(); c++) {
+        lines(0, c) = x(0);
+        lines(1, c) = x(1);
+        lines(2, c) = globalMat(0, c);
+        lines(3, c) = globalMat(1, c);
     }
 
-    //return line_plot_conversion(lnes);
-    return lnes;
+    return lines;
 }
 
 
-void make_covariance_ellipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines) {
+void makeCovarianceEllipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines) {
     int i, N;
     float p_inc, p, cp, sp;
     float s;
@@ -416,33 +416,29 @@ MatrixXf nRandMat::rand(int m, int n) {
 }
 
 //add random measurement noise. We assume R is diagnoal matrix
-void add_observation_noise(vector<VectorXf> &z, MatrixXf &R, int addnoise) {
-    if (addnoise == 1) {
-        unsigned long len = z.size();
-        if (len > 0) {
-            MatrixXf randM1 = nRandMat::randn(1, len);
-            MatrixXf randM2 = nRandMat::randn(1, len);
+void addObservationNoise(vector<VectorXf> &z, MatrixXf &R) {
+    unsigned long len = z.size();
+    if (len > 0) {
+        MatrixXf randM1 = nRandMat::randn(1, len);
+        MatrixXf randM2 = nRandMat::randn(1, len);
 
-            for (unsigned long c = 0; c < len; c++) {
-                z[c][0] = z[c][0] + randM1(0, c) * sqrt(R(0, 0));
-                z[c][1] = z[c][1] + randM2(0, c) * sqrt(R(1, 1));
-            }
+        for (unsigned long c = 0; c < len; c++) {
+            z[c][0] = z[c][0] + randM1(0, c) * sqrt(R(0, 0));
+            z[c][1] = z[c][1] + randM2(0, c) * sqrt(R(1, 1));
         }
     }
 }
 
 
-VectorXf multivariate_gauss(VectorXf &x, MatrixXf &P, int n) {
-    int len = x.size();
-
-    //choleksy decomposition
+VectorXf multivariateGauss(VectorXf &x, MatrixXf &P, int n) {
+    // Cholesky decomposition
     MatrixXf S = P.llt().matrixL();
-    MatrixXf X = nRandMat::randn(len, n);
+    MatrixXf X = nRandMat::randn(x.size(), n);
 
     return S * X + x;
 }
 
-float pi_to_pi(float ang) {
+float trigonometricOffset(float ang) {
     int n;
 
     if ((ang < -2 * M_PI) || (ang > 2 * M_PI)) {
@@ -461,22 +457,6 @@ float pi_to_pi(float ang) {
     return ang;
 }
 
-float pi_to_pi2(float ang) {
-    if (ang > M_PI) {
-        ang = ang - (2 * M_PI);
-    }
-
-    if (ang < -M_PI) {
-        ang = ang + (2 * M_PI);
-    }
-
-    return ang;
-}
-
-
-//
-// add new features
-//
 void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
     int lenz = z.size();
     vector<VectorXf> xf;
@@ -540,7 +520,7 @@ void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector
 
         //predicted observation
         zp_vec[0] = d;
-        zp_vec[1] = pi_to_pi(atan2(dy, dx) - xv(2));
+        zp_vec[1] = trigonometricOffset(atan2(dy, dx) - xv(2));
         zp.push_back(zp_vec);
 
         //Jacobian wrt vehicle states
@@ -687,7 +667,7 @@ void transform_to_global(MatrixXf &p, VectorXf &b) {
     if (p.rows() == 3) {
         for (int k = 0; k < p_resized.cols(); k++) {
             input = p(2, k) + b(2);
-            p(2, k) = pi_to_pi(input);
+            p(2, k) = trigonometricOffset(input);
         }
     }
 }
