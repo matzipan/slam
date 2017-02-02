@@ -102,7 +102,7 @@ void FastSLAM2::observe_heading(Particle &particle, float phi) {
     H << 0, 0, 1;
 
     float v = trigonometricOffset(phi - xv(2));
-    KF_joseph_update(xv, Pv, v, pow(sigma_phi, 2), H);
+    josephUpdate(xv, Pv, v, pow(sigma_phi, 2), H);
 
     particle.setXv(xv);
     particle.setPv(Pv);

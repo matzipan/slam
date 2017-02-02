@@ -17,34 +17,39 @@ public:
 
     ~EKFSLAM();
 
-    void sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float Vn, float Gn, MatrixXf &Qe,
-             float wheel_base, float dt, float phi, int use_heading, float sigma_phi, vector<int> ftag,
-             vector<VectorXf> z, MatrixXf Re, float gate_reject, float gate_augment, bool association_known,
-             bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
-             vector<int> data_association_table,
-             bool batchUpdate, MatrixXf R);
+    void sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
+                 MatrixXf &Qe, float dt, float phi, float sigma_phi, vector<int> ftag, vector<VectorXf> landmarkRangeBearing, MatrixXf Re,
+                 bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
+                 vector<int> dataAssociationTable, MatrixXf R);
+
+    bool enableBatchUpdate;
+    bool useHeading;
+    float wheelBase;
+    float gateReject;
+    float gateAugment;
+    int associationKnown;
 
 protected:
 
-    void predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt);
+    void predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheelBase, float dt);
 
     void batchUpdate(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R, vector<int> &idf);
 
-    void observeHeading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi);
+    void observeHeading(VectorXf &x, MatrixXf &P, float phi, float sigmaPhi);
 
-    void dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R, float gate1, float gate2,
+    void dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &landmarksRangeBearing, MatrixXf &R, float gate1, float gate2,
                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
 
-    void dataAssociateKnown(VectorXf &x, vector<VectorXf> &z, vector<int> &idz, vector<VectorXf> &zf,
+    void dataAssociateKnown(VectorXf &x, vector<VectorXf> &landmarkRangeBearing, vector<int> &idz, vector<VectorXf> &zf,
                             vector<int> &idf, vector<VectorXf> &zn, vector<int> &table);
 
     void augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re);
 
-    void ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd);
+    void ekfComputeAssociation(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd);
 
-    void ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H);
+    void ekfObserveModel(VectorXf &x, int idf, VectorXf &z, MatrixXf &H);
 
-    void ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re);
+    void ekfAddOneZ(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re);
 };
 
 

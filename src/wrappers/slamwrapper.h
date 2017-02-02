@@ -93,14 +93,16 @@ protected:
 
     int currentIteration = 0;
 
-    // @TODO need to find a description for this item
-    float Vn;
-    // @TODO need to find a description for this item
-    float Gn;
-    /// Velocity
-    float V;
-    /// Steer angle
-    float G;
+    /// True velocity
+    float Vtrue;
+    /// True steer angle
+    float Gtrue;
+
+    /// Velocity with control noise
+    float Vnoisy;
+    /// Steer angle with control noise
+    float Gnoisy;
+
     int nLoop;
     /// Index to first waypoint
     int indexOfFirstWaypoint = 0;

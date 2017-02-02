@@ -14,26 +14,26 @@ EKFSLAM::EKFSLAM() {}
 
 EKFSLAM::~EKFSLAM() {}
 
-void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float Vn, float Gn, MatrixXf &Qe,
-                  float wheel_base, float dt, float phi, int use_heading, float sigma_phi, vector<int> ftag,
-                  vector<VectorXf> z, MatrixXf Re, float gate_reject, float gate_augment, bool association_known,
-                  bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
-                  vector<int> data_association_table,
-                  bool doBatchUpdate, MatrixXf R) {
+void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
+                  MatrixXf &Qe, float dt, float phi, float sigmaPhi, vector<int> ftag, vector<VectorXf> landmarksRangeBearing,
+                  MatrixXf Re, bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
+                  vector<int> dataAssociationTable, MatrixXf R) {
     // Predict position & heading
-    predict(x, P, Vn, Gn, Qe, wheel_base, dt);
+    predict(x, P, noisyV, noisyG, Qe, wheelBase, dt);
 
     // Correct xEstimated and P by other sensor (low noise, IMU ...)
-    observeHeading(x, P, phi, use_heading, sigma_phi);
+    if (useHeading) {
+        observeHeading(x, P, phi, sigmaPhi);
+    }
 
     if (observe) {
-        if (association_known) {
-            dataAssociateKnown(x, z, ftag, zf, idf, zn, data_association_table);
+        if (associationKnown) {
+            dataAssociateKnown(x, landmarksRangeBearing, ftag, zf, idf, zn, dataAssociationTable);
         } else {
-            dataAssociate(x, P, z, Re, gate_reject, gate_augment, zf, idf, zn);
+            dataAssociate(x, P, landmarksRangeBearing, Re, gateReject, gateAugment, zf, idf, zn);
         }
 
-        if (doBatchUpdate) {
+        if (enableBatchUpdate) {
             batchUpdate(x, P, zf, R, idf);
         }
 
@@ -42,10 +42,11 @@ void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixX
 }
 
 
-void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheel_base, float dt) {
+void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, float wheelBase, float dt) {
     float s, c;
     float vts, vtc;
-    MatrixXf Gv(3, 3), Gu(3, 2);         // Jacobians
+    // Jacobians
+    MatrixXf Gv(3, 3), Gu(3, 2);
 
     s = sin(G + x(2));
     c = cos(G + x(2));
@@ -57,10 +58,9 @@ void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, f
             0, 0, 1;
     Gu << dt * c, -vts,
             dt * s, vtc,
-            dt * sin(G) / wheel_base, V * dt * cos(G) / wheel_base;
+            dt * sin(G) / wheelBase, V * dt * cos(G) / wheelBase;
 
-    // predict covariance
-    //      P(1:3,1:3)= Gv*P(1:3,1:3)*Gv' + Gu*Q*Gu';
+    // Predict covariance
     P.block(0, 0, 3, 3) = Gv * P.block(0, 0, 3, 3) * Gv.transpose() + Gu * Q * Gu.transpose();
 
     int m = P.rows();
@@ -69,15 +69,21 @@ void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, f
         P.block(3, 0, m - 3, 3) = P.block(0, 3, 3, m - 3).transpose();
     }
 
-    // predict state
+    // Predict state
     x(0) = x(0) + vtc;
     x(1) = x(1) + vts;
-    x(2) = trigonometricOffset(x(2) + V * dt * sin(G) / wheel_base);
+    x(2) = trigonometricOffset(x(2) + V * dt * sin(G) / wheelBase);
 }
 
-void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi, int use_heading, float sigma_phi) {
-    if (use_heading == 0) { return; }
-
+/**
+ * Correct xEstimated and P by other sensor (low noise, IMU ...)
+ *
+ * @param x
+ * @param P
+ * @param phi
+ * @param sigmaPhi heading uncertainty
+ */
+void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi, float sigmaPhi) {
     float v;
     MatrixXf H = MatrixXf(1, x.size());
 
@@ -85,10 +91,10 @@ void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi, int use_headin
     H(2) = 1;
     v = trigonometricOffset(phi - x(2));
 
-    KF_joseph_update(x, P, v, sigma_phi * sigma_phi, H);
+    josephUpdate(x, P, v, pow(sigmaPhi, 2), H);
 }
 
-void EKFSLAM::ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) {
+void EKFSLAM::ekfObserveModel(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) {
     int Nxv, fpos;
     float dx, dy, d2, d, xd, yd, xd2, yd2;
 
@@ -125,15 +131,15 @@ void EKFSLAM::ekf_observe_model(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) 
 }
 
 void
-EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &R, int idf, float &nis, float &nd) {
+EKFSLAM::ekfComputeAssociation(VectorXf &x, MatrixXf &P, VectorXf &landmarksRangeBearing, MatrixXf &R, int idf, float &nis, float &nd) {
     VectorXf zp;
     MatrixXf H;
     VectorXf v(2);
     MatrixXf S;
 
-    ekf_observe_model(x, idf, zp, H);
+    ekfObserveModel(x, idf, zp, H);
 
-    v = z - zp;
+    v = landmarksRangeBearing - zp;
     v(1) = trigonometricOffset(v(1));
 
     S = H * P * H.transpose() + R;
@@ -142,31 +148,26 @@ EKFSLAM::ekf_compute_association(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf
     nd = nis + log(S.determinant());
 }
 
-void EKFSLAM::dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, MatrixXf &R, float gate1, float gate2,
+void EKFSLAM::dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &landmarksRangeBearing, MatrixXf &R, float gate1, float gate2,
                             vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
-    unsigned long Nxv, Nf;
-    unsigned long i, j;
-    long jbest;
     float nis, nd;
-    float nbest, outer;
 
     zf.clear();
     zn.clear();
     idf.clear();
 
-    Nxv = 3;                        // number of vehicle pose states
-    Nf = (x.size() - Nxv) / 2;       // number of features already in map
+    unsigned long Nxv = 3;                        // number of vehicle pose states
+    unsigned long Nf = (x.size() - Nxv) / 2;       // number of features already in map
 
-    // linear search for nearest-neighbour, no clever tricks (like a quick
-    // bounding-box threshold to remove distant features; or, better yet,
-    // a balanced k-d tree lookup). TODO: implement clever tricks.
-    for (i = 0; i < z.size(); i++) {
-        jbest = -1;
-        nbest = 1e60;
-        outer = 1e60;
+    // Linear search for nearest-neighbour, no clever tricks (like a quick bounding-box threshold to remove distant
+    // features; or, better yet, a balanced k-d tree lookup). TODO: implement clever tricks.
+    for (unsigned long i = 0; i < landmarksRangeBearing.size(); i++) {
+        long jbest = -1;
+        float nbest = 1e60;
+        float outer = 1e60;
 
-        for (j = 0; j < Nf; j++) {
-            ekf_compute_association(x, P, z[i], R, j, nis, nd);
+        for (unsigned long j = 0; j < Nf; j++) {
+            ekfComputeAssociation(x, P, landmarksRangeBearing[i], R, j, nis, nd);
 
             if (nis < gate1 && nd < nbest) {
                 nbest = nd;
@@ -178,18 +179,26 @@ void EKFSLAM::dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &z, Matri
 
         if (jbest > -1) {
             // add nearest-neighbour to association list
-            zf.push_back(z[i]);
+            zf.push_back(landmarksRangeBearing[i]);
             idf.push_back(jbest);
         } else if (outer > gate2) {
             // landmarksRangeBearing too far to associate, but far enough to be a new feature
-            zn.push_back(z[i]);
+            zn.push_back(landmarksRangeBearing[i]);
         }
     }
 }
 
-//landmarksRangeBearing is range and bearing of visible landmarks
-// find associations (zf) and new features (zn)
-void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &z, vector<int> &idz, vector<VectorXf> &zf,
+/**
+ * Find associations zf and new features zn
+ * @param x
+ * @param landmarkRangeBearing is range and bearing of visible landmarks
+ * @param idz
+ * @param zf
+ * @param idf
+ * @param zn
+ * @param table
+ */
+void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &landmarksRangeBearing, vector<int> &idz, vector<VectorXf> &zf,
                                  vector<int> &idf, vector<VectorXf> &zn, vector<int> &table) {
     vector<int> idn;
     unsigned i, ii;
@@ -205,23 +214,24 @@ void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &z, vector<int> &
 
         if (table[ii] == -1) {
             // new feature
-            z_i = z[i];
+            z_i = landmarksRangeBearing[i];
             zn.push_back(z_i);
             idn.push_back(ii);
         } else {
             // exist feature
-            z_i = z[i];
+            z_i = landmarksRangeBearing[i];
             zf.push_back(z_i);
             idf.push_back(table[ii]);
         }
     }
 
-    // add new feature IDs to lookup table
-    int Nxv = 3;                        // number of vehicle pose states
-    int Nf = (x.size() - Nxv) / 2;       // number of features already in map
+    // Add new feature IDs to lookup table
+    // Number of vehicle pose states
+    int Nxv = 3;
+    // Number of features already in map
+    int Nf = (x.size() - Nxv) / 2;
 
     // add new feature positions to lookup table
-    //      table[idn]= Nf + (1:size(zn,2));
     for (i = 0; i < idn.size(); i++) {
         table[idn[i]] = Nf + i;
     }
@@ -246,7 +256,7 @@ void EKFSLAM::batchUpdate(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, Matrix
     zp.setZero(2);
 
     for (i = 0; i < lenz; i++) {
-        ekf_observe_model(x, idf[i], zp, H_);
+        ekfObserveModel(x, idf[i], zp, H_);
         H.block(i * 2, 0, 2, lenx) = H_;
 
         v(2 * i) = zf[i](0) - zp(0);
@@ -255,10 +265,10 @@ void EKFSLAM::batchUpdate(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, Matrix
         RR.block(i * 2, i * 2, 2, 2) = R;
     }
 
-    KF_cholesky_update(x, P, v, RR, H);
+    choleskyUpdate(x, P, v, RR, H);
 }
 
-void EKFSLAM::ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re) {
+void EKFSLAM::ekfAddOneZ(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re) {
     int len;
     float r, b;
     float s, c;
@@ -272,8 +282,7 @@ void EKFSLAM::ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re)
     s = sin(x(2) + b);
     c = cos(x(2) + b);
 
-    // augment xEstimated
-    //      xEstimated = [xEstimated; xEstimated(1)+r*c; xEstimated(2)+r*s];
+    // Augment xEstimated xEstimated = [xEstimated; xEstimated(1)+r*c; xEstimated(2)+r*s];
     x.conservativeResize(len + 2);
     x(len) = x(0) + r * c;
     x(len + 1) = x(1) + r * s;
@@ -287,32 +296,30 @@ void EKFSLAM::ekf_add_one_z(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re)
     Gz << c, -r * s,
             s, r * c;
 
-    // augment P
+    // Augment P
     P.conservativeResize(len + 2, len + 2);
 
-    // feature cov
-    //      P(rng,rng)= Gv*P(1:3,1:3)*Gv' + Gz*R*Gz';
+    // Feature cov P(rng,rng)= Gv*P(1:3,1:3)*Gv' + Gz*R*Gz';
     P.block(len, len, 2, 2) = Gv * P.block(0, 0, 3, 3) * Gv.transpose() +
                               Gz * Re * Gz.transpose();
 
-    // vehicle to feature xcorr
+    // Vehicle to feature cross correlation
     //      P(rng,1:3)= Gv*P(1:3,1:3);
     //      P(1:3,rng)= P(rng,1:3)';
     P.block(len, 0, 2, 3) = Gv * P.block(0, 0, 3, 3);
     P.block(0, len, 3, 2) = P.block(len, 0, 2, 3).transpose();
 
     if (len > 3) {
-        // map to feature xcoor
-        //   P(rng,rnm)= Gv*P(1:3,rnm);
+        // Map to feature cross correlation P(rng,rnm)= Gv*P(1:3,rnm);
         P.block(len, 3, 2, len - 3) = Gv * P.block(0, 3, 3, len - 3);
 
-        //   P(rnm,rng)= P(rng,rnm)';
+        // P(rnm,rng)= P(rng,rnm)';
         P.block(3, len, len - 3, 2) = P.block(len, 3, 2, len - 3).transpose();
     }
 }
 
 void EKFSLAM::augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re) {
     for (unsigned long i = 0; i < zn.size(); i++) {
-        ekf_add_one_z(x, P, zn[i], Re);
+        ekfAddOneZ(x, P, zn[i], Re);
     }
 }

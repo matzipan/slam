@@ -59,7 +59,7 @@ void FastSLAM2Wrapper::run() {
 
         // @TODO what happens when the if statement is false and the predict happens but not the observation
         // @TODO why does fastslam1 use Q and fastslam 2 use Qe
-        algorithm->predict(particles, xTrue, Vn, Gn, Qe, conf->WHEELBASE, dt, conf->SWITCH_PREDICT_NOISE == 1, conf->SWITCH_HEADING_KNOWN == 1);
+        algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Qe, conf->WHEELBASE, dt, conf->SWITCH_PREDICT_NOISE == 1, conf->SWITCH_HEADING_KNOWN == 1);
 
         dtSum += dt;
         bool observe = false;
@@ -121,6 +121,4 @@ void FastSLAM2Wrapper::run() {
 
         emit replot();
     }
-
-    delete[] VnGn; //@TODO is this really needed? Is it a memory leak?
 }

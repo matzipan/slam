@@ -24,6 +24,11 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
     commandId = -1;
     commandTime = 0;
 
+    // Setting initial velocity
+    Vtrue = conf->V;
+    // Setting initial steer angle
+    Gtrue = 0;
+
     Q = MatrixXf(2, 2);
     Q << pow(conf->sigmaV, 2), 0, 0, pow(conf->sigmaG, 2);
 
@@ -40,10 +45,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
 
     sigmaPhi = conf->sigmaT;
 
-    // Setting initial velocity
-    V = conf->V;
-    // Setting initial steer angle
-    G = 0;
     nLoop = conf->NUMBER_LOOPS;
     dt = conf->DT_CONTROLS;
 
@@ -195,7 +196,7 @@ int SLAMWrapper::control() {
                 return -1;
             }
 
-            updateSteering(xTrue, waypoints, indexOfFirstWaypoint, conf->AT_WAYPOINT, G, conf->RATEG, conf->MAXG, dt);
+            updateSteering(xTrue, waypoints, indexOfFirstWaypoint, conf->AT_WAYPOINT, Gtrue, conf->RATEG, conf->MAXG, dt);
 
             if (indexOfFirstWaypoint == -1 && nLoop > 1) {
                 indexOfFirstWaypoint = 0;
@@ -214,37 +215,37 @@ int SLAMWrapper::control() {
             switch (command) {
                 case 1:
                     // Forward
-                    V = conf->V;
-                    G = 0.0;
+                    Vtrue = conf->V;
+                    Gtrue = 0.0;
                     break;
                 case 2:
                     // Backward
-                    V = -conf->V;
-                    G = 0.0;
+                    Vtrue = -conf->V;
+                    Gtrue = 0.0;
                     break;
                 case 3:
                     // Turn left
-                    V = conf->V;
-                    G = 30.0 * M_PI / 180.0;
+                    Vtrue = conf->V;
+                    Gtrue = 30.0 * M_PI / 180.0;
                     break;
                 case 4:
                     // Turn right
-                    V = conf->V;
-                    G = -30.0 * M_PI / 180.0;
+                    Vtrue = conf->V;
+                    Gtrue = -30.0 * M_PI / 180.0;
                     break;
                 default:
-                    V = conf->V;
-                    G = 0.0;
+                    Vtrue = conf->V;
+                    Gtrue = 0.0;
             }
             break;
     }
 
     // Predict current position and angle
-    predictTruePosition(xTrue, V, G, conf->WHEELBASE, dt);
+    predictTruePosition(xTrue, Vtrue, Gtrue, conf->WHEELBASE, dt);
 
     if(conf->SWITCH_CONTROL_NOISE) {
         // Add process noise
-        addControlNoise(V, G, Q, Vn, Gn);
+        addControlNoise(Vtrue, Gtrue, Q, Vnoisy, Gnoisy);
     }
 
     return 1;

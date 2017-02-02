@@ -14,47 +14,71 @@
 using namespace std;
 using namespace Eigen;
 
-////////////////////////////////////////////////////////////////////////////////
-// SLAM config Variables
-////////////////////////////////////////////////////////////////////////////////
 class Conf : public CParamArray {
 public:
+    /// Speed in m/s
     float V;
+    /// Maximum steering angle (-MAXG < g < MAXG) in radians
     float MAXG;
+    /// Maximum rate of change for steer angle in radians/second
     float RATEG;
+    /// Vehicle wheelbase in meters
     float WHEELBASE;
+    /// Time interval between control signals in seconds
     float DT_CONTROLS;
-
+    /// Speed control noise in meters/second
     float sigmaV;
+    /// Steering control noise in radians
     float sigmaG;
 
-    float MAX_RANGE;
-    float DT_OBSERVE;
 
+    /// Maximum observation range
+    float MAX_RANGE;
+    /// Time interval between observations in seconds
+    float DT_OBSERVE;
+    /// Distance observation noise in meters
     float sigmaR;
+    /// Angle observation noise in radians
     float sigmaB;
+    /// Inertial measurement unit (IMU) angular noise in radians
     float sigmaT;
 
+    // Data association/innovation gates (Mahalanobis distances)
+    // For 2-D observation:
+    //   - common gates are: 1-sigma (1.0), 2-sigma (4.0), 3-sigma (9.0), 4-sigma (16.0)
+    //   - percent probability mass is: 1-sigma bounds 40%, 2-sigma 86%, 3-sigma 99%, 4-sigma 99.9%.
 
+    /// Maximum distance for data association.
     float GATE_REJECT;
+    /// Minimum distance for creation of new feature
     float GATE_AUGMENT;
 
+    /// Distance from current waypoint at which to switch to next waypoint
     float AT_WAYPOINT;
+    /// Number of loops through the waypoint list
     int NUMBER_LOOPS;
 
+    /// Number of particles
     int NPARTICLES;
+    /// Minimum number of effective particles before resampling
     int NEFFECTIVE;
+
 
     int SWITCH_CONTROL_NOISE;
     int SWITCH_SENSOR_NOISE;
     int SWITCH_INFLATE_NOISE;
+    /// Sample noise from predict (usually 1 for FastSLAM 1 and 0 for FastSLAM 2)
     int SWITCH_PREDICT_NOISE;
 
+    /// Sample from proposal (no effect on FastSLAM 1 and usually 1 for FastSLAM 2)
     int SWITCH_SAMPLE_PROPOSAL;
     int SWITCH_HEADING_KNOWN;
     int SWITCH_RESAMPLE;
     int SWITCH_PROFILE;
+
+    // If not 0, it is used as a seed for random number generation randn(), for repeatability
     int SWITCH_SEED_RANDOM;
+
 
     int SWITCH_ASSOCIATION_KNOWN;
     int SWITCH_BATCH_UPDATE;
@@ -93,9 +117,9 @@ void addControlNoise(float V, float G, MatrixXf &Q, float &Vn, float &Gn);
 
 void addObservationNoise(vector<VectorXf> &z, MatrixXf &R);
 
-void KF_joseph_update(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H);
+void josephUpdate(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H);
 
-void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf &H);
+void choleskyUpdate(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf &H);
 
 
 ////////////////////////////////////////////////////////////////////////////////

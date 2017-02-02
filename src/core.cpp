@@ -55,7 +55,7 @@ void updateSteering(VectorXf &x, MatrixXf &waypoints, int &indexOfFirstWaypoint,
         currentWaypoint[1] = waypoints(1, indexOfFirstWaypoint);
     }
 
-    // Compute change in G to point towards current waypoint
+    // Compute change in Gtrue to point towards current waypoint
     float deltaG = atan2(currentWaypoint[1] - x[1], currentWaypoint[0] - x[0]) - x[2] - G;
     deltaG = trigonometricOffset(deltaG);
 
@@ -142,7 +142,7 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
         Hfi = Hf[i];
         Pfi = Pf[i];
         xfi = xf[i];
-        KF_cholesky_update(xfi, Pfi, vi, R, Hfi);
+        choleskyUpdate(xfi, Pfi, vi, R, Hfi);
         xf[i] = xfi;
         Pf[i] = Pfi;
     }
@@ -253,15 +253,17 @@ vector<int> findVisibleLandmarks(vector<float> &dx, vector<float> &dy, float veh
     return visibleLandmarks;
 }
 
-void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf &H) {
+void choleskyUpdate(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf &H) {
     MatrixXf PHt = P * H.transpose();
     MatrixXf S = H * PHt + R;
 
     // FIXME: why use conjugate()?
-    S = (S + S.transpose()) * 0.5; // Make symmetric
+    // Make symmetric
+    S = (S + S.transpose()) * 0.5;
     MatrixXf SChol = S.llt().matrixU();
 
-    MatrixXf SCholInv = SChol.inverse(); //tri matrix
+    //  Tri matrix
+    MatrixXf SCholInv = SChol.inverse();
     MatrixXf W1 = PHt * SCholInv;
     MatrixXf W = W1 * SCholInv.transpose();
 
@@ -270,7 +272,7 @@ void KF_cholesky_update(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, Matr
 }
 
 
-void KF_joseph_update(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
+void josephUpdate(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     VectorXf PHt = P * H.transpose();
     MatrixXf S = H * PHt;
     MatrixXf _t = S;
@@ -278,11 +280,9 @@ void KF_joseph_update(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     _t = _t * R;
     S = S + _t;
     MatrixXf Si = S.inverse();
-    //Si = make_symmetric(Si);
+
     make_symmetric(Si);
-    MatrixXf PSD_check = Si.llt().matrixU(); //chol of scalar is sqrt
-    //PSD_check.transpose();
-    //PSD_check.conjugate();
+    MatrixXf PSD_check = Si.llt().matrixU();
 
     VectorXf W = PHt * Si;
     x = x + W * v;
@@ -293,12 +293,14 @@ void KF_joseph_update(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     MatrixXf C = eye - W * H;
     P = C * P * C.transpose() + W * R * W.transpose();
 
-    float eps = 2.2204 * pow(10.0, -16); //numerical safety
+    // Numerical safety
+    float eps = 2.2204 * pow(10.0, -16);
     P = P + eye * eps;
 
     PSD_check = P.llt().matrixL();
     PSD_check.transpose();
-    PSD_check.conjugate(); //for upper tri
+    // For upper tri
+    PSD_check.conjugate();
 }
 
 MatrixXf make_symmetric(MatrixXf &P) {
@@ -825,8 +827,7 @@ int Conf::parse(void) {
 
 
     // waypoint proximity
-    AT_WAYPOINT = 1.0;                      // metres, distance from current
-    // waypoint at which to switch to next waypoint
+    AT_WAYPOINT = 1.0;                      // metres, distance from current waypoint at which to switch to next waypoint
     NUMBER_LOOPS = 2;                        // number of loops through the waypoint list
 
     // resampling
@@ -852,7 +853,7 @@ int Conf::parse(void) {
     ////////////////////////////////////////////////////////////////////////////
     /// parse values
     ////////////////////////////////////////////////////////////////////////////
-    f("V", V);
+    f("Vtrue", V);
     f("MAXG", MAXG);
     f("RATEG", RATEG);
     f("WHEELBASE", WHEELBASE);

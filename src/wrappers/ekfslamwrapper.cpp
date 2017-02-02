@@ -15,6 +15,14 @@ using namespace Eigen;
 
 EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
     algorithm = new EKFSLAM();
+
+    algorithm->enableBatchUpdate = conf->SWITCH_BATCH_UPDATE == 1;
+    algorithm->useHeading = conf->SWITCH_HEADING_KNOWN == 1;
+    algorithm->wheelBase = conf->WHEELBASE;
+    algorithm->gateReject = conf->GATE_REJECT;
+    algorithm->gateAugment = conf->GATE_AUGMENT;
+    algorithm->associationKnown = conf->SWITCH_ASSOCIATION_KNOWN;
+
 }
 
 EKFSLAMWrapper::~EKFSLAMWrapper() {
@@ -68,14 +76,9 @@ void EKFSLAMWrapper::run() {
             plines = makeLaserLines(landmarksRangeBearing, xTrue);
         }
 
-        // @TODO what happens if this is moved inside the if(OBSERVE) branch?
-        // @TODO still to clean up
-        algorithm->sim(landmarks, waypoints, xEstimated, P, Vn, Gn, Qe,
-                       conf->WHEELBASE, dt, xTrue(2) + conf->sigmaT * unifRand(), conf->SWITCH_HEADING_KNOWN,
-                       sigmaPhi, landmarkIdentifiers,
-                       landmarksRangeBearing, Re, conf->GATE_REJECT, conf->GATE_AUGMENT, conf->SWITCH_ASSOCIATION_KNOWN, observe, zf,
-                       idf, zn,
-                       dataAssociationTable, conf->SWITCH_BATCH_UPDATE == 1, R);
+        algorithm->sim(landmarks, waypoints, xEstimated, P, Vnoisy, Gnoisy, Qe, dt,
+                       xTrue(2) + conf->sigmaT * unifRand(), sigmaPhi, landmarkIdentifiers,
+                       landmarksRangeBearing, Re, observe, zf, idf, zn, dataAssociationTable, R);
 
         // Update status bar
         currentIteration++;
@@ -103,8 +106,6 @@ void EKFSLAMWrapper::run() {
 
         emit replot();
     }
-
-    delete[] VnGn; //@TODO is this really needed? Is it a memory leak?
 }
 
 void EKFSLAMWrapper::initializeDataAssociationTable() {
