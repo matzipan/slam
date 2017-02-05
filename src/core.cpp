@@ -75,47 +75,68 @@ void updateSteering(VectorXf &x, MatrixXf &waypoints, int &indexOfFirstWaypoint,
 }
 
 
-//landmarksRangeBearing is range and bearing of visible landmarks
-// find associations (zf) and new features (zn)
-void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_association_table, int Nf, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
-    idf.clear();
+/**
+ * Find associations zf and new features zn
+ * @param landmarksRangeBearing is range and bearing of visible landmarks
+ * @param idz
+ * @param dataAssociationTable
+ * @param Nf
+ * @param zf
+ * @param idf
+ * @param zn
+ */
+void dataAssociationKnown(vector<VectorXf> &landmarksRangeBearing, vector<int> &idz, VectorXf &dataAssociationTable, int Nf,
+                          vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn) {
     vector<int> idn;
 
-    unsigned long ii;
+    zf.clear();
+    zn.clear();
+    idf.clear();
 
     for (unsigned long i = 0; i < idz.size(); i++) {
-        ii = idz[i];
+        unsigned long ii = idz[i];
         VectorXf z_i;
-        if (data_association_table(ii) == -1) { //new feature
-            z_i = z[i];
+
+        if (dataAssociationTable(ii) == -1) {
+            // New feature
+            z_i = landmarksRangeBearing[i];
             zn.push_back(z_i);
             idn.push_back(ii);
-        }
-        else {
-            z_i = z[i];
+        } else {
+            // Existing feature
+            z_i = landmarksRangeBearing[i];
             zf.push_back(z_i);
-            idf.push_back(data_association_table(ii));
+            idf.push_back(dataAssociationTable(ii));
         }
     }
 
     assert(idn.size() == zn.size());
     for (unsigned long i = 0; i < idn.size(); i++) {
-        data_association_table(idn[i]) = Nf + i;
+        dataAssociationTable(idn[i]) = Nf + i;
     }
 }
 
 
-//landmarksRangeBearing is the list of measurements conditioned on the particle.
-void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
-    //Having selected a new pose from the proposal distribution,
-    //  this pose is assumed perfect and each feature update maybe
-    //  computed independently and without pose uncertainty
-    vector<VectorXf> xf;    //updated EKF means
-    vector<MatrixXf> Pf;    //updated EKF covariances
+/**
+ * Having selected a new pose from the proposal distribution, this pose is assumed perfect and each feature update maybe
+ * computed independently and without pose uncertainty
+ *
+ * @param particle
+ * @param z is the list of measurements conditioned on the particle.
+ * @param idf
+ * @param R
+ */
+void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+    // Updated EKF means
+    vector<VectorXf> xf;
+    // Updated EKF covariances
+    vector<MatrixXf> Pf;
 
     for (unsigned long i = 0; i < idf.size(); i++) {
-        xf.push_back(particle.xf()[idf[i]]); //means
-        Pf.push_back(particle.Pf()[idf[i]]); //covariances
+        // Means
+        xf.push_back(particle.xf()[idf[i]]);
+        // Covariances
+        Pf.push_back(particle.Pf()[idf[i]]);
     }
 
     vector<VectorXf> zp;
@@ -123,9 +144,10 @@ void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, M
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
 
-    compute_jacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
 
-    vector<VectorXf> v; //difference btw two measurements (used to update mean)
+    // Difference between two measurements (used to update mean)
+    vector<VectorXf> v;
     for (unsigned long i = 0; i < z.size(); i++) {
         VectorXf measure_diff = z[i] - zp[i];
         measure_diff[1] = trigonometricOffset(measure_diff[1]);
@@ -459,8 +481,8 @@ float trigonometricOffset(float ang) {
     return ang;
 }
 
-void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
-    int lenz = z.size();
+void addFeature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
+    int lenZ = z.size();
     vector<VectorXf> xf;
     vector<MatrixXf> Pf;
     VectorXf xv = particle.xv();
@@ -468,7 +490,7 @@ void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
     float r, b, s, c;
     MatrixXf Gz(2, 2);
 
-    for (int i = 0; i < lenz; i++) {
+    for (int i = 0; i < lenZ; i++) {
         r = z[i][0];
         b = z[i][1];
         s = sin(xv(2) + b);
@@ -485,27 +507,35 @@ void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
 
     int lenx = particle.xf().size();
 
-    for (int i = lenx; i < lenx + lenz; i++) {
+    for (int i = lenx; i < lenx + lenZ; i++) {
         particle.setXfi(i, xf[(i - lenx)]);
         particle.setPfi(i, Pf[(i - lenx)]);
     }
 }
 
-void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv, vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
-    // zp - measurement (range, bearing)
-    // Hv - jacobians of function h (deriv of h wrt pose)
-    // Hf - jacobians of function h (deriv of h wrt mean)
-    // Sf - measurement covariance
+/**
+ *
+ * @param particle
+ * @param idf
+ * @param R
+ * @param zp - measurement (range, bearing)
+ * @param Hv - Jacobians of function h (derivative of h wrt pose)
+ * @param Hf - Jacobians of function h (derivative of h wrt mean)
+ * @param Sf - measurement covariance
+ */
+void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv,
+                      vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
 
     VectorXf xv = particle.xv();
 
     vector<VectorXf> xf;
+    // Particle Pf is a array of matrices
     vector<MatrixXf> Pf;
 
     unsigned int i;
     for (i = 0; i < idf.size(); i++) {
         xf.push_back(particle.xf()[idf[i]]);
-        Pf.push_back((particle.Pf())[idf[i]]); //particle.Pf is a array of matrices
+        Pf.push_back((particle.Pf())[idf[i]]);
     }
 
     float dx, dy, d2, d;
@@ -520,28 +550,28 @@ void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector
 
         VectorXf zp_vec(2);
 
-        //predicted observation
+        // Predicted observation
         zp_vec[0] = d;
         zp_vec[1] = trigonometricOffset(atan2(dy, dx) - xv(2));
         zp.push_back(zp_vec);
 
-        //Jacobian wrt vehicle states
+        // Jacobian wrt vehicle states
         HvMat << -dx / d, -dy / d, 0, dy / d2, -dx / d2, -1;
 
-        //Jacobian wrt feature states
+        // Jacobian wrt feature states
         HfMat << dx / d, dy / d, -dy / d2, dx / d2;
 
         Hv->push_back(HvMat);
         Hf->push_back(HfMat);
 
-        //innovation covariance of feature observation given the vehicle'
+        // Innovation covariance of feature observation given the vehicle'
         MatrixXf SfMat = HfMat * Pf[i] * HfMat.transpose() + R;
         Sf->push_back(SfMat);
     }
 }
 
 
-void resample_particles(vector<Particle> &particles, int Nmin, bool do_resample) {
+void resampleParticles(vector<Particle> &particles, int nMin, bool doResample) {
     unsigned long i;
     VectorXf w(particles.size());
 
@@ -554,64 +584,65 @@ void resample_particles(vector<Particle> &particles, int Nmin, bool do_resample)
         particles[i].setW(w(i) / ws);
     }
 
-    float Neff = 0;
+    float nEff = 0;
     vector<int> keep;
 
-    stratified_resample(w, keep, Neff);
+    stratifiedResample(w, keep, nEff);
 
-    vector<Particle> old_particles = vector<Particle>(particles);
+    vector<Particle> oldParticles = vector<Particle>(particles);
     particles.resize(keep.size());
 
-    if (do_resample && (Neff < Nmin)) {
+    if (doResample && (nEff < nMin)) {
         for (i = 0; i < keep.size(); i++) {
-            particles[i] = old_particles[keep[i]];
+            particles[i] = oldParticles[keep[i]];
         }
 
         for (i = 0; i < particles.size(); i++) {
-            float new_w = 1.0f / (float) particles.size();
-            particles[i].setW(new_w);
+            float newW = 1.0f / (float) particles.size();
+            particles[i].setW(newW);
         }
     }
 }
 
-void stratified_random(unsigned long N, vector<float> &di) {
+void stratifiedRandom(unsigned long N, vector<float> &di) {
     float k = 1.0 / (float) N;
 
-    //deterministic intervals
+    // Deterministic intervals
     float temp = k / 2;
     while (temp < (1 - k / 2)) {
         di.push_back(temp);
         temp = temp + k;
     }
 
-    // FIXME: when set NPARTICLES = 30, this whill failed
+    // FIXME: when set NPARTICLES = 30, this will fail
     assert(di.size() == N);
 
-    //dither within interval
+    // Dither within interval
     vector<float>::iterator diter;
     for (diter = di.begin(); diter != di.end(); diter++) {
         *diter = (*diter) + unifRand() * k - (k / 2);
     }
 }
 
-//
-// Generate a random number between 0 and 1
-// return a uniform number in [0,1].
+/**
+ * Generate a random number between 0 and 1
+ * @return random number in [0, 1]
+ */
 double unifRand() {
     return rand() / double(RAND_MAX);
 }
 
 // FIXME: input w will be modified?
-void stratified_resample(VectorXf w, vector<int> &keep, float &Neff) {
-    VectorXf wsqrd(w.size());
-    double w_sum = w.sum();
+void stratifiedResample(VectorXf w, vector<int> &keep, float &nEff) {
+    VectorXf wSqrd(w.size());
+    double wSum = w.sum();
 
     for (int i = 0; i < w.size(); i++) {
         // FIXME: matlab version is: w = w / sum(w)
-        w(i) = w(i) / w_sum;
-        wsqrd(i) = pow(w(i), 2);
+        w(i) = w(i) / wSum;
+        wSqrd(i) = pow(w(i), 2);
     }
-    Neff = 1 / wsqrd.sum();
+    nEff = 1 / wSqrd.sum();
 
     int len = w.size();
     keep.resize(len);
@@ -620,8 +651,8 @@ void stratified_resample(VectorXf w, vector<int> &keep, float &Neff) {
     }
 
     vector<float> select;
-    stratified_random(len, select);
-    cumulative_sum(w);
+    stratifiedRandom(len, select);
+    cumulativeSum(w);
 
     int ctr = 0;
     for (int i = 0; i < len; i++) {
@@ -632,8 +663,11 @@ void stratified_resample(VectorXf w, vector<int> &keep, float &Neff) {
     }
 }
 
-// returns a cumulative sum array
-void cumulative_sum(VectorXf &w) {
+/**
+ *
+ * @param w [in/out] a cumulative sum array
+ */
+void cumulativeSum(VectorXf &w) {
     VectorXf csumVec(w.size());
     for (int i = 0; i < w.size(); i++) {
         float sum = 0;
@@ -643,7 +677,7 @@ void cumulative_sum(VectorXf &w) {
         csumVec(i) = sum;
     }
 
-    w = VectorXf(csumVec); // copy constructor. Double check
+    w = VectorXf(csumVec); // Copy constructor. Double check
 }
 
 

@@ -16,27 +16,27 @@ FastSLAM1::FastSLAM1() { }
 FastSLAM1::~FastSLAM1() { }
 
 void FastSLAM1::update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
-                       vector<VectorXf> &z, vector<int> &ftag_visible, VectorXf &data_association_table, MatrixXf &R,
-                       int neffective, bool do_resample) {
+                       vector<int> &visibleLandmarkIdentifiers, VectorXf &dataAssociationTable, MatrixXf &R) {
     // Perform update
     for (int i = 0; i < particles.size(); i++) {
-        if (!zf.empty()) { //observe map features
-            float w = compute_weight(particles[i], zf, idf, R);
+        if (!zf.empty()) {
+            // Observe map features
+            float w = computeWeight(particles[i], zf, idf, R);
             w = particles[i].w() * w;
             particles[i].setW(w);
-            feature_update(particles[i], zf, idf, R);
+            featureUpdate(particles[i], zf, idf, R);
         }
         if (!zn.empty()) {
-            add_feature(particles[i], zn, R);
+            addFeature(particles[i], zn, R);
         }
     }
 
-    resample_particles(particles, neffective, do_resample);
+    resampleParticles(particles, nEffective, resample);
 }
 
-void FastSLAM1::predict_state(Particle &particle, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random) {
+void FastSLAM1::predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt) {
     // Optional: add random noise to predicted state
-    if (add_random) {
+    if (addPredictNoise) {
         VectorXf A(2);
         A(0) = V;
         A(1) = G;
@@ -48,17 +48,18 @@ void FastSLAM1::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
 
     // Predict state
     VectorXf xv = particle.xv();
-    VectorXf xv_temp(3);
-    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheel_base));
-    particle.setXv(xv_temp);
+    VectorXf xvTemp(3);
+    xvTemp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheelBase));
+    particle.setXv(xvTemp);
 }
 
 // Predict step
-void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random, bool heading_known) {
+void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float dt) {
     for (int i = 0; i < particles.size(); i++) {
-        predict_state(particles[i], V, G, Q, wheel_base, dt, add_random);
+        predictState(particles[i], V, G, Q, dt);
 
-        if (heading_known) { // If heading known, observe heading
+        if (useHeading) {
+            // If heading known, observe heading
             for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
                 VectorXf xf_j = particles[i].xf()[j];
                 xf_j[2] = xtrue[2];
@@ -71,14 +72,14 @@ void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xtrue, float V, f
 
 
 // Compute particle weight for sampling
-float FastSLAM1::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+float FastSLAM1::computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
     vector<MatrixXf> Hv;
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
     vector<VectorXf> zp;
 
     // Process each feature, incrementally refine proposal distribution
-    compute_jacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
 
     vector<VectorXf> v;
 
@@ -91,11 +92,10 @@ float FastSLAM1::compute_weight(Particle &particle, vector<VectorXf> &z, vector<
     float w = 1.0;
 
     MatrixXf S;
-    float den, num;
     for (unsigned long i = 0; i < z.size(); i++) {
         S = Sf[i];
-        den = 2 * M_PI * sqrt(S.determinant());
-        num = std::exp(-0.5 * v[i].transpose() * S.inverse() * v[i]);
+        float den = 2 * M_PI * sqrt(S.determinant());
+        float num = std::exp(-0.5 * v[i].transpose() * S.inverse() * v[i]);
         w = w * num / den;
     }
     return w;

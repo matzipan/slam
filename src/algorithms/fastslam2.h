@@ -17,28 +17,34 @@ public:
 
     ~FastSLAM2();
 
-    void predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random, bool heading_known);
+    void
+    predict(vector<Particle> &particles, VectorXf &xTrue, float V, float G, MatrixXf &Q, float dt);
 
     void update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
-                vector<VectorXf> &z, vector<int> &ftag_visible, VectorXf &data_association_table, MatrixXf &R,
-                int neffective, bool do_resample);
+                    vector<VectorXf> &z, VectorXf &dataAssociationTable, MatrixXf &R);
+
+    bool addPredictNoise;
+    bool useHeading;
+    float wheelBase;
+    int nEffective;
+    bool resample;
+
 protected:
 
-    void sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+    VectorXf deltaXv(VectorXf &xv1, VectorXf &xv2);
 
-    float likelihood_given_xv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+    void sampleProposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-    VectorXf delta_xv(VectorXf &xv1, VectorXf &xv2);
+    float likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-    void predict_state(Particle &particle, float V, float G, MatrixXf &Q, float wheel_base, float dt, int add_random);
+    void predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt);
 
-    void observe_heading(Particle &particle, float phi);
+    void observeHeading(Particle &particle, float phi);
 
-    float gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag);
+    float gaussEvaluate(VectorXf &v, MatrixXf &S, int logflag);
 
-    float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+    float computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
-    vector<Particle> sim(MatrixXf &lm, MatrixXf &wp);
 };
 
 #endif //SLAM_GUI_FASTSLAM2_H

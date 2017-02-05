@@ -125,19 +125,21 @@ void choleskyUpdate(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf
 ////////////////////////////////////////////////////////////////////////////////
 // FastSLAM functions
 ////////////////////////////////////////////////////////////////////////////////
-void compute_jacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv, vector<MatrixXf> *Hf, vector<MatrixXf> *Sf);
+void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv,
+                      vector<MatrixXf> *Hf, vector<MatrixXf> *Sf);
 
-void resample_particles(vector<Particle> &particles, int Nmin, bool do_resample);
+void resampleParticles(vector<Particle> &particles, int nMin, bool doResample);
 
-void stratified_resample(VectorXf w, vector<int> &keep, float &Neff);
+void stratifiedResample(VectorXf w, vector<int> &keep, float &Neff);
 
-void cumulative_sum(VectorXf &w);
+void cumulativeSum(VectorXf &w);
 
-void data_associate_known(vector<VectorXf> &z, vector<int> &idz, VectorXf &data_association_table, int Nf, vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
+void dataAssociationKnown(vector<VectorXf> &z, vector<int> &idz, VectorXf &dataAssociationTable, int Nf,
+                          vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
 
-void add_feature(Particle &particle, vector<VectorXf> &z, MatrixXf &R);
+void addFeature(Particle &particle, vector<VectorXf> &z, MatrixXf &R);
 
-void feature_update(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
 
 /**
@@ -155,7 +157,7 @@ MatrixXf makeLaserLines(vector<VectorXf> &rb, VectorXf &x);
 
 void makeCovarianceEllipse(MatrixXf &x, MatrixXf &P, MatrixXf &lines);
 
-void stratified_random(unsigned long N, vector<float> &di);
+void stratifiedRandom(unsigned long N, vector<float> &di);
 
 double unifRand();
 

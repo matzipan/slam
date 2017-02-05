@@ -41,7 +41,7 @@ protected:
                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
 
     void dataAssociateKnown(VectorXf &x, vector<VectorXf> &landmarkRangeBearing, vector<int> &idz, vector<VectorXf> &zf,
-                            vector<int> &idf, vector<VectorXf> &zn, vector<int> &table);
+                            vector<int> &idf, vector<VectorXf> &zn, vector<int> &dataAssociationTable);
 
     void augment(VectorXf &x, MatrixXf &P, vector<VectorXf> &zn, MatrixXf &Re);
 

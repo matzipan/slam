@@ -196,23 +196,21 @@ void EKFSLAM::dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &landmark
  * @param zf
  * @param idf
  * @param zn
- * @param table
+ * @param dataAssociationTable
  */
 void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &landmarksRangeBearing, vector<int> &idz, vector<VectorXf> &zf,
-                                 vector<int> &idf, vector<VectorXf> &zn, vector<int> &table) {
+                                 vector<int> &idf, vector<VectorXf> &zn, vector<int> &dataAssociationTable) {
     vector<int> idn;
-    unsigned i, ii;
 
     zf.clear();
     zn.clear();
     idf.clear();
-    idn.clear();
 
-    for (i = 0; i < idz.size(); i++) {
-        ii = idz[i];
+    for (unsigned int i = 0; i < idz.size(); i++) {
+        unsigned int ii = idz[i];
         VectorXf z_i;
 
-        if (table[ii] == -1) {
+        if (dataAssociationTable[ii] == -1) {
             // new feature
             z_i = landmarksRangeBearing[i];
             zn.push_back(z_i);
@@ -221,19 +219,19 @@ void EKFSLAM::dataAssociateKnown(VectorXf &x, vector<VectorXf> &landmarksRangeBe
             // exist feature
             z_i = landmarksRangeBearing[i];
             zf.push_back(z_i);
-            idf.push_back(table[ii]);
+            idf.push_back(dataAssociationTable[ii]);
         }
     }
 
-    // Add new feature IDs to lookup table
+    // Add new feature IDs to lookup dataAssociationTable
     // Number of vehicle pose states
     int Nxv = 3;
     // Number of features already in map
     int Nf = (x.size() - Nxv) / 2;
 
-    // add new feature positions to lookup table
-    for (i = 0; i < idn.size(); i++) {
-        table[idn[i]] = Nf + i;
+    // add new feature positions to lookup dataAssociationTable
+    for (unsigned int i = 0; i < idn.size(); i++) {
+        dataAssociationTable[idn[i]] = Nf + i;
     }
 }
 

@@ -16,6 +16,12 @@ using namespace Eigen;
 
 FastSLAM2Wrapper::FastSLAM2Wrapper(Conf *conf, Plot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot, parent) {
     algorithm = new FastSLAM2();
+
+    algorithm->addPredictNoise = conf->SWITCH_PREDICT_NOISE == 1;
+    algorithm->useHeading = conf->SWITCH_HEADING_KNOWN == 1;
+    algorithm->wheelBase = conf->WHEELBASE;
+    algorithm->nEffective = conf->NEFFECTIVE;
+    algorithm->resample = conf->SWITCH_RESAMPLE == 1;
 }
 
 FastSLAM2Wrapper::~FastSLAM2Wrapper() {
@@ -38,11 +44,9 @@ void FastSLAM2Wrapper::run() {
     initializeLandmarkIdentifiers();
     initializeDataAssociationTable();
 
-    QVector<double> arrParticles_x, arrParticles_y;
-    QVector<double> arrParticlesFea_x, arrParticlesFea_y;
-
-    double w_max;
-    double x_mean, y_mean, t_max;
+    vector<int> idf;
+    vector<VectorXf> zf;
+    vector<VectorXf> zn;
 
     // Main loop
     while (isAlive) {
@@ -56,10 +60,9 @@ void FastSLAM2Wrapper::run() {
             continue;
         }
 
-
         // @TODO what happens when the if statement is false and the predict happens but not the observation
         // @TODO why does fastslam1 use Q and fastslam 2 use Qe
-        algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Qe, conf->WHEELBASE, dt, conf->SWITCH_PREDICT_NOISE == 1, conf->SWITCH_HEADING_KNOWN == 1);
+        algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Qe, dt);
 
         dtSum += dt;
         bool observe = false;
@@ -68,10 +71,10 @@ void FastSLAM2Wrapper::run() {
             observe = true;
             dtSum = 0;
 
-            vector<int> ftag_visible = vector<int>(landmarkIdentifiers); // Modify the copy, not the landmarkIdentifiers
+            vector<int> visibleLandmarkIdentifiers = vector<int>(landmarkIdentifiers); // Modify the copy, not the landmarkIdentifiers
 
             // Compute true data, then add noise
-            landmarksRangeBearing = getObservations(landmarks, xTrue, ftag_visible, conf->MAX_RANGE);
+            landmarksRangeBearing = getObservations(landmarks, xTrue, visibleLandmarkIdentifiers, conf->MAX_RANGE);
             if(conf->SWITCH_SENSOR_NOISE) {
                 addObservationNoise(landmarksRangeBearing, R);
             }
@@ -80,14 +83,12 @@ void FastSLAM2Wrapper::run() {
 
             // Compute (known) data associations
             unsigned long Nf = particles[0].xf().size();
-            vector<int> idf;
-            vector<VectorXf> zf;
-            vector<VectorXf> zn;
 
-            data_associate_known(landmarksRangeBearing, ftag_visible, dataAssociationTable, Nf, zf, idf, zn);
+            dataAssociationKnown(landmarksRangeBearing, visibleLandmarkIdentifiers, dataAssociationTable, Nf, zf, idf, zn);
 
             // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, landmarksRangeBearing, ftag_visible, dataAssociationTable, Re, conf->NEFFECTIVE, conf->SWITCH_RESAMPLE == 1);
+            algorithm->update(particles, zf, zn, idf, landmarksRangeBearing, dataAssociationTable,
+                              Re);
         }
 
 

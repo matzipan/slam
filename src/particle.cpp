@@ -28,7 +28,6 @@ Particle::Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &xf, v
 Particle::~Particle() {
 }
 
-//getters
 float &Particle::w() {
     return _w;
 }

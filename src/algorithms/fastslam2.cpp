@@ -16,18 +16,17 @@ FastSLAM2::FastSLAM2() { }
 FastSLAM2::~FastSLAM2() { }
 
 void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
-                       vector<VectorXf> &z, vector<int> &ftag_visible, VectorXf &data_association_table, MatrixXf &R,
-                       int neffective, bool do_resample) {
+                       vector<VectorXf> &z, VectorXf &dataAssociationTable, MatrixXf &R) {
     // Observe map features
     if (!zf.empty()) {
         // Sample from 'optimal' proposal distribution, then update map
         for (int i = 0; i < particles.size(); i++) {
-            sample_proposal(particles[i], zf, idf, R);
-            feature_update(particles[i], zf, idf, R);
+            sampleProposal(particles[i], zf, idf, R);
+            featureUpdate(particles[i], zf, idf, R);
         }
 
         // Resample
-        resample_particles(particles, neffective, do_resample);
+        resampleParticles(particles, nEffective, resample);
     }
 
     // Observe new features, augment map
@@ -40,23 +39,24 @@ void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector
                 pv.setZero();
                 particles[i].setPv(pv);
             }
-            add_feature(particles[i], zn, R);
+            addFeature(particles[i], zn, R);
         }
     }
 }
 
 
-void FastSLAM2::predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random, bool heading_known) {
+void FastSLAM2::predict(vector<Particle> &particles, VectorXf &xTrue, float V, float G, MatrixXf &Q, float dt) {
     // Predict step
     for (int i = 0; i < particles.size(); i++) {
-        predict_state(particles[i], V, G, Q, wheel_base, dt, add_random);
-        if (heading_known) {
-            observe_heading(particles[i], xtrue(2)); // If heading known, observe heading
+        predictState(particles[i], V, G, Q, dt);
+        if (useHeading) {
+            // If heading known, observe heading
+            observeHeading(particles[i], xTrue(2));
         }
     }
 }
 
-void FastSLAM2::predict_state(Particle &particle, float V, float G, MatrixXf &Q, float wheel_base, float dt, int add_random) {
+void FastSLAM2::predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt) {
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
 
@@ -65,18 +65,18 @@ void FastSLAM2::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
     MatrixXf Gv(3, 3), Gu(3, 2);
 
     Gv << 1, 0, -V * dt * sin(G + phi), 0, 1, V * dt * cos(G + phi), 0, 0, 1;
-    Gu << dt * cos(G + phi), -V * dt * sin(G + phi), dt * sin(G + phi), V * dt * cos(G + phi), dt * sin(G) / wheel_base, V * dt * cos(G) / wheel_base;
+    Gu << dt * cos(G + phi), -V * dt * sin(G + phi), dt * sin(G + phi), V * dt * cos(G + phi), dt * sin(G) / wheelBase, V * dt * cos(G) / wheelBase;
 
     // Predict covariance
     MatrixXf newPv;
 
-    // @TODO: Pv here is somehow corrupted. Probably in sample_proposal
+    // @TODO: Pv here is somehow corrupted. Probably in sampleProposal
 
     newPv = Gv * Pv * Gv.transpose() + Gu * Q * Gu.transpose();
     particle.setPv(newPv);
 
     // Optional: add random noise to predicted state
-    if (add_random == 1) {
+    if (addPredictNoise) {
         VectorXf A(2);
         A(0) = V;
         A(1) = G;
@@ -87,13 +87,13 @@ void FastSLAM2::predict_state(Particle &particle, float V, float G, MatrixXf &Q,
     }
 
     // Predict state
-    VectorXf xv_temp(3);
-    xv_temp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheel_base));
-    particle.setXv(xv_temp);
+    VectorXf xvTemp(3);
+    xvTemp << xv(0) + V * dt * cos(G + xv(2)), xv(1) + V * dt * sin(G + xv(2)), trigonometricOffset(xv(2) + V * dt * sin(G / wheelBase));
+    particle.setXv(xvTemp);
 }
 
 
-void FastSLAM2::observe_heading(Particle &particle, float phi) {
+void FastSLAM2::observeHeading(Particle &particle, float phi) {
     float sigma_phi = 0.01 * M_PI / 180.0;
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
@@ -108,7 +108,7 @@ void FastSLAM2::observe_heading(Particle &particle, float phi) {
     particle.setPv(Pv);
 }
 
-float FastSLAM2::gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag) {
+float FastSLAM2::gaussEvaluate(VectorXf &v, MatrixXf &S, int logflag) {
     int D = v.size();
     MatrixXf Sc = S.llt().matrixL();
 
@@ -146,15 +146,15 @@ float FastSLAM2::gauss_evaluate(VectorXf &v, MatrixXf &S, int logflag) {
     return w;
 }
 
-// Compute particle weight for sampling
-float FastSLAM2::compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+/// Compute particle weight for sampling
+float FastSLAM2::computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
     vector<MatrixXf> Hv;
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
     vector<VectorXf> zp;
 
     // Process each feature, incrementally refine proposal distribution
-    compute_jacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
 
     vector<VectorXf> v;
 
@@ -175,10 +175,12 @@ float FastSLAM2::compute_weight(Particle &particle, vector<VectorXf> &z, vector<
     return w;
 }
 
-// Compute proposal distribution, then sample from it, and compute new particle weight
-void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
-    VectorXf xv(particle.xv()); // Robot position
-    MatrixXf Pv(particle.Pv()); // Controls (motion command)
+/// Compute proposal distribution, then sample from it, and compute new particle weight
+void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+    // Robot position
+    VectorXf xv(particle.xv());
+    // Controls (motion command)
+    MatrixXf Pv(particle.Pv());
 
     VectorXf xv0(xv);
     MatrixXf Pv0(Pv);
@@ -187,13 +189,13 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
 
-    // FIXME: landmarksRangeBearing is std vector, get first item's rows?
+    // FIXME: z is std vector, get first item's rows?
     vector<VectorXf> zp;
     MatrixXf Hvi;
     MatrixXf Hfi;
     MatrixXf Sfi;
 
-    // FIXME: landmarksRangeBearing is std vector, get first item's rows?
+    // FIXME: z is std vector, get first item's rows?
     VectorXf vi(z[0].rows());
 
     // Process each feature, incrementally refine proposal distribution
@@ -204,7 +206,7 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
         j.push_back(idf[i]);
         zp.clear();
 
-        compute_jacobians(particle, j, R, zp, &Hv, &Hf, &Sf);
+        computeJacobians(particle, j, R, zp, &Hv, &Hf, &Sf);
 
         Hvi = Hv[0];
         Hfi = Hf[0];
@@ -232,17 +234,17 @@ void FastSLAM2::sample_proposal(Particle &particle, vector<VectorXf> &z, vector<
     particle.setPv(zeros);
 
     // Compute sample weight: w = w* p(landmarksRangeBearing|xk) p(xk|xk-1) / proposal
-    VectorXf v1 = delta_xv(xv0, xvs);
-    VectorXf v2 = delta_xv(xv, xvs);
+    VectorXf v1 = deltaXv(xv0, xvs);
+    VectorXf v2 = deltaXv(xv, xvs);
 
-    float likelihood = likelihood_given_xv(particle, z, idf, R);
-    float prior = gauss_evaluate(v1, Pv0, 0);
-    float proposal = gauss_evaluate(v2, Pv, 0);
+    float likelihood = likelihoodGivenXv(particle, z, idf, R);
+    float prior = gaussEvaluate(v1, Pv0, 0);
+    float proposal = gaussEvaluate(v2, Pv, 0);
 
     particle.setW(particle.w() * likelihood * prior / proposal);
 }
 
-float FastSLAM2::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+float FastSLAM2::likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
     float w = 1;
     vector<int> idfi;
 
@@ -258,19 +260,19 @@ float FastSLAM2::likelihood_given_xv(Particle &particle, vector<VectorXf> &z, ve
         idfi.push_back(idf[i]);
         zp.clear();
 
-        compute_jacobians(particle, idfi, R, zp, &Hv, &Hf, &Sf);
+        computeJacobians(particle, idfi, R, zp, &Hv, &Hf, &Sf);
 
         for (unsigned k = 0; k < z[0].rows(); k++) {
             v(k) = z[i][k] - zp[0][k];
         }
         v(1) = trigonometricOffset(v(1));
 
-        w = w * gauss_evaluate(v, Sf[0], 0);
+        w = w * gaussEvaluate(v, Sf[0], 0);
     }
     return w;
 }
 
-VectorXf FastSLAM2::delta_xv(VectorXf &xv1, VectorXf &xv2) {
+VectorXf FastSLAM2::deltaXv(VectorXf &xv1, VectorXf &xv2) {
     // Compute innovation between two xv estimates, normalising the heading component
     VectorXf dx = xv1 - xv2;
     dx(2) = trigonometricOffset(dx(2));

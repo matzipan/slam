@@ -19,15 +19,21 @@ public:
 
     ~FastSLAM1();
 
-    void predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random, bool heading_known);
+    bool addPredictNoise;
+    bool useHeading;
+    float wheelBase;
+    int nEffective;
+    bool resample;
+
+    void
+    predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float dt);
 
     void update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
-                vector<VectorXf> &z, vector<int> &ftag_visible, VectorXf &data_association_table, MatrixXf &R,
-                int neffective, bool do_resample);
+                    vector<int> &visibleLandmarkIdentifiers, VectorXf &dataAssociationTable, MatrixXf &R);
 
 protected:
-    void predict_state(Particle &particle, float V, float G, MatrixXf &Q, float wheel_base, float dt, bool add_random);
-    float compute_weight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+    void predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt);
+    float computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 };
 
 
