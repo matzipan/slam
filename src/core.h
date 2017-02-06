@@ -111,7 +111,7 @@ void getVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, vector<int> &landmark
 
 vector<VectorXf> computeRangeBearing(MatrixXf &landmarks, VectorXf &x);
 
-vector<int> findVisibleLandmarks(vector<float> &dx, vector<float> &dy, float vehicleAngle, float maximumVisibiltyRange);
+vector<int> findVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, float maximumVisibiltyRange);
 
 void addControlNoise(float V, float G, MatrixXf &Q, float &Vn, float &Gn);
 

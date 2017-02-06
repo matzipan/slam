@@ -36,8 +36,8 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
     R << pow(conf->sigmaR, 2), 0, 0, pow(conf->sigmaB, 2);
 
     if (conf->SWITCH_INFLATE_NOISE == 1) {
-        Qe = 2 * Q;
-        Re = 2 * R;
+        Q = 2 * Q;
+        R = 2 * R;
     } else {
         Qe = MatrixXf(Q);
         Re = MatrixXf(R);
@@ -54,7 +54,7 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
     xEstimated = VectorXf(3);
     xEstimated.setZero(3);
 
-    drawSkip = 4; //@TODO use methods isntead of this
+    drawSkip = 4;
     conf->i("drawSkip", drawSkip);
 
     qRegisterMetaType<QString>("QString");

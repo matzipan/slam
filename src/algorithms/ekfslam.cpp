@@ -15,7 +15,7 @@ EKFSLAM::EKFSLAM() {}
 EKFSLAM::~EKFSLAM() {}
 
 void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
-                  MatrixXf &Qe, float dt, float phi, float sigmaPhi, vector<int> ftag, vector<VectorXf> landmarksRangeBearing,
+                  MatrixXf &Qe, float dt, float phi, float sigmaPhi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarksRangeBearing,
                   MatrixXf Re, bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
                   vector<int> dataAssociationTable, MatrixXf R) {
     // Predict position & heading
@@ -28,7 +28,7 @@ void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixX
 
     if (observe) {
         if (associationKnown) {
-            dataAssociateKnown(x, landmarksRangeBearing, ftag, zf, idf, zn, dataAssociationTable);
+            dataAssociateKnown(x, landmarksRangeBearing, landmarkIdentifiers, zf, idf, zn, dataAssociationTable);
         } else {
             dataAssociate(x, P, landmarksRangeBearing, Re, gateReject, gateAugment, zf, idf, zn);
         }

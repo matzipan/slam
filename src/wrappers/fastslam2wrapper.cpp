@@ -60,8 +60,6 @@ void FastSLAM2Wrapper::run() {
             continue;
         }
 
-        // @TODO what happens when the if statement is false and the predict happens but not the observation
-        // @TODO why does fastslam1 use Q and fastslam 2 use Qe
         algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Qe, dt);
 
         dtSum += dt;
@@ -86,7 +84,6 @@ void FastSLAM2Wrapper::run() {
 
             dataAssociationKnown(landmarksRangeBearing, visibleLandmarkIdentifiers, dataAssociationTable, Nf, zf, idf, zn);
 
-            // @TODO why does fastslam1 use R and fastslam 2 use Re
             algorithm->update(particles, zf, zn, idf, landmarksRangeBearing, dataAssociationTable,
                               Re);
         }

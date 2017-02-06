@@ -317,7 +317,6 @@ char *CVariant::to_s(char *buf) {
             break;
 
         case VT_POINTER:
-            // FIXME: change to u64
             sprintf(buf, "%lx", (uint64_t) d.pVal);
             break;
     }
@@ -326,7 +325,6 @@ char *CVariant::to_s(char *buf) {
 }
 
 char *CVariant::to_s(void) {
-    // FIXME: use a fixed length
     if (buf == NULL) {
         buf = new char[PARAM_ARRAY_ITEM_MAXLEN];
     }
@@ -542,7 +540,7 @@ int CParamArray::load(const string &f) {
         if (_b[0] == '#' || _b[0] == ':')
             continue;
 
-        // FIXME: if current line have more than one of "="
+        // If current line have more than one of "="
         //        then it will be failed
         sa = split_text(_b, "=");
 

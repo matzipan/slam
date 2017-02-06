@@ -52,15 +52,11 @@ void FastSLAM1Wrapper::run() {
             continue;
         }
 
-        // @TODO what happens when the if statement is false and the predict happens but not the observation
-        // @TODO why does fastslam1 use Q and fastslam 2 use Qe
-        algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Q, dt);
+        algorithm->predict(particles, xTrue, Vnoisy, Gnoisy, Qe, dt);
 
         dtSum += dt;
-        bool observe = false;
 
         if (dtSum >= conf->DT_OBSERVE) {
-            observe = true;
             dtSum = 0;
 
             vector<int> visibleLandmarkIdentifiers = vector<int>(landmarkIdentifiers); // Modify the copy, not the landmarkIdentifiers
@@ -79,8 +75,7 @@ void FastSLAM1Wrapper::run() {
             dataAssociationKnown(landmarksRangeBearing, visibleLandmarkIdentifiers, dataAssociationTable, Nf, zf, idf,
                                  zn);
 
-            // @TODO why does fastslam1 use R and fastslam 2 use Re
-            algorithm->update(particles, zf, zn, idf, visibleLandmarkIdentifiers, dataAssociationTable, R);
+            algorithm->update(particles, zf, zn, idf, visibleLandmarkIdentifiers, dataAssociationTable, Re);
         }
 
 

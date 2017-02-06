@@ -37,7 +37,6 @@ void EKFSLAMWrapper::run() {
     initializeLandmarkIdentifiers();
     initializeDataAssociationTable();
 
-    //@TODO what is this?
     P = MatrixXf(3, 3);
     P.setZero(3, 3);
 

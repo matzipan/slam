@@ -18,7 +18,7 @@ public:
     ~EKFSLAM();
 
     void sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
-                 MatrixXf &Qe, float dt, float phi, float sigma_phi, vector<int> ftag, vector<VectorXf> landmarkRangeBearing, MatrixXf Re,
+                 MatrixXf &Qe, float dt, float phi, float sigma_phi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarkRangeBearing, MatrixXf Re,
                  bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
                  vector<int> dataAssociationTable, MatrixXf R);
 

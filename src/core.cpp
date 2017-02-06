@@ -196,22 +196,8 @@ vector<VectorXf> getObservations(MatrixXf landmarks, VectorXf &x, vector<int> &l
  * @param maximumVisibilityRange - [in] maximum observation range
  */
 void getVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, vector<int> &landmarkIdentifiers, float maximumVisibilityRange) {
-    // Select set of landmarks that are visible within vehicle's
-    // Semi-circular field of view
-    vector<float> dx;
-    vector<float> dy;
-
-    for (int c = 0; c < landmarks.cols(); c++) {
-        dx.push_back(landmarks(0, c) - x(0));
-        dy.push_back(landmarks(1, c) - x(1));
-    }
-
-    float vehicleAngle = x(2);
-
-    //@TODO move code from above into find visiblelandmarks
-
     // Eliminate distant points
-    vector<int> visibleLandmarks = findVisibleLandmarks(dx, dy, vehicleAngle, maximumVisibilityRange);
+    vector<int> visibleLandmarks = findVisibleLandmarks(landmarks, x, maximumVisibilityRange);
 
     MatrixXf landmarksNew(landmarks.rows(), visibleLandmarks.size());
     unsigned j, k;
@@ -256,13 +242,25 @@ vector<VectorXf> computeRangeBearing(MatrixXf &landmarks, VectorXf &x) {
 /**
  * Incremental tests for bounding semi-circle.
  *
- * @param dx
- * @param dy
+ * @param landmarks
+ * @param x
  * @param vehicleAngle
  * @param maximumVisibiltyRange - [in] maximum observation range
  * @return
  */
-vector<int> findVisibleLandmarks(vector<float> &dx, vector<float> &dy, float vehicleAngle, float maximumVisibiltyRange) {
+vector<int> findVisibleLandmarks(MatrixXf &landmarks, VectorXf &x, float maximumVisibiltyRange) {
+    // Select set of landmarks that are visible within vehicle's
+    // Semi-circular field of view
+    vector<float> dx;
+    vector<float> dy;
+
+    for (int c = 0; c < landmarks.cols(); c++) {
+        dx.push_back(landmarks(0, c) - x(0));
+        dy.push_back(landmarks(1, c) - x(1));
+    }
+
+    float vehicleAngle = x(2);
+
     vector<int> visibleLandmarks;
 
     for (unsigned long j = 0; j < dx.size(); j++) {
@@ -309,7 +307,7 @@ void josephUpdate(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     VectorXf W = PHt * Si;
     x = x + W * v;
 
-    //Joseph-form covariance update
+    // Joseph-form covariance update
     MatrixXf eye(P.rows(), P.cols());
     eye.setIdentity();
     MatrixXf C = eye - W * H;
@@ -439,7 +437,11 @@ MatrixXf nRandMat::rand(int m, int n) {
     return x;
 }
 
-//add random measurement noise. We assume R is diagnoal matrix
+/**
+ * Add random measurement noise.
+ * @param z
+ * @param R - we assume R is diagnoal matrix
+ */
 void addObservationNoise(vector<VectorXf> &z, MatrixXf &R) {
     unsigned long len = z.size();
     if (len > 0) {
@@ -635,11 +637,9 @@ double unifRand() {
 // FIXME: input w will be modified?
 void stratifiedResample(VectorXf w, vector<int> &keep, float &nEff) {
     VectorXf wSqrd(w.size());
-    double wSum = w.sum();
 
     for (int i = 0; i < w.size(); i++) {
-        // FIXME: matlab version is: w = w / sum(w)
-        w(i) = w(i) / wSum;
+        w(i) = w(i) / w.sum();
         wSqrd(i) = pow(w(i), 2);
     }
     nEff = 1 / wSqrd.sum();

@@ -39,6 +39,8 @@ protected:
     void drawCovarianceEllipseLines();
 
     vector<int> dataAssociationTable;
+
+    /// A posteriori error covariance matrix (a measure of the estimated accuracy of the state estimate).
     MatrixXf P;
 
     EKFSLAM *algorithm;

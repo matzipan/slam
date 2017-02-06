@@ -17,21 +17,16 @@ FastSLAM2::~FastSLAM2() { }
 
 void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
                        vector<VectorXf> &z, VectorXf &dataAssociationTable, MatrixXf &R) {
-    // Observe map features
-    if (!zf.empty()) {
-        // Sample from 'optimal' proposal distribution, then update map
-        for (int i = 0; i < particles.size(); i++) {
+    for (int i = 0; i < particles.size(); i++) {
+        // Observe map features
+        if (!zf.empty()) {
+            // Sample from 'optimal' proposal distribution, then update map
             sampleProposal(particles[i], zf, idf, R);
             featureUpdate(particles[i], zf, idf, R);
         }
 
-        // Resample
-        resampleParticles(particles, nEffective, resample);
-    }
-
-    // Observe new features, augment map
-    if (!zn.empty()) {
-        for (int i = 0; i < particles.size(); i++) {
+        // Observe new features, augment map
+        if (!zn.empty()) {
             if (zf.empty()) { // Sample from proposal distribution if we have not already done so above
                 VectorXf xv = multivariateGauss(particles[i].xv(), particles[i].Pv(), 1);
                 particles[i].setXv(xv);
@@ -42,6 +37,8 @@ void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector
             addFeature(particles[i], zn, R);
         }
     }
+
+    resampleParticles(particles, nEffective, resample);
 }
 
 
@@ -56,6 +53,14 @@ void FastSLAM2::predict(vector<Particle> &particles, VectorXf &xTrue, float V, f
     }
 }
 
+/**
+ *
+ * @param particle
+ * @param V speed
+ * @param G steer angle
+ * @param Q
+ * @param dt
+ */
 void FastSLAM2::predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt) {
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
@@ -72,6 +77,7 @@ void FastSLAM2::predictState(Particle &particle, float V, float G, MatrixXf &Q, 
 
     // @TODO: Pv here is somehow corrupted. Probably in sampleProposal
 
+    // Pose predict covariance = Pose predict covariance + Control noise covariance
     newPv = Gv * Pv * Gv.transpose() + Gu * Q * Gu.transpose();
     particle.setPv(newPv);
 

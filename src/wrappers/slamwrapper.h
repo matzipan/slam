@@ -110,13 +110,13 @@ protected:
     VectorXf xTrue;
     /// Predicted position
     VectorXf xEstimated;
-    // @TODO need to find a description for this item
+    /// Control covariance
     MatrixXf Q;
-    // @TODO need to find a description for this item
+    /// Observation covariance
     MatrixXf R;
-    // @TODO need to find a description for this item
+    /// Used for inflated control covariance
     MatrixXf Qe;
-    // @TODO need to find a description for this item
+    /// Used for inflated observation covariance
     MatrixXf Re;
     /// Heading uncertainty, in radians
     float sigmaPhi;
