@@ -60,10 +60,10 @@ void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xtrue, float V, f
 
         if (useHeading) {
             // If heading known, observe heading
-            for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
-                VectorXf xf_j = particles[i].xf()[j];
+            for (unsigned long j = 0; j < particles[i].landmarkXs().size(); j++) {
+                VectorXf xf_j = particles[i].landmarkXs()[j];
                 xf_j[2] = xtrue[2];
-                particles[i].setXfi(j, xf_j);
+                particles[i].setLandmarkX(j, xf_j);
             }
         }
     }

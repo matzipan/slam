@@ -15,43 +15,34 @@ class Particle {
 public:
     Particle();
 
-    Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &xf, vector<MatrixXf> &Pf, float *da);
+    Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &xf, vector<MatrixXf> &pFeatures);
 
     ~Particle();
 
-    //getters
     float &w();
 
-    VectorXf &xv();             //robot pose: xEstimated,y,theta (heading dir)
-    MatrixXf &Pv();             //controls: velocities, vehicle pose predict covariance
-    vector<VectorXf> &xf();     //2d means of EKF
-    vector<MatrixXf> &Pf();     //covariance matrices for EKF
-    float *da();
+    /// Robot pose: x, y, theta (heading direction)
+    VectorXf &xv();
+    /// Controls: velocities, vehicle pose predict covariance
+    MatrixXf &Pv();
+    /// 2D means of landmark EKFs
+    vector<VectorXf> &landmarkXs();
+    /// Covariance matrices for landmark EKFs
+    vector<MatrixXf> &landmarkPs();
 
     //setters
     void setW(float w);
-
     void setXv(VectorXf &xv);
-
     void setPv(MatrixXf &Pv);
-
-    void setXf(vector<VectorXf> &xf);
-
-    void setXfi(unsigned long i, VectorXf &vec);
-
-    void setPf(vector<MatrixXf> &Pf);
-
-    void setPfi(unsigned long i, MatrixXf &m);
-
-    void setDa(float *da);
+    void setLandmarkX(unsigned long i, VectorXf &vec);
+    void setLandmarkP(unsigned long i, MatrixXf &m);
 
 private:
     float _w;
     VectorXf _xv;
     MatrixXf _Pv;
-    vector<VectorXf> _xf;
-    vector<MatrixXf> _Pf;
-    float *_da;
+    vector<VectorXf> _landmarkXs;
+    vector<MatrixXf> _landmarkPs;
 };
 
 #endif //SLAM_GUI_PARTICLE_H

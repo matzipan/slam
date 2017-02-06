@@ -47,9 +47,9 @@ void ParticleSLAMWrapper::drawFeatureParticles() {
     QVector<double> featureParticleXs, featureParticleYs;
 
     for (int i = 0; i < particles.size(); i++) {
-        for (unsigned long j = 0; j < particles[i].xf().size(); j++) {
-            featureParticleXs.push_back(particles[i].xf()[j](0));
-            featureParticleYs.push_back(particles[i].xf()[j](1));
+        for (unsigned long j = 0; j < particles[i].landmarkXs().size(); j++) {
+            featureParticleXs.push_back(particles[i].landmarkXs()[j](0));
+            featureParticleYs.push_back(particles[i].landmarkXs()[j](1));
         }
     }
     plot->setParticlesFea(featureParticleXs, featureParticleYs);

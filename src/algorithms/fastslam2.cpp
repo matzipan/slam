@@ -100,7 +100,7 @@ void FastSLAM2::predictState(Particle &particle, float V, float G, MatrixXf &Q, 
 
 
 void FastSLAM2::observeHeading(Particle &particle, float phi) {
-    float sigma_phi = 0.01 * M_PI / 180.0;
+    float sigmaPhi = 0.01 * M_PI / 180.0;
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
 
@@ -108,7 +108,7 @@ void FastSLAM2::observeHeading(Particle &particle, float phi) {
     H << 0, 0, 1;
 
     float v = trigonometricOffset(phi - xv(2));
-    josephUpdate(xv, Pv, v, pow(sigma_phi, 2), H);
+    josephUpdate(xv, Pv, v, pow(sigmaPhi, 2), H);
 
     particle.setXv(xv);
     particle.setPv(Pv);

@@ -102,7 +102,7 @@ void EKFSLAM::ekfObserveModel(VectorXf &x, int idf, VectorXf &z, MatrixXf &H) {
     H.setZero(2, x.size());
     z.setZero(2);
 
-    // position of xf in state
+    // position of landmarkXs in state
     fpos = Nxv + idf * 2;
 
     dx = x(fpos) - x(0);

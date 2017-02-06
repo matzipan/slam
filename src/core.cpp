@@ -134,9 +134,9 @@ void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, Ma
 
     for (unsigned long i = 0; i < idf.size(); i++) {
         // Means
-        xf.push_back(particle.xf()[idf[i]]);
+        xf.push_back(particle.landmarkXs()[idf[i]]);
         // Covariances
-        Pf.push_back(particle.Pf()[idf[i]]);
+        Pf.push_back(particle.landmarkPs()[idf[i]]);
     }
 
     vector<VectorXf> zp;
@@ -170,8 +170,8 @@ void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, Ma
     }
 
     for (unsigned long i = 0; i < idf.size(); i++) {
-        particle.setXfi(idf[i], xf[i]);
-        particle.setPfi(idf[i], Pf[i]);
+        particle.setLandmarkX(idf[i], xf[i]);
+        particle.setLandmarkP(idf[i], Pf[i]);
     }
 }
 
@@ -507,11 +507,11 @@ void addFeature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
         Pf.push_back(Gz * R * Gz.transpose());
     }
 
-    int lenx = particle.xf().size();
+    int lenx = particle.landmarkXs().size();
 
     for (int i = lenx; i < lenx + lenZ; i++) {
-        particle.setXfi(i, xf[(i - lenx)]);
-        particle.setPfi(i, Pf[(i - lenx)]);
+        particle.setLandmarkX(i, xf[(i - lenx)]);
+        particle.setLandmarkP(i, Pf[(i - lenx)]);
     }
 }
 
@@ -536,8 +536,8 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
 
     unsigned int i;
     for (i = 0; i < idf.size(); i++) {
-        xf.push_back(particle.xf()[idf[i]]);
-        Pf.push_back((particle.Pf())[idf[i]]);
+        xf.push_back(particle.landmarkXs()[idf[i]]);
+        Pf.push_back((particle.landmarkPs())[idf[i]]);
     }
 
     float dx, dy, d2, d;

@@ -13,16 +13,14 @@ Particle::Particle() {
     _xv.setZero(3);
     _Pv = MatrixXf(3, 3);
     _Pv.setZero(3, 3);
-    _da = NULL;
 }
 
-Particle::Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &xf, vector<MatrixXf> &Pf, float *da) {
+Particle::Particle(float &w, VectorXf &xv, MatrixXf &Pv, vector<VectorXf> &landmarkXs, vector<MatrixXf> &landmarkPs) {
     _w = w;
     _xv = xv;
     _Pv = Pv;
-    _xf = xf;
-    _Pf = Pf;
-    _da = da;
+    _landmarkXs = landmarkXs;
+    _landmarkPs = landmarkPs;
 }
 
 Particle::~Particle() {
@@ -40,19 +38,14 @@ MatrixXf &Particle::Pv() {
     return _Pv;
 }
 
-vector<VectorXf> &Particle::xf() {
-    return _xf;
+vector<VectorXf> &Particle::landmarkXs() {
+    return _landmarkXs;
 }
 
-vector<MatrixXf> &Particle::Pf() {
-    return _Pf;
+vector<MatrixXf> &Particle::landmarkPs() {
+    return _landmarkPs;
 }
 
-float *Particle::da() {
-    return _da;
-}
-
-//setters
 void Particle::setW(float w) {
     _w = w;
 }
@@ -65,28 +58,16 @@ void Particle::setPv(MatrixXf &Pv) {
     _Pv = Pv;
 }
 
-void Particle::setXf(vector<VectorXf> &xf) {
-    _xf = xf;
-}
-
-void Particle::setXfi(unsigned long i, VectorXf &vec) {
-    if (i >= _xf.size()) {
-        _xf.resize(i + 1);
+void Particle::setLandmarkX(unsigned long i, VectorXf &vec) {
+    if (i >= _landmarkXs.size()) {
+        _landmarkXs.resize(i + 1);
     }
-    _xf[i] = vec;
+    _landmarkXs[i] = vec;
 }
 
-void Particle::setPf(vector<MatrixXf> &Pf) {
-    _Pf = Pf;
-}
-
-void Particle::setPfi(unsigned long i, MatrixXf &m) {
-    if (i >= _Pf.size()) {
-        _Pf.resize(i + 1);
+void Particle::setLandmarkP(unsigned long i, MatrixXf &m) {
+    if (i >= _landmarkPs.size()) {
+        _landmarkPs.resize(i + 1);
     }
-    _Pf[i] = m;
-}
-
-void Particle::setDa(float *da) {
-    _da = da;
+    _landmarkPs[i] = m;
 }

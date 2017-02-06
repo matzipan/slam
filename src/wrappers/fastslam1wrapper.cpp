@@ -70,7 +70,7 @@ void FastSLAM1Wrapper::run() {
             plines = makeLaserLines(landmarksRangeBearing, xTrue);
 
             // Compute (known) data associations
-            unsigned long Nf = particles[0].xf().size();
+            unsigned long Nf = particles[0].landmarkXs().size();
 
             dataAssociationKnown(landmarksRangeBearing, visibleLandmarkIdentifiers, dataAssociationTable, Nf, zf, idf,
                                  zn);
