@@ -9,7 +9,7 @@
 
 #include "utils.h"
 
-#include "particle.h"
+#include "Particle.h"
 
 using namespace std;
 using namespace Eigen;

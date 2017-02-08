@@ -13,7 +13,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include "core.h"
-#include "particle.h"
+#include "Particle.h"
 
 using namespace std;
 using namespace Eigen;
@@ -637,9 +637,10 @@ double unifRand() {
 // FIXME: input w will be modified?
 void stratifiedResample(VectorXf w, vector<int> &keep, float &nEff) {
     VectorXf wSqrd(w.size());
+    float wSum = w.sum();
 
     for (int i = 0; i < w.size(); i++) {
-        w(i) = w(i) / w.sum();
+        w(i) = w(i) / wSum;
         wSqrd(i) = pow(w(i), 2);
     }
     nEff = 1 / wSqrd.sum();
