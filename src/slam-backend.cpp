@@ -4,14 +4,15 @@
 #include <string>
 
 #include <QApplication>
+#include "src/plotting/WindowPlot.h"
+#include "src/plotting/WindowPlot.h"
 
-#include "plot.h"
-#include "src/wrappers/slamwrapper.h"
+#include "wrappers/slamwrapper.h"
 #include "core.h"
 
-#include "src/wrappers/fastslam1wrapper.h"
-#include "src/wrappers/fastslam2wrapper.h"
-#include "src/wrappers/ekfslamwrapper.h"
+#include "wrappers/fastslam1wrapper.h"
+#include "wrappers/fastslam2wrapper.h"
+#include "wrappers/ekfslamwrapper.h"
 
 using namespace std;
 
@@ -62,22 +63,19 @@ void loadConfiguration(int argc, char *argv[], Conf *conf) {
     conf->print();
 }
 
-void configurePlot(Plot *plot, Conf *conf) {
-    plot->show();
-    plot->setGeometry(10, 10, 1024, 768);
+void configurePlot(NetworkPlot *plot, Conf *conf) {
     plot->setScreenshotFilename(conf->s("fn_screenshot"));
     plot->plot();
 }
 
 int main(int argc, char *argv[]) {
+    QApplication application(argc, argv);
     Conf conf;
 
     loadConfiguration(argc, argv, &conf);
 
-    QApplication application(argc, argv);
-
-    Plot plot;
-    configurePlot(&plot, &conf);
+    NetworkPlot plot;
+    plot.setScreenshotFilename(conf.s("fn_screenshot"));
 
     SLAMWrapper *slamThread;
 
@@ -89,12 +87,11 @@ int main(int argc, char *argv[]) {
     // Begin SLAM simulation
     slamThread->start();
 
-    // Begin GUI loop
-    int returnValue = application.exec();
+    application.exec();
 
     slamThread->stop();
 
     delete slamThread;
 
-    return returnValue;
+    return 0;
 }

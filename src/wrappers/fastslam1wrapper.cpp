@@ -6,15 +6,15 @@
 #include <Eigen/Dense>
 
 #include "src/core.h"
-#include "src/plot.h"
-#include "src/particle.h"
+#include "src/plotting/WindowPlot.h"
+#include "src/Particle.h"
 #include "src/algorithms/fastslam1.h"
 #include "fastslam1wrapper.h"
 
 using namespace std;
 using namespace Eigen;
 
-FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, Plot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot, parent) {
+FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot, parent) {
     algorithm = new FastSLAM1();
 
     algorithm->addPredictNoise = 1; // Always use predict noise

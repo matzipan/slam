@@ -6,7 +6,7 @@
 #include <string>
 #include <QtGui>
 #include <Eigen/Dense>
-#include <src/plot.h>
+#include <src/plotting/NetworkPlot.h>
 
 #include "../core.h"
 
@@ -25,7 +25,7 @@ public:
         SLAM_INTERACTIVE
     };
 
-    SLAMWrapper(Conf *conf, Plot *plot, QObject *parent = 0);
+    SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
 
     ~SLAMWrapper();
 
@@ -74,7 +74,7 @@ protected:
     int getCurrentCommand();
 
     Conf *conf;
-    Plot *plot;
+    NetworkPlot *plot;
 
     /// Is finished?
     int isAlive;

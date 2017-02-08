@@ -4,13 +4,13 @@
 #include <src/core.h>
 
 #include "slamwrapper.h"
-#include "src/plot.h"
+#include "src/plotting/WindowPlot.h"
 
 #include "src/utils.h"
 
 #include "moc_slamwrapper.cpp"
 
-SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(parent) {
+SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThread(parent) {
     this->conf = conf;
     this->plot = plot;
 
@@ -59,8 +59,8 @@ SLAMWrapper::SLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : QThread(pare
 
     qRegisterMetaType<QString>("QString");
 
-    connect(this, SIGNAL(replot()), plot, SLOT(canvasReplot()));
-    connect(this, SIGNAL(showMessage(QString)), plot, SLOT(canvasShowMessage(QString)));
+    connect(this, SIGNAL(replot()), plot, SLOT(plot()));
+    connect(this, SIGNAL(showMessage(QString)), plot, SLOT(showMessage(QString)));
 
     connect(plot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
 
@@ -124,7 +124,7 @@ void SLAMWrapper::configurePlot() {
     plot->addEstimatedPosition(xTrue(0), xTrue(1));
     plot->setCarEstimatedPosition(xTrue(0), xTrue(1), xTrue(2));
 
-    emit replot();
+    plot->plot();
 }
 
 void SLAMWrapper::addWaypointsAndLandmarks() {

@@ -10,27 +10,30 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(SOURCE_FILES
+set(BACKEND_FILES
+        src/slam-backend.cpp
+        src/Particle.cpp
+        src/core.cpp
+        src/utils.cpp
+        src/wrappers/slamwrapper.cpp
         src/wrappers/ekfslamwrapper.cpp
         src/wrappers/fastslam1wrapper.cpp
         src/wrappers/fastslam2wrapper.cpp
+        src/wrappers/ParticleSLAMWrapper.cpp
         src/algorithms/ekfslam.cpp
         src/algorithms/fastslam1.cpp
         src/algorithms/fastslam2.cpp
-        src/particle.cpp
-        src/core.cpp
-        src/plot.cpp
-        src/wrappers/slamwrapper.cpp
-        src/utils.cpp
-        src/main.cpp
-        src/algorithms/ekfslam.cpp
         libs/qcustomplot/qcustomplot.cpp
-        src/wrappers/ParticleSLAMWrapper.cpp)
+        src/plotting/NetworkPlot.cpp)
+
+set(GUI_FILES
+        libs/qcustomplot/qcustomplot.cpp
+        src/plotting/WindowPlot.cpp
+        src/slam-gui.cpp src/plotting/PlotController.cpp src/plotting/PlotController.h)
 
 set (PKG_DEPS
         QtCore
-        QtGui
-        )
+        QtGui)
 
 pkg_check_modules (DEPS REQUIRED ${PKG_DEPS})
 
@@ -44,7 +47,8 @@ include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(libs/eigen3)
 
-add_executable(slam-gui ${SOURCE_FILES})
+add_executable(slam-backend ${BACKEND_FILES})
+add_executable(slam-gui ${GUI_FILES})
 
-target_link_libraries(slam-gui ${DEPS_LIBRARIES})
-
+target_link_libraries(slam-backend ${DEPS_LIBRARIES} zmqpp)
+target_link_libraries(slam-gui ${DEPS_LIBRARIES} zmqpp)

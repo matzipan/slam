@@ -11,86 +11,56 @@
 #include "libs/qcustomplot/qcustomplot.h"
 
 
-class Plot : public QMainWindow {
+class WindowPlot : public QMainWindow {
 Q_OBJECT
 
 public:
-    explicit Plot(QWidget *parent = 0);
+    explicit WindowPlot(QWidget *parent = 0);
 
-    ~Plot();
+    ~WindowPlot();
 
     void setupCanvas(void);
-
     void setupInitData(void);
-
     void setLandmarks(QVector<double> &arrX, QVector<double> &arrY);
-
     void setWaypoints(QVector<double> &arrX, QVector<double> &arrY);
-
     void setParticles(QVector<double> &arrX, QVector<double> &arrY);
-
-    void setParticlesFea(QVector<double> &arrX, QVector<double> &arr);
-
+    void setFeatureParticles(QVector<double> &arrX, QVector<double> &arr);
     void setLaserLines(Eigen::MatrixXf &lnes);
-
     void setCovEllipse(Eigen::MatrixXf &lnes, int idx);
-
-    void clearCovEllipse(void);
-
     void addTruePosition(double x, double y);
-
     void addEstimatedPosition(double x, double y);
-
     void setCarSize(double s, int id = 0);
-
-    void setCarModel(double *parm, int id = 0);
-
     void setCarTruePosition(double x, double y, double t);
-
     void setCarEstimatedPosition(double x, double y, double t);
-
     void setPlotRange(double xmin, double xmax, double ymin, double ymax);
-
     void clear(void);
+    void setScreenshotFilename(std::string filename);
 
-    void plot(void);
+public slots:
 
-    void setScreenshotFilename(std::string fnBase);
+    void plot();
+    void showMessage(QString text);
 
-    void showMessage(QString &msg);
-
-
-protected slots:
-
-    void canvsMousePressEvent(QMouseEvent *event);
-
+    // @TODO These functions can be used to send messages from WindowPlot to NetworkPlot when an event happens
+    void canvasMousePressEvent(QMouseEvent *event);
     void canvasMouseMoveEvent(QMouseEvent *event);
 
-    void canvasReplot(void);
+    void plotBegin(void);
+    void plotEnd(void);
 
-    void canvasShowMessage(QString msg);
-
-    void plotBegin(void);                   // slot for QCustomPlot begin plot
-    void plotEnd(void);                     // slot for QCustomPlot end plot
-
-    void covEllipseAdd(int n);              // slot for add new covariance ellipse
+    void covEllipseAdd(int n);
 
 signals:
 
+    // @TODO These signals can be used to send messages from WindowPlot to NetworkPlot when an event happens
     void commandSend(int cmd);
-
     void addCovEllipse(int n);
 
 
 protected:
     void keyPressEvent(QKeyEvent *event);
-
     void mousePressEvent(QMouseEvent *event);
-
     void resizeEvent(QResizeEvent *event);
-
-    void timerEvent(QTimerEvent *event);
-
     void setCarPos(double x, double y, double t, int id = 0);
 
 private:
@@ -114,7 +84,7 @@ private:
     // 3 - size
 
     QCPGraph *plotParticles;
-    QCPGraph *plotParticlesFea;
+    QCPGraph *plotFeatureParticles;
     QCPGraph *plotLandmarks;
     QCPCurve *curvWayPoint;
     QCPCurve *curvRealPos;

@@ -1,11 +1,11 @@
 #include <QtGui>
 #include <QScreen>
 
-#include "plot.h"
+#include "WindowPlot.h"
 
-#include "moc_plot.cpp"
+#include "moc_WindowPlot.cpp"
 
-Plot::Plot(QWidget *parent) : QMainWindow(parent) {
+WindowPlot::WindowPlot(QWidget *parent) : QMainWindow(parent) {
     muxData = new QMutex(QMutex::NonRecursive);
 
     customPlot = new QCustomPlot(this);
@@ -29,11 +29,11 @@ Plot::Plot(QWidget *parent) : QMainWindow(parent) {
     customPlot->replot();
 }
 
-Plot::~Plot() {
+WindowPlot::~WindowPlot() {
     delete muxData;
 }
 
-void Plot::keyPressEvent(QKeyEvent *event) {
+void WindowPlot::keyPressEvent(QKeyEvent *event) {
     int key;
     int cmd = -1;
 
@@ -80,7 +80,7 @@ void Plot::keyPressEvent(QKeyEvent *event) {
     if (cmd > 0) emit commandSend(cmd);
 }
 
-void Plot::mousePressEvent(QMouseEvent *event) {
+void WindowPlot::mousePressEvent(QMouseEvent *event) {
     // 1 - left
     // 2 - right
     // 4 - middle
@@ -91,15 +91,11 @@ void Plot::mousePressEvent(QMouseEvent *event) {
     }
 }
 
-void Plot::resizeEvent(QResizeEvent *event) {
+void WindowPlot::resizeEvent(QResizeEvent *event) {
     customPlot->xAxis->setScaleRatio(customPlot->yAxis, 1.0);
 }
 
-void Plot::timerEvent(QTimerEvent *event) {
-    //plot();
-}
-
-void Plot::canvasMouseMoveEvent(QMouseEvent *event) {
+void WindowPlot::canvasMouseMoveEvent(QMouseEvent *event) {
     double fx, fy;
     QString msg;
 
@@ -113,7 +109,7 @@ void Plot::canvasMouseMoveEvent(QMouseEvent *event) {
 }
 
 
-void Plot::canvsMousePressEvent(QMouseEvent *event) {
+void WindowPlot::canvasMousePressEvent(QMouseEvent *event) {
 #if 0
     // 1 - left
     // 2 - right
@@ -164,31 +160,22 @@ void Plot::canvsMousePressEvent(QMouseEvent *event) {
     parmCarModel[1] = fy;
     drawCar();
 
-    // replot canvas
-    customPlot->replot();
+    // plot canvas
+    customPlot->plot();
 #endif
 }
 
 
-void Plot::canvasReplot(void) {
-    plot();
-}
-
-void Plot::plotBegin(void) {
+void WindowPlot::plotBegin(void) {
     muxData->lock();
 }
 
-void Plot::plotEnd(void) {
+void WindowPlot::plotEnd(void) {
     muxData->unlock();
 }
 
 
-void Plot::canvasShowMessage(QString msg) {
-    showMessage(msg);
-}
-
-
-void Plot::setupInitData(void) {
+void WindowPlot::setupInitData(void) {
     // setupt car parameters
     parmCarModel[0] = 0;            // pos - xEstimated
     parmCarModel[1] = 0;            // pos - y
@@ -201,8 +188,8 @@ void Plot::setupInitData(void) {
     parmCarEst[3] = 1;              // size
 }
 
-void Plot::setupCanvas(void) {
-    connect(customPlot, SIGNAL(mousePress(QMouseEvent * )), this, SLOT(canvsMousePressEvent(QMouseEvent * )));
+void WindowPlot::setupCanvas(void) {
+    connect(customPlot, SIGNAL(mousePress(QMouseEvent * )), this, SLOT(canvasMousePressEvent(QMouseEvent * )));
     connect(customPlot, SIGNAL(mouseMove(QMouseEvent * )), this, SLOT(canvasMouseMoveEvent(QMouseEvent * )));
 
     customPlot->xAxis->setScaleRatio(customPlot->yAxis, 1.0);
@@ -239,11 +226,11 @@ void Plot::setupCanvas(void) {
     plotParticles->setName("Particles");
 
     // setup particles feature (scatter)
-    plotParticlesFea = customPlot->addGraph();
-    plotParticlesFea->setPen(QColor(255, 0, 0));
-    plotParticlesFea->setLineStyle(QCPGraph::lsNone);
-    plotParticlesFea->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 2));
-    plotParticlesFea->setName("Feature Particles");
+    plotFeatureParticles = customPlot->addGraph();
+    plotFeatureParticles->setPen(QColor(255, 0, 0));
+    plotFeatureParticles->setLineStyle(QCPGraph::lsNone);
+    plotFeatureParticles->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 2));
+    plotFeatureParticles->setName("Feature Particles");
 
     // setupt landmarks
     plotLandmarks = customPlot->addGraph();
@@ -313,45 +300,45 @@ void Plot::setupCanvas(void) {
     customPlot->yAxis2->setSubTickLength(0, 0);
 }
 
-void Plot::setLandmarks(QVector<double> &arrX, QVector<double> &arrY) {
+void WindowPlot::setLandmarks(QVector<double> &xs, QVector<double> &ys) {
     muxData->lock();
 
-    plotLandmarks->setData(arrX, arrY);
+    plotLandmarks->setData(xs, ys);
 
     muxData->unlock();
 }
 
-void Plot::setWaypoints(QVector<double> &arrX, QVector<double> &arrY) {
+void WindowPlot::setWaypoints(QVector<double> &xs, QVector<double> &ys) {
     muxData->lock();
 
-    curvWayPoint->setData(arrX, arrY);
+    curvWayPoint->setData(xs, ys);
 
     muxData->unlock();
 }
 
-void Plot::setParticles(QVector<double> &arrX, QVector<double> &arrY) {
+void WindowPlot::setParticles(QVector<double> &xs, QVector<double> &ys) {
     muxData->lock();
 
-    plotParticles->setData(arrX, arrY);
+    plotParticles->setData(xs, ys);
 
     muxData->unlock();
 }
 
-void Plot::setParticlesFea(QVector<double> &arrX, QVector<double> &arrY) {
+void WindowPlot::setFeatureParticles(QVector<double> &xs, QVector<double> &ys) {
     muxData->lock();
 
-    plotParticlesFea->setData(arrX, arrY);
+    plotFeatureParticles->setData(xs, ys);
 
     muxData->unlock();
 }
 
 
-void Plot::setLaserLines(Eigen::MatrixXf &lnes) {
+void WindowPlot::setLaserLines(Eigen::MatrixXf &lnes) {
     muxData->lock();
 
     int i;
     int nGraph, nLines;
-    QVector<double> arrX, arrY;
+    QVector<double> xs, ys;
 
     nGraph = arrLaserLines.size();
     nLines = lnes.cols();
@@ -370,31 +357,31 @@ void Plot::setLaserLines(Eigen::MatrixXf &lnes) {
 
     // set laser line data
     for (i = 0; i < nLines; i++) {
-        arrX.clear();
-        arrY.clear();
-        arrX.push_back(lnes(0, i));
-        arrX.push_back(lnes(2, i));
-        arrY.push_back(lnes(1, i));
-        arrY.push_back(lnes(3, i));
+        xs.clear();
+        ys.clear();
+        xs.push_back(lnes(0, i));
+        xs.push_back(lnes(2, i));
+        ys.push_back(lnes(1, i));
+        ys.push_back(lnes(3, i));
 
-        arrLaserLines[i]->setData(arrX, arrY);
+        arrLaserLines[i]->setData(xs, ys);
     }
 
     for (i = nLines; i < nGraph; i++) {
-        arrX.clear();
-        arrY.clear();
-        arrX.push_back(0.0);
-        arrX.push_back(0.0);
-        arrY.push_back(0.0);
-        arrY.push_back(0.0);
-        arrLaserLines[i]->setData(arrX, arrY);
+        xs.clear();
+        ys.clear();
+        xs.push_back(0.0);
+        xs.push_back(0.0);
+        ys.push_back(0.0);
+        ys.push_back(0.0);
+        arrLaserLines[i]->setData(xs, ys);
     }
 
     muxData->unlock();
 }
 
 // slot for add new covariance ellipse
-void Plot::covEllipseAdd(int n) {
+void WindowPlot::covEllipseAdd(int n) {
     muxData->lock();
 
     int i;
@@ -419,13 +406,13 @@ void Plot::covEllipseAdd(int n) {
 }
 
 
-void Plot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
+void WindowPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
     muxData->lock();
 
     int i, nSeg;
     int nGraph;
 
-    QVector<double> arrX, arrY;
+    QVector<double> xs, ys;
 
     nSeg = lnes.cols();
     nGraph = arrCovLines.size();
@@ -437,37 +424,20 @@ void Plot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
     }
 
     // set covanice ellipse line data
-    arrX.clear();
-    arrY.clear();
+    xs.clear();
+    ys.clear();
 
     for (i = 0; i < nSeg; i++) {
-        arrX.push_back(lnes(0, i));
-        arrY.push_back(lnes(1, i));
+        xs.push_back(lnes(0, i));
+        ys.push_back(lnes(1, i));
 
-        arrCovLines[idx]->setData(arrX, arrY);
+        arrCovLines[idx]->setData(xs, ys);
     }
 
     muxData->unlock();
 }
 
-void Plot::clearCovEllipse(void) {
-    muxData->lock();
-
-    int i, nGraph;
-    QVector<double> arrX, arrY;
-
-    nGraph = arrCovLines.size();
-
-    arrX.clear();
-    arrY.clear();
-    for (i = 0; i < nGraph; i++) {
-        arrCovLines[i]->setData(arrX, arrY);
-    }
-
-    muxData->unlock();
-}
-
-void Plot::addTruePosition(double x, double y) {
+void WindowPlot::addTruePosition(double x, double y) {
     muxData->lock();
 
     arrPos_x.push_back(x);
@@ -478,7 +448,7 @@ void Plot::addTruePosition(double x, double y) {
     muxData->unlock();
 }
 
-void Plot::addEstimatedPosition(double x, double y) {
+void WindowPlot::addEstimatedPosition(double x, double y) {
     muxData->lock();
 
     arrEstPos_x.push_back(x);
@@ -510,15 +480,15 @@ void Plot::addEstimatedPosition(double x, double y) {
 }
 
 
-void Plot::setCarTruePosition(double x, double y, double t) {
+void WindowPlot::setCarTruePosition(double x, double y, double t) {
     setCarPos(x, y, t, 0);
 }
 
-void Plot::setCarEstimatedPosition(double x, double y, double t) {
+void WindowPlot::setCarEstimatedPosition(double x, double y, double t) {
     setCarPos(x, y, t, 1);
 }
 
-void Plot::setCarPos(double x, double y, double t, int idx) {
+void WindowPlot::setCarPos(double x, double y, double t, int idx) {
     muxData->lock();
 
     if (idx == 0) {
@@ -536,7 +506,7 @@ void Plot::setCarPos(double x, double y, double t, int idx) {
     muxData->unlock();
 }
 
-void Plot::setCarSize(double s, int idx) {
+void WindowPlot::setCarSize(double s, int idx) {
     muxData->lock();
 
     if (idx == 0)
@@ -549,22 +519,7 @@ void Plot::setCarSize(double s, int idx) {
     muxData->unlock();
 }
 
-void Plot::setCarModel(double *parm, int idx) {
-    muxData->lock();
-
-    for (int i = 0; i < 4; i++) {
-        if (idx == 0)
-            parmCarModel[i] = parm[i];
-        else if (idx == 1)
-            parmCarEst[i] = parm[i];
-    }
-
-    drawCar(idx);
-
-    muxData->unlock();
-}
-
-void Plot::setPlotRange(double xmin, double xmax, double ymin, double ymax) {
+void WindowPlot::setPlotRange(double xmin, double xmax, double ymin, double ymax) {
     muxData->lock();
 
     // set ranges appropriate to show data:
@@ -574,7 +529,7 @@ void Plot::setPlotRange(double xmin, double xmax, double ymin, double ymax) {
     muxData->unlock();
 }
 
-void Plot::showMessage(QString &msg) {
+void WindowPlot::showMessage(QString msg) {
     QString _msg;
 
     msgString1 = msg;
@@ -582,12 +537,12 @@ void Plot::showMessage(QString &msg) {
     statusBar()->showMessage(_msg);
 }
 
-void Plot::setScreenshotFilename(std::string fnBase) {
-    fnScreenShot_base = fnBase;
+void WindowPlot::setScreenshotFilename(std::string filename) {
+    fnScreenShot_base = filename;
 }
 
 
-void Plot::clear(void) {
+void WindowPlot::clear(void) {
     muxData->lock();
 
     arrWaypoint_x.clear();
@@ -608,7 +563,7 @@ void Plot::clear(void) {
     muxData->unlock();
 }
 
-void Plot::plot(void) {
+void WindowPlot::plot(void) {
     static int idx = 0;
     QString fnOut;
 
@@ -620,11 +575,11 @@ void Plot::plot(void) {
     }
 }
 
-void Plot::drawCar(int idx) {
+void WindowPlot::drawCar(int idx) {
     double x, y, t, s;
     double x1, y1, x2, y2;
 
-    QVector<double> arrX, arrY;
+    QVector<double> xs, ys;
 
     if (idx == 0) {
         x = parmCarModel[0];
@@ -640,25 +595,25 @@ void Plot::drawCar(int idx) {
 
     x2 = x + s / 3 * cos(M_PI / 2.0 + t);
     y2 = y + s / 3 * sin(M_PI / 2.0 + t);
-    arrX.push_back(x2);
-    arrY.push_back(y2);
+    xs.push_back(x2);
+    ys.push_back(y2);
 
     x1 = x + s / 3 * cos(3.0 * M_PI / 2.0 + t);
     y1 = y + s / 3 * sin(3.0 * M_PI / 2.0 + t);
-    arrX.push_back(x1);
-    arrY.push_back(y1);
+    xs.push_back(x1);
+    ys.push_back(y1);
 
     x1 = x + s * 1.3 * cos(t);
     y1 = y + s * 1.3 * sin(t);
-    arrX.push_back(x1);
-    arrY.push_back(y1);
+    xs.push_back(x1);
+    ys.push_back(y1);
 
-    arrX.push_back(x2);
-    arrY.push_back(y2);
+    xs.push_back(x2);
+    ys.push_back(y2);
 
     if (idx == 0) {
-        curvCar->setData(arrX, arrY);
+        curvCar->setData(xs, ys);
     } else if (idx == 1) {
-        curvCarEst->setData(arrX, arrY);
+        curvCarEst->setData(xs, ys);
     }
 }

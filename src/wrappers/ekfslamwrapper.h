@@ -27,7 +27,7 @@ class EKFSLAMWrapper : public SLAMWrapper {
     Q_OBJECT
 
 public:
-    EKFSLAMWrapper(Conf *conf, Plot *plot, QObject *parent = 0);
+    EKFSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
 
     ~EKFSLAMWrapper();
 

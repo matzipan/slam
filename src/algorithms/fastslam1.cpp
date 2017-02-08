@@ -6,7 +6,7 @@
 
 #include "fastslam1.h"
 
-#include "src/particle.h"
+#include "src/Particle.h"
 #include "src/core.h"
 
 using namespace Eigen;

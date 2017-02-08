@@ -27,7 +27,7 @@ class FastSLAM1Wrapper : public ParticleSLAMWrapper {
     Q_OBJECT
 
 public:
-    FastSLAM1Wrapper(Conf *conf, Plot *plot, QObject *parent = 0);
+    FastSLAM1Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
 
     ~FastSLAM1Wrapper();
 

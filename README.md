@@ -10,6 +10,7 @@ So far I have added a CMake build system and I am decoupling the algorithm from 
 * Ubuntu 16.04
 * CMake: `sudo apt install cmake`
 * Qt4: `sudo apt install libqtcore4 libqtgui4 libqt4-dev`
+* zmqpp: `sudo apt install libzmqpp3 libzmqpp-dev`
 
 ## Build
 1. `mkdir build && cd build`

@@ -6,14 +6,14 @@
 #define SLAM_GUI_PARTICLESLAMWRAPPER_H
 
 #include <QtGui>
-#include <src/particle.h>
+#include <src/Particle.h>
 #include "slamwrapper.h"
 
 class ParticleSLAMWrapper : public SLAMWrapper {
 Q_OBJECT
 
 public:
-    ParticleSLAMWrapper(Conf *conf, Plot *plot, QObject *parent);
+    ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent);
 
     ~ParticleSLAMWrapper();
 

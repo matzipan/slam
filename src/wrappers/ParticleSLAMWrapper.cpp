@@ -3,11 +3,11 @@
 //
 #include <QtGui>
 #include <src/core.h>
-#include <src/plot.h>
+#include <src/plotting/WindowPlot.h>
 
 #include "ParticleSLAMWrapper.h"
 
-ParticleSLAMWrapper::ParticleSLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
+ParticleSLAMWrapper::ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
     particles = vector<Particle>(conf->NPARTICLES);
 }
 
@@ -52,7 +52,7 @@ void ParticleSLAMWrapper::drawFeatureParticles() {
             featureParticleYs.push_back(particles[i].landmarkXs()[j](1));
         }
     }
-    plot->setParticlesFea(featureParticleXs, featureParticleYs);
+    plot->setFeatureParticles(featureParticleXs, featureParticleYs);
 }
 
 void ParticleSLAMWrapper::computeEstimatedPosition(double &x, double &y, double &t) {

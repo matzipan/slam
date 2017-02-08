@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 
 #include "src/core.h"
-#include "src/plot.h"
+#include "src/plotting/WindowPlot.h"
 #include "src/algorithms/ekfslam.h"
 #include "ekfslamwrapper.h"
 
@@ -13,7 +13,7 @@ using namespace std;
 using namespace Eigen;
 
 
-EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, Plot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
+EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
     algorithm = new EKFSLAM();
 
     algorithm->enableBatchUpdate = conf->SWITCH_BATCH_UPDATE == 1;
