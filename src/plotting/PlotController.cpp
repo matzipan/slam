@@ -105,7 +105,7 @@ void PlotController::run () {
 
                 plot->setFeatureParticles(xs, ys);
             } else if(text == "setLaserLines") {
-                int rows, cols;
+                long rows, cols;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
@@ -119,7 +119,8 @@ void PlotController::run () {
 
                 plot->setLaserLines(lnes);
             } else if(text == "setCovEllipse") {
-                int rows, cols, idx;
+                long rows, cols;
+                int idx;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
