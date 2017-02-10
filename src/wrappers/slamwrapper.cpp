@@ -19,8 +19,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThre
 
     loadMap();
 
-    isAlive = 1;
-
     commandId = -1;
     commandTime = 0;
 
@@ -72,7 +70,7 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThre
 SLAMWrapper::~SLAMWrapper() { }
 
 void SLAMWrapper::stop() {
-    isAlive = 0;
+    isAlive = false;
 }
 
 void SLAMWrapper::commandRecieve(int command) {

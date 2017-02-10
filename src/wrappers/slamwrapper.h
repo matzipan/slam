@@ -77,7 +77,7 @@ protected:
     NetworkPlot *plot;
 
     /// Is finished?
-    int isAlive;
+    bool isAlive = true;
 
     int commandId;
     /// Timestamp when command was recieved
