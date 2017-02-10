@@ -529,10 +529,11 @@ void WindowPlot::setPlotRange(double xmin, double xmax, double ymin, double ymax
     muxData->unlock();
 }
 
-void WindowPlot::showMessage(QString msg) {
+void WindowPlot::setCurrentIteration(int iteration) {
     QString _msg;
 
-    msgString1 = msg;
+    msgString1.sprintf("[%d]", iteration);
+
     _msg = msgString1 + " | " + msgString2;
     statusBar()->showMessage(_msg);
 }

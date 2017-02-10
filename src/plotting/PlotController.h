@@ -21,7 +21,7 @@ public:
 
 signals:
     void replot();
-    void showMessage(QString msg);
+    void setCurrentIteration(int iteration);
 
 protected:
     WindowPlot *plot;

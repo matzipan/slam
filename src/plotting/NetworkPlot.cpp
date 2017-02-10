@@ -171,10 +171,14 @@ void NetworkPlot::setScreenshotFilename(std::string filename) {
     socket->send(message);
 }
 
-void NetworkPlot::showMessage(QString text) {
+void NetworkPlot::setCurrentIteration(int iteration) {
+    if(true) {
+        // TODO: this function triggers a race condition with zeroMQ and haven't been able to track it down, so I'm just gonna disable it
+        return;
+    }
     zmqpp::message message;
 
-    message<<"showMessage"<<text.toStdString();
+    message<<"setCurrentIteration"<<iteration;
 
     socket->send(message);
 }

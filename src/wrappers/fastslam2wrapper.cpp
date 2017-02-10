@@ -97,8 +97,7 @@ void FastSLAM2Wrapper::run() {
             continue;
         }
 
-        plotMessage.sprintf("[%6d]", currentIteration);
-        emit showMessage(plotMessage);
+        emit setCurrentIteration(currentIteration);
 
         drawParticles();
         drawFeatureParticles();

@@ -87,8 +87,7 @@ void EKFSLAMWrapper::run() {
             continue;
         }
 
-        plotMessage.sprintf("[%6d]", currentIteration);
-        emit showMessage(plotMessage);
+        emit setCurrentIteration(currentIteration);
 
         // Add new position
         plot->addTruePosition(xTrue(0), xTrue(1));

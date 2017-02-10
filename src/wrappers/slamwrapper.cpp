@@ -55,12 +55,10 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThre
     drawSkip = 4;
     conf->i("drawSkip", drawSkip);
 
-    qRegisterMetaType<QString>("QString");
+    connect(this, SIGNAL(replot()), this->plot, SLOT(plot()));
+    connect(this, SIGNAL(setCurrentIteration(int)), this->plot, SLOT(setCurrentIteration(int)));
 
-    connect(this, SIGNAL(replot()), plot, SLOT(plot()));
-    connect(this, SIGNAL(showMessage(QString)), plot, SLOT(showMessage(QString)));
-
-    connect(plot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
+    connect(this->plot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
 
     if (conf->SWITCH_SEED_RANDOM != 0) {
         srand(conf->SWITCH_SEED_RANDOM);

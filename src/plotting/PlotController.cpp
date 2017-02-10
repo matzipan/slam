@@ -6,10 +6,8 @@
 using namespace std;
 
 PlotController::PlotController(WindowPlot *plot, QObject *parent) : QThread(parent)  {
-    qRegisterMetaType<QString>("QString");
-
     connect(this, SIGNAL(replot()), plot, SLOT(plot()));
-    connect(this, SIGNAL(showMessage(QString)), plot, SLOT(showMessage(QString)));
+    connect(this, SIGNAL(setCurrentIteration(int)), plot, SLOT(setCurrentIteration(int)));
 
     this->plot = plot;
 
@@ -183,15 +181,12 @@ void PlotController::run () {
                 message>>filename;
 
                 plot->setScreenshotFilename(filename);
-            } else if(text == "showMessage") {
-                QString qText;
-                std::string text;
+            } else if(text == "setCurrentIteration") {
+                int iteration;
 
-                message>>text;
+                message>>iteration;
 
-                qText.fromStdString(text);
-
-                emit showMessage(qText);
+                emit setCurrentIteration(iteration);
             } else if(text == "covEllipseAdd") {
                 int n;
                 message>>n;

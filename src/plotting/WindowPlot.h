@@ -39,7 +39,7 @@ public:
 public slots:
 
     void plot();
-    void showMessage(QString text);
+    void setCurrentIteration(int iteration);
 
     // @TODO These functions can be used to send messages from WindowPlot to NetworkPlot when an event happens
     void canvasMousePressEvent(QMouseEvent *event);

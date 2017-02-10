@@ -41,7 +41,7 @@ public:
 public slots:
 
     void plot(void);
-    void showMessage(QString text);
+    void setCurrentIteration(int iteration);
 
     void canvasMousePressEvent(QMouseEvent *event);
     void covEllipseAdd(int n);

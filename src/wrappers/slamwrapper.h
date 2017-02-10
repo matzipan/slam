@@ -38,7 +38,7 @@ public:
 
 signals:
     void replot();
-    void showMessage(QString msg);
+    void setCurrentIteration(int currentIteration);
 
 public slots:
     virtual void commandRecieve(int command);
@@ -83,8 +83,6 @@ protected:
     /// Timestamp when command was recieved
     uint64_t commandTime;
     RunMode runMode;
-
-    QString plotMessage;
 
     /// Landmark positions
     MatrixXf landmarks;
