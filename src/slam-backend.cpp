@@ -87,11 +87,11 @@ int main(int argc, char *argv[]) {
     // Begin SLAM simulation
     slamThread->start();
 
-    application.exec();
+    int returnValue = application.exec();
 
     slamThread->stop();
 
     delete slamThread;
 
-    return 0;
+    return returnValue;
 }
