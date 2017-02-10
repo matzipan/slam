@@ -25,9 +25,8 @@ PlotController::~PlotController () {}
 void PlotController::run () {
     zmqpp::message message;
 
-    while(true) {
-        //@TODO make this break stop
-        if (socket->receive(message)) {
+    while(continuePlotting) {
+        if (socket->receive(message, true)) {
             string text;
             message >> text;
 
@@ -201,5 +200,8 @@ void PlotController::run () {
             }
         }
     }
+}
 
+void PlotController::stop() {
+    continuePlotting  = false;
 }

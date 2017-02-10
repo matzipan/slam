@@ -17,6 +17,8 @@ public:
     PlotController (WindowPlot *plot, QObject *parent = 0);
     ~PlotController ();
 
+    void stop();
+
 signals:
     void replot();
     void showMessage(QString msg);
@@ -27,6 +29,9 @@ protected:
     zmqpp::context *context;
 
     void run();
+
+    bool continuePlotting = true;
+
 };
 
 
