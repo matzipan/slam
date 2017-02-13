@@ -24,6 +24,7 @@ public:
     float wheelBase;
     int nEffective;
     bool resample;
+    float sigmaPhi;
 
     void
     predict(vector<Particle> &particles, VectorXf &xTrue, float V, float G, MatrixXf &Q, float dt);

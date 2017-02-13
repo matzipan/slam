@@ -28,6 +28,7 @@ public:
     float wheelBase;
     int nEffective;
     bool resample;
+    float sigmaPhi;
 
 protected:
 

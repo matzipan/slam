@@ -21,6 +21,7 @@ FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, NetworkPlot *plot, QObject *paren
     algorithm->wheelBase = conf->WHEELBASE;
     algorithm->nEffective = conf->NEFFECTIVE;
     algorithm->resample = conf->SWITCH_RESAMPLE == 1;
+    algorithm->sigmaPhi = conf->sigmaT;
 }
 
 FastSLAM1Wrapper::~FastSLAM1Wrapper() {

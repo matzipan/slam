@@ -98,9 +98,13 @@ void FastSLAM2::predictState(Particle &particle, float V, float G, MatrixXf &Q, 
     particle.setXv(xvTemp);
 }
 
-
+/**
+ * Correct xEstimated and P by other sensor (low noise, IMU ...)
+ *
+ * @param particle
+ * @param phi
+ */
 void FastSLAM2::observeHeading(Particle &particle, float phi) {
-    float sigmaPhi = 0.01 * M_PI / 180.0;
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
 

@@ -14,16 +14,17 @@ EKFSLAM::EKFSLAM() {}
 
 EKFSLAM::~EKFSLAM() {}
 
-void EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
-                  MatrixXf &Qe, float dt, float phi, float sigmaPhi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarksRangeBearing,
-                  MatrixXf Re, bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
-                  vector<int> dataAssociationTable, MatrixXf R) {
+void
+EKFSLAM::sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG, MatrixXf &Qe,
+             float dt, float phi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarksRangeBearing, MatrixXf Re,
+             bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn, vector<int> dataAssociationTable,
+             MatrixXf R) {
     // Predict position & heading
     predict(x, P, noisyV, noisyG, Qe, wheelBase, dt);
 
     // Correct xEstimated and P by other sensor (low noise, IMU ...)
     if (useHeading) {
-        observeHeading(x, P, phi, sigmaPhi);
+        observeHeading(x, P, phi);
     }
 
     if (observe) {
@@ -81,9 +82,8 @@ void EKFSLAM::predict(VectorXf &x, MatrixXf &P, float V, float G, MatrixXf &Q, f
  * @param x
  * @param P
  * @param phi
- * @param sigmaPhi heading uncertainty
  */
-void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi, float sigmaPhi) {
+void EKFSLAM::observeHeading(VectorXf &x, MatrixXf &P, float phi) {
     float v;
     MatrixXf H = MatrixXf(1, x.size());
 

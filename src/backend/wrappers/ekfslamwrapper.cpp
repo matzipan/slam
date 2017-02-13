@@ -21,6 +21,7 @@ EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) :
     algorithm->gateReject = conf->GATE_REJECT;
     algorithm->gateAugment = conf->GATE_AUGMENT;
     algorithm->associationKnown = conf->SWITCH_ASSOCIATION_KNOWN;
+    algorithm->sigmaPhi = conf->sigmaT;
 
 }
 
@@ -75,8 +76,9 @@ void EKFSLAMWrapper::run() {
         }
 
         algorithm->sim(landmarks, waypoints, xEstimated, P, Vnoisy, Gnoisy, Qe, dt,
-                       xTrue(2) + conf->sigmaT * unifRand(), sigmaPhi, landmarkIdentifiers,
-                       landmarksRangeBearing, Re, observe, zf, idf, zn, dataAssociationTable, R);
+                       xTrue(2) + conf->sigmaT * unifRand(), landmarkIdentifiers,
+                       landmarksRangeBearing, Re, observe, zf, idf, zn, dataAssociationTable,
+                       R);
 
         // Update status bar
         currentIteration++;

@@ -17,10 +17,10 @@ public:
 
     ~EKFSLAM();
 
-    void sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG,
-                 MatrixXf &Qe, float dt, float phi, float sigma_phi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarkRangeBearing, MatrixXf Re,
-                 bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn,
-                 vector<int> dataAssociationTable, MatrixXf R);
+    void sim(MatrixXf &landmarks, MatrixXf &waypoints, VectorXf &x, MatrixXf &P, float noisyV, float noisyG, MatrixXf &Qe,
+                 float dt, float phi, vector<int> landmarkIdentifiers, vector<VectorXf> landmarkRangeBearing, MatrixXf Re,
+                 bool observe, vector<VectorXf> zf, vector<int> idf, vector<VectorXf> zn, vector<int> dataAssociationTable,
+                 MatrixXf R);
 
     bool enableBatchUpdate;
     bool useHeading;
@@ -28,6 +28,7 @@ public:
     float gateReject;
     float gateAugment;
     int associationKnown;
+    float sigmaPhi;
 
 protected:
 
@@ -35,7 +36,7 @@ protected:
 
     void batchUpdate(VectorXf &x, MatrixXf &P, vector<VectorXf> &zf, MatrixXf &R, vector<int> &idf);
 
-    void observeHeading(VectorXf &x, MatrixXf &P, float phi, float sigmaPhi);
+    void observeHeading(VectorXf &x, MatrixXf &P, float phi);
 
     void dataAssociate(VectorXf &x, MatrixXf &P, vector<VectorXf> &landmarksRangeBearing, MatrixXf &R, float gate1, float gate2,
                        vector<VectorXf> &zf, vector<int> &idf, vector<VectorXf> &zn);
@@ -50,6 +51,7 @@ protected:
     void ekfObserveModel(VectorXf &x, int idf, VectorXf &z, MatrixXf &H);
 
     void ekfAddOneZ(VectorXf &x, MatrixXf &P, VectorXf &z, MatrixXf &Re);
+
 };
 
 

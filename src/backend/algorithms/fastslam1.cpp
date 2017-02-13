@@ -65,8 +65,13 @@ void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xTrue, float V, f
     }
 }
 
+/**
+ * Correct xEstimated and P by other sensor (low noise, IMU ...)
+ *
+ * @param particle
+ * @param phi
+ */
 void FastSLAM1::observeHeading(Particle &particle, float phi) {
-    float sigmaPhi = 0.01 * M_PI / 180.0;
     VectorXf xv = particle.xv();
     MatrixXf Pv = particle.Pv();
 

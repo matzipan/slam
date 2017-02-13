@@ -117,8 +117,6 @@ protected:
     MatrixXf Qe;
     /// Used for inflated observation covariance
     MatrixXf Re;
-    /// Heading uncertainty, in radians
-    float sigmaPhi;
     /// Change in time between predicts
     float dt;
     /// Change in time since last observation

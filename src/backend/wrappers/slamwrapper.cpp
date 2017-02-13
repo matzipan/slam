@@ -36,8 +36,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThre
         Re = MatrixXf(R);
     }
 
-    sigmaPhi = conf->sigmaT;
-
     nLoop = conf->NUMBER_LOOPS;
     dt = conf->DT_CONTROLS;
 
