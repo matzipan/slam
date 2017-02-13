@@ -39,6 +39,7 @@ public:
 signals:
     void replot();
     void setCurrentIteration(int currentIteration);
+    void jobFinished();
 
 public slots:
     virtual void commandRecieve(int command);

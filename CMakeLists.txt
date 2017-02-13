@@ -4,6 +4,8 @@ project(slam-gui)
 find_package(PkgConfig)
 find_package(Qt4)
 
+option(PROFILING "profiling" OFF)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -msse4 -g -rdynamic -D__STDC_CONSTANT_MACROS -Wno-deprecated-declarations")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lz -lpthread")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
@@ -24,12 +26,14 @@ set(BACKEND_FILES
         src/algorithms/fastslam1.cpp
         src/algorithms/fastslam2.cpp
         libs/qcustomplot/qcustomplot.cpp
-        src/plotting/NetworkPlot.cpp)
+        src/plotting/NetworkPlot.cpp
+        src/SLAMBackendApplication.cpp)
 
 set(GUI_FILES
         libs/qcustomplot/qcustomplot.cpp
         src/plotting/WindowPlot.cpp
-        src/slam-gui.cpp src/plotting/PlotController.cpp src/plotting/PlotController.h)
+        src/slam-gui.cpp
+        src/plotting/PlotController.cpp)
 
 set (PKG_DEPS
         QtCore
@@ -52,3 +56,9 @@ add_executable(slam-gui ${GUI_FILES})
 
 target_link_libraries(slam-backend ${DEPS_LIBRARIES} zmqpp)
 target_link_libraries(slam-gui ${DEPS_LIBRARIES} zmqpp)
+
+if(PROFILING)
+    target_link_libraries(slam-backend -pg)
+    target_compile_options(slam-backend PRIVATE -pg)
+endif()
+

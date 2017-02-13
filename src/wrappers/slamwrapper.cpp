@@ -198,6 +198,11 @@ int SLAMWrapper::control() {
                 indexOfFirstWaypoint = 0;
                 nLoop--;
             }
+
+            if(indexOfFirstWaypoint == -1 && nLoop == 1) {
+                stop();
+                jobFinished();
+            }
             break;
 
         case SLAM_INTERACTIVE:
