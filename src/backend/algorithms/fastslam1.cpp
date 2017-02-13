@@ -54,19 +54,30 @@ void FastSLAM1::predictState(Particle &particle, float V, float G, MatrixXf &Q, 
 }
 
 // Predict step
-void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float dt) {
+void FastSLAM1::predict(vector<Particle> &particles, VectorXf &xTrue, float V, float G, MatrixXf &Q, float dt) {
     for (int i = 0; i < particles.size(); i++) {
         predictState(particles[i], V, G, Q, dt);
 
         if (useHeading) {
             // If heading known, observe heading
-            for (unsigned long j = 0; j < particles[i].landmarkXs().size(); j++) {
-                VectorXf xf_j = particles[i].landmarkXs()[j];
-                xf_j[2] = xtrue[2];
-                particles[i].setLandmarkX(j, xf_j);
-            }
+            observeHeading(particles[i], xTrue(2));
         }
     }
+}
+
+void FastSLAM1::observeHeading(Particle &particle, float phi) {
+    float sigmaPhi = 0.01 * M_PI / 180.0;
+    VectorXf xv = particle.xv();
+    MatrixXf Pv = particle.Pv();
+
+    MatrixXf H(1, 3);
+    H << 0, 0, 1;
+
+    float v = trigonometricOffset(phi - xv(2));
+    josephUpdate(xv, Pv, v, pow(sigmaPhi, 2), H);
+
+    particle.setXv(xv);
+    particle.setPv(Pv);
 }
 
 

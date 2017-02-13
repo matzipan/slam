@@ -26,7 +26,7 @@ public:
     bool resample;
 
     void
-    predict(vector<Particle> &particles, VectorXf &xtrue, float V, float G, MatrixXf &Q, float dt);
+    predict(vector<Particle> &particles, VectorXf &xTrue, float V, float G, MatrixXf &Q, float dt);
 
     void update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
                     vector<int> &visibleLandmarkIdentifiers, VectorXf &dataAssociationTable, MatrixXf &R);
@@ -34,6 +34,8 @@ public:
 protected:
     void predictState(Particle &particle, float V, float G, MatrixXf &Q, float dt);
     float computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+
+    void observeHeading(Particle &particle, float phi);
 };
 
 
