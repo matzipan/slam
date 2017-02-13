@@ -42,6 +42,12 @@ Examples:
 
 `./fastslam -fn_screenshot ./screenshot/img -ww 400 -wh 300 -SWITCH_HEADING_KNOWN 0` (Generate video)
 
+## Profiling 
+1. `cmake -DPROFILING:BOOL=ON ..`
+2. `make`
+3. Run `./slam-backend` with appropriate options, such as `-m ../data/example_webmap.mat -method FAST2`
+4. `gprof slam-backend gmon.out > analysis.txt`
+
 ## Issues
 * Low performance.
 * Crash occurs when zooming or moving plot.
