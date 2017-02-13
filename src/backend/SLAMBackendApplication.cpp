@@ -2,10 +2,10 @@
 // Created by matzipan on 13/02/17.
 //
 
-#include <src/wrappers/slamwrapper.h>
-#include <src/wrappers/fastslam1wrapper.h>
-#include <src/wrappers/fastslam2wrapper.h>
-#include <src/wrappers/ekfslamwrapper.h>
+#include <src/backend/wrappers/slamwrapper.h>
+#include <src/backend/wrappers/fastslam1wrapper.h>
+#include <src/backend/wrappers/fastslam2wrapper.h>
+#include <src/backend/wrappers/ekfslamwrapper.h>
 #include "SLAMBackendApplication.h"
 
 SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv) : QApplication(argc, argv) {

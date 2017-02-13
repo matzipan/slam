@@ -2,8 +2,7 @@
 // Created by matzipan on 30/01/17.
 //
 #include <QtGui>
-#include <src/core.h>
-#include <src/plotting/WindowPlot.h>
+#include <src/backend/core.h>
 
 #include "ParticleSLAMWrapper.h"
 

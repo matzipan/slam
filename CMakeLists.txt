@@ -13,27 +13,27 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(BACKEND_FILES
-        src/slam-backend.cpp
-        src/Particle.cpp
-        src/core.cpp
-        src/utils.cpp
-        src/wrappers/slamwrapper.cpp
-        src/wrappers/ekfslamwrapper.cpp
-        src/wrappers/fastslam1wrapper.cpp
-        src/wrappers/fastslam2wrapper.cpp
-        src/wrappers/ParticleSLAMWrapper.cpp
-        src/algorithms/ekfslam.cpp
-        src/algorithms/fastslam1.cpp
-        src/algorithms/fastslam2.cpp
-        libs/qcustomplot/qcustomplot.cpp
-        src/plotting/NetworkPlot.cpp
-        src/SLAMBackendApplication.cpp)
+        src/backend/slam-backend.cpp
+        src/backend/Particle.cpp
+        src/backend/core.cpp
+        src/backend/utils.cpp
+        src/backend/wrappers/slamwrapper.cpp
+        src/backend/wrappers/ekfslamwrapper.cpp
+        src/backend/wrappers/fastslam1wrapper.cpp
+        src/backend/wrappers/fastslam2wrapper.cpp
+        src/backend/wrappers/ParticleSLAMWrapper.cpp
+        src/backend/algorithms/ekfslam.cpp
+        src/backend/algorithms/fastslam1.cpp
+        src/backend/algorithms/fastslam2.cpp
+        src/backend/plotting/NetworkPlot.cpp
+        src/backend/SLAMBackendApplication.cpp
+        libs/qcustomplot/qcustomplot.cpp)
 
 set(GUI_FILES
-        libs/qcustomplot/qcustomplot.cpp
-        src/plotting/WindowPlot.cpp
-        src/slam-gui.cpp
-        src/plotting/PlotController.cpp)
+        src/gui/plotting/WindowPlot.cpp
+        src/gui/slam-gui.cpp
+        src/gui/plotting/PlotController.cpp
+        libs/qcustomplot/qcustomplot.cpp)
 
 set (PKG_DEPS
         QtCore

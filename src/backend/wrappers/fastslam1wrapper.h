@@ -15,9 +15,9 @@
 
 #include <Eigen/Dense>
 
-#include "src/core.h"
+#include "src/backend/core.h"
 #include "slamwrapper.h"
-#include "src/algorithms/fastslam1.h"
+#include "src/backend/algorithms/fastslam1.h"
 #include "ParticleSLAMWrapper.h"
 
 using namespace std;

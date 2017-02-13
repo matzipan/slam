@@ -6,9 +6,9 @@
 #include <string>
 #include <QtGui>
 #include <Eigen/Dense>
-#include <src/plotting/NetworkPlot.h>
+#include <src/backend/plotting/NetworkPlot.h>
 
-#include "../core.h"
+#include "src/backend/core.h"
 
 
 using namespace std;

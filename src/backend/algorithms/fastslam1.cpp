@@ -6,8 +6,8 @@
 
 #include "fastslam1.h"
 
-#include "src/Particle.h"
-#include "src/core.h"
+#include "src/backend/Particle.h"
+#include "src/backend/core.h"
 
 using namespace Eigen;
 

@@ -2,8 +2,8 @@
 // Created by matzipan on 06/02/17.
 //
 
-#include <src/plotting/PlotController.h>
-#include "src/plotting/WindowPlot.h"
+#include <src/gui/plotting/PlotController.h>
+#include "src/gui/plotting/WindowPlot.h"
 
 int main(int argc, char *argv[]) {
     QApplication application(argc, argv);

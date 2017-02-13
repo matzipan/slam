@@ -6,8 +6,8 @@
 #define SLAM_GUI_SLAMBACKENDAPPLICATION_H
 
 #include "core.h"
-#include "plotting/NetworkPlot.h"
-#include "wrappers/slamwrapper.h"
+#include "src/backend/plotting/NetworkPlot.h"
+#include "src/backend/wrappers/slamwrapper.h"
 #include <QtGui/QApplication>
 
 class SLAMBackendApplication : public QApplication {

@@ -15,8 +15,8 @@
 
 #include <Eigen/Dense>
 
-#include "src/core.h"
-#include "src/algorithms/ekfslam.h"
+#include "src/backend/core.h"
+#include "src/backend/algorithms/ekfslam.h"
 #include "slamwrapper.h"
 
 using namespace std;

@@ -1,14 +1,9 @@
 #include <stdlib.h>
 
 #include <QtGui>
-#include <src/core.h>
+#include <src/backend/core.h>
 
 #include "slamwrapper.h"
-#include "src/plotting/WindowPlot.h"
-
-#include "src/utils.h"
-
-#include "moc_slamwrapper.cpp"
 
 SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThread(parent) {
     this->conf = conf;

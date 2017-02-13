@@ -4,7 +4,7 @@
 
 #include <Eigen/Dense>
 
-#include "src/core.h"
+#include "src/backend/core.h"
 #include "ekfslam.h"
 
 using namespace std;

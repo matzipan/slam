@@ -4,9 +4,8 @@
 
 #include <Eigen/Dense>
 
-#include "src/core.h"
-#include "src/plotting/WindowPlot.h"
-#include "src/algorithms/ekfslam.h"
+#include "src/backend/core.h"
+#include "src/backend/algorithms/ekfslam.h"
 #include "ekfslamwrapper.h"
 
 using namespace std;

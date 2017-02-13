@@ -5,10 +5,9 @@
 
 #include <Eigen/Dense>
 
-#include "src/core.h"
-#include "src/plotting/WindowPlot.h"
-#include "src/Particle.h"
-#include "src/algorithms/fastslam2.h"
+#include "src/backend/core.h"
+#include "src/backend/Particle.h"
+#include "src/backend/algorithms/fastslam2.h"
 #include "fastslam2wrapper.h"
 
 using namespace std;
