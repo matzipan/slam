@@ -302,7 +302,6 @@ void josephUpdate(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     MatrixXf Si = S.inverse();
 
     make_symmetric(Si);
-    MatrixXf PSD_check = Si.llt().matrixU();
 
     VectorXf W = PHt * Si;
     x = x + W * v;
@@ -316,11 +315,6 @@ void josephUpdate(VectorXf &x, MatrixXf &P, float v, float R, MatrixXf &H) {
     // Numerical safety
     float eps = 2.2204 * pow(10.0, -16);
     P = P + eye * eps;
-
-    PSD_check = P.llt().matrixL();
-    PSD_check.transpose();
-    // For upper tri
-    PSD_check.conjugate();
 }
 
 MatrixXf make_symmetric(MatrixXf &P) {

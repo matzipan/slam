@@ -49,6 +49,5 @@ Examples:
 4. `gprof slam-backend gmon.out > analysis.txt`
 
 ## Issues
-* Low performance.
 * Crash occurs when zooming or moving plot.
 * Some segmentation faults every once in a while.
