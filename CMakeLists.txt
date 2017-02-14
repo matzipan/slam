@@ -37,7 +37,8 @@ set(GUI_FILES
 
 set (PKG_DEPS
         QtCore
-        QtGui)
+        QtGui
+        libzmq)
 
 pkg_check_modules (DEPS REQUIRED ${PKG_DEPS})
 
@@ -58,6 +59,7 @@ target_link_libraries(slam-backend ${DEPS_LIBRARIES} zmqpp)
 target_link_libraries(slam-gui ${DEPS_LIBRARIES} zmqpp)
 
 if(PROFILING)
+    message("-- Profiling on")
     target_link_libraries(slam-backend -pg)
     target_compile_options(slam-backend PRIVATE -pg)
 endif()
