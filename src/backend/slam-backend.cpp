@@ -6,5 +6,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
     SLAMBackendApplication application(argc, argv);
 
-    return application.exec();
+    application.run();
+
+    return 0;
 }

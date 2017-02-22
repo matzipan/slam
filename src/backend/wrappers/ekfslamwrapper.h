@@ -24,15 +24,15 @@ using namespace Eigen;
 
 
 class EKFSLAMWrapper : public SLAMWrapper {
-    Q_OBJECT
 
 public:
-    EKFSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
+    EKFSLAMWrapper(Conf *conf, NetworkPlot *plot);
 
     ~EKFSLAMWrapper();
 
-protected:
     void run();
+
+protected:
 
     void initializeDataAssociationTable();
 

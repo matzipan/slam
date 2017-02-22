@@ -14,9 +14,7 @@
 using namespace std;
 using namespace Eigen;
 
-class SLAMWrapper : public QThread {
-Q_OBJECT
-
+class SLAMWrapper {
 public:
     enum RunMode {
         /// Move along waypoints
@@ -25,7 +23,7 @@ public:
         SLAM_INTERACTIVE
     };
 
-    SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
+    SLAMWrapper(Conf *conf, NetworkPlot *plot);
 
     ~SLAMWrapper();
 
@@ -36,16 +34,11 @@ public:
     /// Set map filename
     void loadMap();
 
-signals:
-    void replot();
-    void setCurrentIteration(int currentIteration);
-    void jobFinished();
-
-public slots:
-    virtual void commandRecieve(int command);
+    virtual void run() = 0;
+/*public slots:
+    virtual void commandRecieve(int command);*/
 
 protected:
-    virtual void run() = 0;
 
     void initializeLandmarkIdentifiers();
 
@@ -72,7 +65,7 @@ protected:
      *
      *   @return command value according to above list
      */
-    int getCurrentCommand();
+    //int getCurrentCommand();
 
     Conf *conf;
     NetworkPlot *plot;

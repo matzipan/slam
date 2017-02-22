@@ -8,7 +8,7 @@
 #include <src/backend/wrappers/ekfslamwrapper.h>
 #include "SLAMBackendApplication.h"
 
-SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv) : QApplication(argc, argv) {
+SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
     loadConfiguration(argc, argv);
 
     plot.setScreenshotFilename(conf.s("fn_screenshot"));
@@ -18,13 +18,14 @@ SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv) : QApplic
     else if (slamMethod == "FAST2") {  slamThread = new FastSLAM2Wrapper(&conf, &plot); }
     else {  slamThread = new EKFSLAMWrapper(&conf, &plot); }
 
-    connect(slamThread, SIGNAL(jobFinished()), this, SLOT(quit()));
-
-    slamThread->start();
 }
 
 SLAMBackendApplication::~SLAMBackendApplication () {
     delete slamThread;
+}
+
+void SLAMBackendApplication::run() {
+    slamThread->run();
 }
 
 void SLAMBackendApplication::printUsage(char **argv) {

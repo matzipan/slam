@@ -7,7 +7,7 @@
 #include "moc_NetworkPlot.cpp"
 
 
-NetworkPlot::NetworkPlot() : QObject() {
+NetworkPlot::NetworkPlot() {
     context = new zmqpp::context();
 
     socket = new zmqpp::socket(*context, zmqpp::socket_type::push);
@@ -188,7 +188,7 @@ void NetworkPlot::plot() {
 
     message<<"plot";
 
-    socket->send(message);
+    socket->send(message); //@TODO use don't block
 }
 
 void NetworkPlot::covEllipseAdd(int n) {
@@ -199,7 +199,7 @@ void NetworkPlot::covEllipseAdd(int n) {
     socket->send(message);
 }
 
-// @TODO These unimplemented functions can be used to send messages from WindowPlot to NetworkPlot when an event happens
+/*// @TODO These unimplemented functions can be used to send messages from WindowPlot to NetworkPlot when an event happens
 void NetworkPlot::canvasMousePressEvent(QMouseEvent *event) {}
 void NetworkPlot::keyPressEvent(QKeyEvent *event) {}
-void NetworkPlot::mousePressEvent(QMouseEvent *event) {}
+void NetworkPlot::mousePressEvent(QMouseEvent *event) {}*/

@@ -10,13 +10,14 @@
 #include "src/backend/wrappers/slamwrapper.h"
 #include <QtGui/QApplication>
 
-class SLAMBackendApplication : public QApplication {
-Q_OBJECT
+class SLAMBackendApplication {
 
 public:
     SLAMBackendApplication(int &argc, char **argv);
 
     ~SLAMBackendApplication();
+
+    void run();
 
 protected:
     Conf conf;

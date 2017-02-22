@@ -14,8 +14,7 @@
 #include <zmqpp/zmqpp.hpp>
 
 
-class NetworkPlot : public QObject {
-Q_OBJECT
+class NetworkPlot {
 
 public:
     NetworkPlot();
@@ -38,18 +37,18 @@ public:
     void setScreenshotFilename(std::string filename);
 
 
-public slots:
+/*public slots:*/
 
     void plot(void);
     void setCurrentIteration(int iteration);
-
-    void canvasMousePressEvent(QMouseEvent *event);
     void covEllipseAdd(int n);
+
+/*    void canvasMousePressEvent(QMouseEvent *event);
 
     signals:
 
     void commandSend(int cmd);
-    void addCovEllipse(int n);
+    void addCovEllipse(int n);*/
 
 
 protected:

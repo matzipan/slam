@@ -36,15 +36,18 @@ set(GUI_FILES
         libs/qcustomplot/qcustomplot.cpp)
 
 set (PKG_DEPS
-        QtCore
-        QtGui
         libzmq)
 
-pkg_check_modules (DEPS REQUIRED ${PKG_DEPS})
+set (QT_PKG_DEPS
+        QtCore
+        QtGui)
 
-add_definitions(${DEPS_CFLAGS})
-link_libraries(${DEPS_LIBRARIES})
-link_directories(${DEPS_LIBRARY_DIRS})
+pkg_check_modules (DEPS REQUIRED ${PKG_DEPS})
+pkg_check_modules (QT_DEPS REQUIRED ${QT_PKG_DEPS})
+
+add_definitions(${DEPS_CFLAGS} ${QT_DEPS_CFLAGS})
+link_libraries(${DEPS_LIBRARIES} ${QT_DEPS_LIBRARIES})
+link_directories(${DEPS_LIBRARY_DIRS} ${QT_DEPS_LIBRARY_DIRS})
 
 link_directories(${CMAKE_BINARY_DIR})
 
@@ -55,8 +58,9 @@ include_directories(libs/eigen3)
 add_executable(slam-backend ${BACKEND_FILES})
 add_executable(slam-gui ${GUI_FILES})
 
+# The zmqpp pkg-config seems to not be working, so we're adding it manually.
 target_link_libraries(slam-backend ${DEPS_LIBRARIES} zmqpp)
-target_link_libraries(slam-gui ${DEPS_LIBRARIES} zmqpp)
+target_link_libraries(slam-gui ${QT_DEPS_LIBRARIES} ${DEPS_LIBRARIES} zmqpp)
 
 if(PROFILING)
     message("-- Profiling on")

@@ -5,7 +5,7 @@
 
 #include "slamwrapper.h"
 
-SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThread(parent) {
+SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot) {
     this->conf = conf;
     this->plot = plot;
 
@@ -48,11 +48,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : QThre
     drawSkip = 4;
     conf->i("drawSkip", drawSkip);
 
-    connect(this, SIGNAL(replot()), this->plot, SLOT(plot()));
-    connect(this, SIGNAL(setCurrentIteration(int)), this->plot, SLOT(setCurrentIteration(int)));
-
-    connect(this->plot, SIGNAL(commandSend(int)), this, SLOT(commandRecieve(int)));
-
     if (conf->SWITCH_SEED_RANDOM != 0) {
         srand(conf->SWITCH_SEED_RANDOM);
     }
@@ -64,11 +59,13 @@ void SLAMWrapper::stop() {
     isAlive = false;
 }
 
+/*
 void SLAMWrapper::commandRecieve(int command) {
     commandId = command;
     commandTime = getMillisecondsTime();
 }
-
+*/
+/*
 int SLAMWrapper::getCurrentCommand() {
     unsigned long timeNow;
 
@@ -80,6 +77,7 @@ int SLAMWrapper::getCurrentCommand() {
         return -1;
     }
 }
+ */
 
 void SLAMWrapper::setRunMode(RunMode mode) {
     runMode = mode;
@@ -194,11 +192,10 @@ int SLAMWrapper::control() {
 
             if(indexOfFirstWaypoint == -1 && nLoop == 1) {
                 stop();
-                jobFinished();
             }
             break;
 
-        case SLAM_INTERACTIVE:
+        /*case SLAM_INTERACTIVE:
             int command = getCurrentCommand();
 
             // No commands, then continue
@@ -231,7 +228,7 @@ int SLAMWrapper::control() {
                     Vtrue = conf->V;
                     Gtrue = 0.0;
             }
-            break;
+            break;*/
     }
 
     // Predict current position and angle

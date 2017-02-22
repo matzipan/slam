@@ -24,15 +24,15 @@ using namespace std;
 using namespace Eigen;
 
 class FastSLAM2Wrapper : public ParticleSLAMWrapper {
-Q_OBJECT
 
 public:
     FastSLAM2Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent = 0);
 
     ~FastSLAM2Wrapper();
 
-protected:
     void run();
+
+protected:
 
     FastSLAM2 *algorithm;
 };

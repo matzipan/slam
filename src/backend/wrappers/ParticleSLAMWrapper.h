@@ -10,10 +10,8 @@
 #include "slamwrapper.h"
 
 class ParticleSLAMWrapper : public SLAMWrapper {
-Q_OBJECT
-
 public:
-    ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent);
+    ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot);
 
     ~ParticleSLAMWrapper();
 

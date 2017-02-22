@@ -12,7 +12,7 @@ using namespace std;
 using namespace Eigen;
 
 
-EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
+EKFSLAMWrapper::EKFSLAMWrapper(Conf *conf, NetworkPlot *plot) : SLAMWrapper(conf, plot) {
     algorithm = new EKFSLAM();
 
     algorithm->enableBatchUpdate = conf->SWITCH_BATCH_UPDATE == 1;
@@ -88,7 +88,7 @@ void EKFSLAMWrapper::run() {
             continue;
         }
 
-        emit setCurrentIteration(currentIteration);
+        plot->setCurrentIteration(currentIteration);
 
         // Add new position
         plot->addTruePosition(xTrue(0), xTrue(1));
@@ -103,7 +103,7 @@ void EKFSLAMWrapper::run() {
 
         drawCovarianceEllipseLines();
 
-        emit replot();
+        plot->plot();
     }
 }
 

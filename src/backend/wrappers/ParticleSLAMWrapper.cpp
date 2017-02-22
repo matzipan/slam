@@ -6,7 +6,7 @@
 
 #include "ParticleSLAMWrapper.h"
 
-ParticleSLAMWrapper::ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : SLAMWrapper(conf, plot, parent) {
+ParticleSLAMWrapper::ParticleSLAMWrapper(Conf *conf, NetworkPlot *plot) : SLAMWrapper(conf, plot) {
     particles = vector<Particle>(conf->NPARTICLES);
 }
 

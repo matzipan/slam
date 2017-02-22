@@ -13,7 +13,7 @@
 using namespace std;
 using namespace Eigen;
 
-FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot, parent) {
+FastSLAM1Wrapper::FastSLAM1Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot) {
     algorithm = new FastSLAM1();
 
     algorithm->addPredictNoise = 1; // Always use predict noise
@@ -87,7 +87,7 @@ void FastSLAM1Wrapper::run() {
             continue;
         }
 
-        emit setCurrentIteration(currentIteration);
+        plot->setCurrentIteration(currentIteration);
 
         drawParticles();
         drawFeatureParticles();
@@ -106,6 +106,6 @@ void FastSLAM1Wrapper::run() {
         // Set laser lines
         plot->setLaserLines(plines);
 
-        emit replot();
+        plot->plot();
     }
 }
