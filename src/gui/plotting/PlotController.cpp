@@ -195,6 +195,8 @@ void PlotController::run () {
                 plot->covEllipseAdd(n);
             }
         }
+
+        msleep(1);
     }
 }
 
