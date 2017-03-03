@@ -1,7 +1,6 @@
 //
 // Created by matzipan on 30/01/17.
 //
-#include <QtGui>
 #include <src/backend/core.h>
 
 #include "ParticleSLAMWrapper.h"
@@ -33,7 +32,7 @@ void ParticleSLAMWrapper::initializeDataAssociationTable() {
 }
 
 void ParticleSLAMWrapper::drawParticles() {
-    QVector<double> particleXs, particleYs;
+    std::vector<double> particleXs, particleYs;
 
     for (int i = 0; i < particles.size(); i++) {
         particleXs.push_back(particles[i].xv()(0));
@@ -43,7 +42,7 @@ void ParticleSLAMWrapper::drawParticles() {
 }
 
 void ParticleSLAMWrapper::drawFeatureParticles() {
-    QVector<double> featureParticleXs, featureParticleYs;
+    std::vector<double> featureParticleXs, featureParticleYs;
 
     for (int i = 0; i < particles.size(); i++) {
         for (unsigned long j = 0; j < particles[i].landmarkXs().size(); j++) {

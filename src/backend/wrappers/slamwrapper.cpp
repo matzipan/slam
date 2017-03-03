@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
-#include <QtGui>
-#include <src/backend/core.h>
+#include "core.h"
 
 #include "slamwrapper.h"
 
@@ -117,8 +116,8 @@ void SLAMWrapper::configurePlot() {
 void SLAMWrapper::addWaypointsAndLandmarks() {
     uint n;
 
-    QVector<double> waypointXs, waypointYs;
-    QVector<double> landmarkXs, landmarkYs;
+    std::vector<double> waypointXs, waypointYs;
+    std::vector<double> landmarkXs, landmarkYs;
 
     // Draw waypoints
     if (runMode == SLAM_WAYPOINT) {

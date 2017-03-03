@@ -4,11 +4,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string>
-#include <QtGui>
 #include <Eigen/Dense>
-#include <src/backend/plotting/NetworkPlot.h>
+#include <plotting/NetworkPlot.h>
 
-#include "src/backend/core.h"
+#include "core.h"
 
 
 using namespace std;

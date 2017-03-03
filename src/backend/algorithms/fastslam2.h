@@ -7,8 +7,8 @@
 
 #include <Eigen/Dense>
 
-#include "src/backend/Particle.h"
-#include "src/backend/core.h"
+#include "Particle.h"
+#include "core.h"
 
 class FastSLAM2 {
 

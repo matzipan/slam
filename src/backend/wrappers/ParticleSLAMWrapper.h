@@ -5,8 +5,7 @@
 #ifndef SLAM_GUI_PARTICLESLAMWRAPPER_H
 #define SLAM_GUI_PARTICLESLAMWRAPPER_H
 
-#include <QtGui>
-#include <src/backend/Particle.h>
+#include <Particle.h>
 #include "slamwrapper.h"
 
 class ParticleSLAMWrapper : public SLAMWrapper {

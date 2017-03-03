@@ -1,12 +1,6 @@
 #ifndef __EKFSLAM_WRAPPER_H__
 #define __EKFSLAM_WRAPPER_H__
 
-#include <QtGui>
-#include <QMutex>
-#include <QSize>
-#include <QThread>
-#include <QWaitCondition>
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -15,8 +9,8 @@
 
 #include <Eigen/Dense>
 
-#include "src/backend/core.h"
-#include "src/backend/algorithms/ekfslam.h"
+#include "core.h"
+#include "algorithms/ekfslam.h"
 #include "slamwrapper.h"
 
 using namespace std;

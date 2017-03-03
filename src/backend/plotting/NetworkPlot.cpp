@@ -4,9 +4,6 @@
 
 #include "NetworkPlot.h"
 
-#include "moc_NetworkPlot.cpp"
-
-
 NetworkPlot::NetworkPlot() {
     context = new zmqpp::context();
 
@@ -17,7 +14,7 @@ NetworkPlot::NetworkPlot() {
 
 NetworkPlot::~NetworkPlot() {}
 
-void NetworkPlot::sendXYArrays(zmqpp::message &message, QVector<double> &xs, QVector<double> &ys) {
+void NetworkPlot::sendXYArrays(zmqpp::message &message, std::vector<double> &xs, std::vector<double> &ys) {
     message<<xs.size();
     for (int i = 0; i < xs.size(); i++) {
         message << xs[i];
@@ -31,7 +28,7 @@ void NetworkPlot::sendXYArrays(zmqpp::message &message, QVector<double> &xs, QVe
     socket->send(message);
 }
 
-void NetworkPlot::setLandmarks(QVector<double> &xs, QVector<double> &ys) {
+void NetworkPlot::setLandmarks(std::vector<double> &xs, std::vector<double> &ys) {
     zmqpp::message message;
 
     message<<"setLandmarks";
@@ -39,7 +36,7 @@ void NetworkPlot::setLandmarks(QVector<double> &xs, QVector<double> &ys) {
     sendXYArrays(message, xs, ys);
 }
 
-void NetworkPlot::setWaypoints(QVector<double> &xs, QVector<double> &ys) {
+void NetworkPlot::setWaypoints(std::vector<double> &xs, std::vector<double> &ys) {
     zmqpp::message message;
 
     message<<"setWaypoints";
@@ -47,7 +44,7 @@ void NetworkPlot::setWaypoints(QVector<double> &xs, QVector<double> &ys) {
     sendXYArrays(message, xs, ys);
 }
 
-void NetworkPlot::setParticles(QVector<double> &xs, QVector<double> &ys) {
+void NetworkPlot::setParticles(std::vector<double> &xs, std::vector<double> &ys) {
     zmqpp::message message;
 
     message<<"setParticles";
@@ -55,7 +52,7 @@ void NetworkPlot::setParticles(QVector<double> &xs, QVector<double> &ys) {
     sendXYArrays(message, xs, ys);
 }
 
-void NetworkPlot::setFeatureParticles(QVector<double> &xs, QVector<double> &ys) {
+void NetworkPlot::setFeatureParticles(std::vector<double> &xs, std::vector<double> &ys) {
     zmqpp::message message;
 
     message<<"setFeatureParticles";
@@ -188,7 +185,7 @@ void NetworkPlot::plot() {
 
     message<<"plot";
 
-    socket->send(message); //@TODO use don't block
+    socket->send(message);
 }
 
 void NetworkPlot::covEllipseAdd(int n) {

@@ -1,6 +1,3 @@
-#include <QtGui>
-#include <QScreen>
-
 #include "WindowPlot.h"
 
 #include "moc_WindowPlot.cpp"

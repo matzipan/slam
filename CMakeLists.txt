@@ -1,70 +1,25 @@
-cmake_minimum_required(VERSION 3.5)
-project(slam-gui)
+cmake_minimum_required(VERSION 3.3)
+project(slam)
 
-find_package(PkgConfig)
-find_package(Qt4)
+option(BUILD_GUI "build-gui" ON)
 
-option(PROFILING "profiling" OFF)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -msse4 -g -rdynamic -D__STDC_CONSTANT_MACROS -Wno-deprecated-declarations")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lz -lpthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -rdynamic -D__STDC_CONSTANT_MACROS -Wno-deprecated-declarations")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpthread")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(BACKEND_FILES
-        src/backend/slam-backend.cpp
-        src/backend/Particle.cpp
-        src/backend/core.cpp
-        src/backend/utils.cpp
-        src/backend/wrappers/slamwrapper.cpp
-        src/backend/wrappers/ekfslamwrapper.cpp
-        src/backend/wrappers/fastslam1wrapper.cpp
-        src/backend/wrappers/fastslam2wrapper.cpp
-        src/backend/wrappers/ParticleSLAMWrapper.cpp
-        src/backend/algorithms/ekfslam.cpp
-        src/backend/algorithms/fastslam1.cpp
-        src/backend/algorithms/fastslam2.cpp
-        src/backend/plotting/NetworkPlot.cpp
-        src/backend/SLAMBackendApplication.cpp
-        libs/qcustomplot/qcustomplot.cpp)
-
-set(GUI_FILES
-        src/gui/plotting/WindowPlot.cpp
-        src/gui/slam-gui.cpp
-        src/gui/plotting/PlotController.cpp
-        libs/qcustomplot/qcustomplot.cpp)
-
-set (PKG_DEPS
-        libzmq)
-
-set (QT_PKG_DEPS
-        QtCore
-        QtGui)
-
-pkg_check_modules (DEPS REQUIRED ${PKG_DEPS})
-pkg_check_modules (QT_DEPS REQUIRED ${QT_PKG_DEPS})
-
-add_definitions(${DEPS_CFLAGS} ${QT_DEPS_CFLAGS})
-link_libraries(${DEPS_LIBRARIES} ${QT_DEPS_LIBRARIES})
-link_directories(${DEPS_LIBRARY_DIRS} ${QT_DEPS_LIBRARY_DIRS})
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64 OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lz")
+endif()
 
 link_directories(${CMAKE_BINARY_DIR})
 
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(libs/eigen3)
 
-add_executable(slam-backend ${BACKEND_FILES})
-add_executable(slam-gui ${GUI_FILES})
-
-# The zmqpp pkg-config seems to not be working, so we're adding it manually.
-target_link_libraries(slam-backend ${DEPS_LIBRARIES} zmqpp)
-target_link_libraries(slam-gui ${QT_DEPS_LIBRARIES} ${DEPS_LIBRARIES} zmqpp)
-
-if(PROFILING)
-    message("-- Profiling on")
-    target_link_libraries(slam-backend -pg)
-    target_compile_options(slam-backend PRIVATE -pg)
+add_subdirectory(libs/zmqpp)
+add_subdirectory(src/backend)
+if(BUILD_GUI)
+    add_subdirectory(src/gui)
 endif()
-

@@ -5,13 +5,8 @@
 #ifndef SLAM_GUI_NETWORKPLOT_H
 #define SLAM_GUI_NETWORKPLOT_H
 
-
-#include <QtCore>
-#include <QtGui>
-#include <QtCore>
 #include <Eigen/Dense>
-#include <libs/qcustomplot/qcustomplot.h>
-#include <zmqpp/zmqpp.hpp>
+#include <zmqpp.hpp>
 
 
 class NetworkPlot {
@@ -21,10 +16,10 @@ public:
 
     ~NetworkPlot();
 
-    void setLandmarks(QVector<double> &xs, QVector<double> &ys);
-    void setWaypoints(QVector<double> &x, QVector<double> &ys);
-    void setParticles(QVector<double> &x, QVector<double> &ys);
-    void setFeatureParticles(QVector<double> &x, QVector<double> &ys);
+    void setLandmarks(std::vector<double> &xs, std::vector<double> &ys);
+    void setWaypoints(std::vector<double> &x, std::vector<double> &ys);
+    void setParticles(std::vector<double> &x, std::vector<double> &ys);
+    void setFeatureParticles(std::vector<double> &x, std::vector<double> &ys);
     void setLaserLines(Eigen::MatrixXf &lnes);
     void setCovEllipse(Eigen::MatrixXf &lnes, int idx);
     void addTruePosition(double x, double y);
@@ -55,10 +50,10 @@ protected:
     zmqpp::socket *socket;
     zmqpp::context *context;
 
-    void keyPressEvent(QKeyEvent *event);
-    void mousePressEvent(QMouseEvent *event);
+    /*void keyPressEvent(QKeyEvent *event);
+    void mousePressEvent(QMouseEvent *event);*/
 
-    void sendXYArrays(zmqpp::message &message, QVector<double> &xs, QVector<double> &ys);
+    void sendXYArrays(zmqpp::message &message, std::vector<double> &xs, std::vector<double> &ys);
 };
 
 

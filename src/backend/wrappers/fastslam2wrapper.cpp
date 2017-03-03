@@ -4,6 +4,7 @@
 #include <iterator>
 
 #include <Eigen/Dense>
+#include <src/backend/plotting/NetworkPlot.h>
 
 #include "src/backend/core.h"
 #include "src/backend/Particle.h"
@@ -13,7 +14,7 @@
 using namespace std;
 using namespace Eigen;
 
-FastSLAM2Wrapper::FastSLAM2Wrapper(Conf *conf, NetworkPlot *plot, QObject *parent) : ParticleSLAMWrapper(conf, plot) {
+FastSLAM2Wrapper::FastSLAM2Wrapper(Conf *conf, NetworkPlot *plot) : ParticleSLAMWrapper(conf, plot) {
     algorithm = new FastSLAM2();
 
     algorithm->addPredictNoise = conf->SWITCH_PREDICT_NOISE == 1;

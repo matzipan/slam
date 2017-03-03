@@ -2,10 +2,10 @@
 // Created by matzipan on 13/02/17.
 //
 
-#include <src/backend/wrappers/slamwrapper.h>
-#include <src/backend/wrappers/fastslam1wrapper.h>
-#include <src/backend/wrappers/fastslam2wrapper.h>
-#include <src/backend/wrappers/ekfslamwrapper.h>
+#include <wrappers/slamwrapper.h>
+#include <wrappers/fastslam1wrapper.h>
+#include <wrappers/fastslam2wrapper.h>
+#include <wrappers/ekfslamwrapper.h>
 #include "SLAMBackendApplication.h"
 
 SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
