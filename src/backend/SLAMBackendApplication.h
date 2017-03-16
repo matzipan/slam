@@ -9,6 +9,10 @@
 #include "plotting/NetworkPlot.h"
 #include "wrappers/slamwrapper.h"
 
+#ifdef JACOBIAN_ACCELERATOR
+    #include "AcceleratorHandler.h"
+#endif
+
 class SLAMBackendApplication {
 
 public:
@@ -26,7 +30,6 @@ protected:
     void loadConfiguration(int &argc, char **argv);
 
     void printUsage(char **argv);
-
 };
 
 

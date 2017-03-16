@@ -89,7 +89,6 @@ void save_arguments(int argc, char *argv[], string fname) {
     time_t t;
     char str_time[200];
 
-
     fn = fname + "_args.txt";
     fp = fopen(fn.c_str(), "a+"); ASSERT(fp);
 

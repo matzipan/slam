@@ -8,10 +8,20 @@
 #include <wrappers/ekfslamwrapper.h>
 #include "SLAMBackendApplication.h"
 
+#ifdef JACOBIAN_ACCELERATOR
+    /// Pointer to zynq handler to link against using extern
+    AcceleratorHandler* acceleratorHandler;
+#endif
+
+
 SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
     loadConfiguration(argc, argv);
 
     plot.setScreenshotFilename(conf.s("fn_screenshot"));
+
+#ifdef JACOBIAN_ACCELERATOR
+    acceleratorHandler = new AcceleratorHandler();
+#endif
 
     string slamMethod = conf.s("method");
     if (slamMethod == "FAST1") {  slamThread = new FastSLAM1Wrapper(&conf, &plot); }
@@ -22,6 +32,9 @@ SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
 
 SLAMBackendApplication::~SLAMBackendApplication () {
     delete slamThread;
+#ifdef JACOBIAN_ACCELERATOR
+    delete acceleratorHandler;
+#endif
 }
 
 void SLAMBackendApplication::run() {
@@ -63,13 +76,6 @@ void SLAMBackendApplication::loadConfiguration(int &argc, char **argv) {
     conf.load(conf_fname);                  // First load conf file
     conf.set_args(argc, argv);              // Set input arguments
     conf.parse();                           // Parse input arguments
-
-    // Save input arguments
-    if (arrFN[0].size() > 0) {
-        save_arguments(argc, argv, arrFN[0]);
-    } else {
-        save_arguments(argc, argv, "fastslam");
-    }
 
     // Print parameters
     conf.print();
