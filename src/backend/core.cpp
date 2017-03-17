@@ -522,8 +522,6 @@ void addFeature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
  * @param Hf - Jacobians of function h (derivative of h wrt mean)
  * @param Sf - measurement covariance
  */
-//#define JACOBIAN_ACCELERATOR 1
-//@TODO REMOVE THIS
 
 #ifdef JACOBIAN_ACCELERATOR
 extern AcceleratorHandler* acceleratorHandler;
