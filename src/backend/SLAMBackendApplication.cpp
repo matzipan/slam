@@ -24,8 +24,8 @@ SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
 #endif
 
     string slamMethod = conf.s("method");
-    if (slamMethod == "FAST1") {  slamThread = new FastSLAM1Wrapper(&conf, &plot); }
-    else if (slamMethod == "FAST2") {  slamThread = new FastSLAM2Wrapper(&conf, &plot); }
+    if (slamMethod == "FASTSLAM1") {  slamThread = new FastSLAM1Wrapper(&conf, &plot); }
+    else if (slamMethod == "FASTSLAM2") {  slamThread = new FastSLAM2Wrapper(&conf, &plot); }
     else {  slamThread = new EKFSLAMWrapper(&conf, &plot); }
 
 }
@@ -49,15 +49,15 @@ void SLAMBackendApplication::printUsage(char **argv) {
     printf("        interactive : use keyboard to control movement\n");
     printf("    -method             [s] SLAM method\n");
     printf("        EKF1        : EKF SLAM 1\n");
-    printf("        FAST1       : FastSLAM 1\n");
-    printf("        FAST2       : FastSLAM 2\n");
+    printf("        FASTSLAM1       : FastSLAM 1\n");
+    printf("        FASTSLAM2       : FastSLAM 2\n");
     printf("    -h  (print usage)\n");
     printf("\n");
 }
 
 void SLAMBackendApplication::loadConfiguration(int &argc, char **argv) {
     // Parse input arguments
-    string mapFilename = "data/example_webmap.mat";
+    string mapFilename = "example_webmap.mat";
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2) {
