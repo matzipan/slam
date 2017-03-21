@@ -11,7 +11,7 @@ add_library(zmqpp STATIC ${ZMQPP_FILES})
 target_include_directories(zmqpp PUBLIC .)
 
 if(${TARGET} MATCHES "zynq")
-    find_library(ZMQ_LIBRARY zmq HINTS ${ROOTFS}/lib)
+    find_library(ZMQ_LIBRARY zmq HINTS ${CMAKE_FIND_ROOT_PATH}/lib)
     target_link_libraries(zmqpp PUBLIC ${ZMQ_LIBRARY})
     target_compile_definitions(zmqpp PRIVATE ZMQ_BUILD_DRAFT_API=1)
 else()
