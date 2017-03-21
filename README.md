@@ -15,12 +15,11 @@ platform (currently on a Digilent Zybo board). You can find the Vivado project f
 * Ubuntu 16.04
 * CMake: `sudo apt install cmake`
 * Qt4: `sudo apt install libqtcore4 libqtgui4 libqt4-dev`
-* zmqpp: `sudo apt install libzmqpp3 libzmqpp-dev`
+* zmq: `sudo apt install libzmq5 libzmq3-dev`
 
 ## Build
 1. `mkdir build && cd build`
 2. `cmake ..`. Enable debug build type using the following argument: `-DCMAKE_BUILD_TYPE=Debug`
-
 3. `make`
 4. The executables paths are `src/backend/slam-backend` and `src/gui/slam-gui`.
 
@@ -76,5 +75,6 @@ at the high phyiscal address. Through the Userspace I/O (UIO) kernel mechanism, 
 by Vivado HLS to `mmap` the device control region and interact with it.
 
 ## Issues
-* Crash occurs when zooming or moving plot.
-* Some segmentation faults every once in a while.
+* Crash sometimes occurs when zooming or moving plot.
+* Load the configuration and perform simulation and control on the GUI side of things and only send range and bearing 
+information to backend.
