@@ -565,9 +565,7 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
     acceleratorHandler->setN(n);
     acceleratorHandler->start();
 
-    while (!acceleratorHandler->isDone()) {
-        usleep(1);
-    }
+    while (!acceleratorHandler->isDone());
 
     current_memory_read_position = 3+4+(2+4)*n;
 
