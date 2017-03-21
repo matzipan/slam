@@ -11,36 +11,36 @@ PlotController::PlotController(WindowPlot *plot, QObject *parent) : QThread(pare
 
     this->plot = plot;
 
-    context = new zmqpp::context ();
+    context = new zmqpp::context();
 
-    socket = new zmqpp::socket (*context, zmqpp::socket_type::pull);
+    socket = new zmqpp::socket(*context, zmqpp::socket_type::pair);
 
     socket->bind("tcp://*:4242");
 }
 
-PlotController::~PlotController () {}
+PlotController::~PlotController() {}
 
-void PlotController::run () {
+void PlotController::run() {
     zmqpp::message message;
 
     while(continuePlotting) {
         if (socket->receive(message, true)) {
             string text;
-            message >> text;
+            message>>text;
 
             if(text == "setLandmarks") {
-                int xSize, ySize;
+                int32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int i = 0; i < xSize; i++) {
+                for (int32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int i = 0; i < ySize; i++) {
+                for (int32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -48,18 +48,18 @@ void PlotController::run () {
 
                 plot->setLandmarks(xs, ys);
             } else if(text == "setWaypoints") {
-                int xSize, ySize;
+                int32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int i = 0; i < xSize; i++) {
+                for (int32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int i = 0; i < ySize; i++) {
+                for (int32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -67,18 +67,18 @@ void PlotController::run () {
 
                 plot->setWaypoints(xs, ys);
             } else if(text == "setParticles") {
-                int xSize, ySize;
+                int32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int i = 0; i < xSize; i++) {
+                for (int32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int i = 0; i < ySize; i++) {
+                for (int32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -86,18 +86,18 @@ void PlotController::run () {
 
                 plot->setParticles(xs, ys);
             } else if(text == "setFeatureParticles") {
-                int xSize, ySize;
+                int32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int i = 0; i < xSize; i++) {
+                for (int32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int i = 0; i < ySize; i++) {
+                for (int32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -105,12 +105,12 @@ void PlotController::run () {
 
                 plot->setFeatureParticles(xs, ys);
             } else if(text == "setLaserLines") {
-                long rows, cols;
+                int32_t rows, cols;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
+                for (int32_t i = 0; i < rows; i++) {
+                    for (int32_t j = 0; j < cols; j++) {
                         float aux;
                         message >> aux;
                         lnes(i, j) = aux;
@@ -119,13 +119,13 @@ void PlotController::run () {
 
                 plot->setLaserLines(lnes);
             } else if(text == "setCovEllipse") {
-                long rows, cols;
-                int idx;
+                int32_t rows, cols;
+                int32_t idx;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
+                for (int32_t i = 0; i < rows; i++) {
+                    for (int32_t j = 0; j < cols; j++) {
                         float aux;
                         message >> aux;
                         lnes(i, j) = aux;
@@ -149,7 +149,7 @@ void PlotController::run () {
                 plot->addEstimatedPosition(x,y);
             } else if(text == "setCarSize") {
                 double s;
-                int id;
+                int32_t id;
 
                 message>>s>>id;
 
@@ -183,20 +183,18 @@ void PlotController::run () {
 
                 plot->setScreenshotFilename(filename);
             } else if(text == "setCurrentIteration") {
-                int iteration;
+                int32_t iteration;
 
                 message>>iteration;
 
                 emit setCurrentIteration(iteration);
             } else if(text == "covEllipseAdd") {
-                int n;
+                int32_t n;
                 message>>n;
 
                 plot->covEllipseAdd(n);
             }
         }
-
-        msleep(1);
     }
 }
 

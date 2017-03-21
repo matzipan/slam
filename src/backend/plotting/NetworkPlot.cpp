@@ -7,21 +7,23 @@
 NetworkPlot::NetworkPlot() {
     context = new zmqpp::context();
 
-    socket = new zmqpp::socket(*context, zmqpp::socket_type::push);
+    socket = new zmqpp::socket(*context, zmqpp::socket_type::pair);
 
-    socket->connect("tcp://localhost:4242");
+    socket->connect("tcp://127.0.0.1:4242");
+
+    printf("Connected to plotting server\n");
 }
 
 NetworkPlot::~NetworkPlot() {}
 
 void NetworkPlot::sendXYArrays(zmqpp::message &message, std::vector<double> &xs, std::vector<double> &ys) {
-    message<<xs.size();
-    for (int i = 0; i < xs.size(); i++) {
+    message<<(int32_t) xs.size();
+    for (int32_t i = 0; i < (int32_t) xs.size(); i++) {
         message << xs[i];
     }
 
-    message<<ys.size();
-    for (int i = 0; i < ys.size(); i++) {
+    message<<(int32_t) ys.size();
+    for (int32_t i = 0; i < (int32_t) ys.size(); i++) {
         message << ys[i];
     }
 
@@ -65,7 +67,7 @@ void NetworkPlot::setLaserLines(Eigen::MatrixXf &lnes) {
 
     message<<"setLaserLines";
 
-    message<<lnes.rows()<<lnes.cols();
+    message<<(int32_t) lnes.rows()<<(int32_t) lnes.cols();
     for (int i = 0; i < lnes.rows(); i++) {
         for (int j = 0; j < lnes.cols(); j++) {
             message << lnes(i, j);
@@ -80,7 +82,7 @@ void NetworkPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
 
     message<<"setCovEllipse";
 
-    message<<lnes.rows()<<lnes.cols();
+    message<<(int32_t) lnes.rows()<<(int32_t) lnes.cols();
     for (int i = 0; i < lnes.rows(); i++) {
         for (int j = 0; j < lnes.cols(); j++) {
             message << lnes(i, j);
@@ -117,7 +119,7 @@ void NetworkPlot::setCarSize(double s, int id) {
 
     message<<"setCarSize";
 
-    message<<s<<id;
+    message<<s<<(int32_t) id;
 
     socket->send(message);
 }
