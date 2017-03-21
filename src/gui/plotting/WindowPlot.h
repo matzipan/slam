@@ -19,8 +19,8 @@ public:
 
     ~WindowPlot();
 
-    void setupCanvas(void);
-    void setupInitData(void);
+    void setupCanvas();
+    void setupInitData();
     void setLandmarks(QVector<double> &arrX, QVector<double> &arrY);
     void setWaypoints(QVector<double> &arrX, QVector<double> &arrY);
     void setParticles(QVector<double> &arrX, QVector<double> &arrY);
@@ -33,7 +33,7 @@ public:
     void setCarTruePosition(double x, double y, double t);
     void setCarEstimatedPosition(double x, double y, double t);
     void setPlotRange(double xmin, double xmax, double ymin, double ymax);
-    void clear(void);
+    void clear();
     void setScreenshotFilename(std::string filename);
 
 public slots:

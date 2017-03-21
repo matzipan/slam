@@ -17,7 +17,7 @@
 SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
     loadConfiguration(argc, argv);
 
-    plot.setScreenshotFilename(conf.s("fn_screenshot"));
+    plot.setSimulationName(conf.s("simulation_name"));
 
 #ifdef JACOBIAN_ACCELERATOR
     acceleratorHandler = new AcceleratorHandler();
@@ -44,7 +44,7 @@ void SLAMBackendApplication::run() {
 void SLAMBackendApplication::printUsage(char **argv) {
     printf("%s\n", argv[0]);
     printf("    -m                  [s] input map file name\n");
-    printf("    -mode               [s] runing mode\n");
+    printf("    -mode               [s] running mode\n");
     printf("        waypoints   : following given waypoints\n");
     printf("        interactive : use keyboard to control movement\n");
     printf("    -method             [s] SLAM method\n");
@@ -58,10 +58,14 @@ void SLAMBackendApplication::printUsage(char **argv) {
 void SLAMBackendApplication::loadConfiguration(int &argc, char **argv) {
     // Parse input arguments
     string mapFilename = "example_webmap.mat";
+    string simulationName = "simulation";
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-m") == 0 && strlen(argv[i]) == 2) {
             mapFilename = argv[i + 1];
+        }
+        if (strcmp(argv[i], "-n") == 0) {
+            simulationName = argv[i + 1];
         }
         if (strcmp(argv[i], "-h") == 0) {
             printUsage(argv);
@@ -76,6 +80,8 @@ void SLAMBackendApplication::loadConfiguration(int &argc, char **argv) {
     conf.load(conf_fname);                  // First load conf file
     conf.set_args(argc, argv);              // Set input arguments
     conf.parse();                           // Parse input arguments
+
+    conf.s("simulation_name", simulationName);
 
     // Print parameters
     conf.print();

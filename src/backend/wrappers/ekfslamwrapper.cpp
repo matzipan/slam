@@ -45,7 +45,7 @@ void EKFSLAMWrapper::run() {
     vector<VectorXf> zn;
 
     // Main loop
-    while (isAlive) {
+    while (true) {
         int controlStatus = control();
 
         if(controlStatus == -1) {
@@ -105,6 +105,8 @@ void EKFSLAMWrapper::run() {
 
         plot->plot();
     }
+
+    plot->endPlot();
 }
 
 void EKFSLAMWrapper::initializeDataAssociationTable() {

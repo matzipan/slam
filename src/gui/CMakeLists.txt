@@ -9,8 +9,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(GUI_FILES
         plotting/WindowPlot.cpp
         slam-gui.cpp
-        plotting/PlotController.cpp
-        ../../libs/qcustomplot/qcustomplot.cpp)
+        plotting/Controller.cpp
+        ../../libs/qcustomplot/qcustomplot.cpp
+        plotting/DataGatherer.cpp)
 
 set(GUI_PKG_DEPS
         QtCore

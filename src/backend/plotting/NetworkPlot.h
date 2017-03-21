@@ -29,12 +29,13 @@ public:
     void setCarEstimatedPosition(double x, double y, double t);
     void setPlotRange(double xmin, double xmax, double ymin, double ymax);
     void clear(void);
-    void setScreenshotFilename(std::string filename);
+    void setSimulationName(std::string filename);
 
 
 /*public slots:*/
 
-    void plot(void);
+    void plot();
+    void endPlot();
     void setCurrentIteration(int iteration);
     void covEllipseAdd(int n);
 

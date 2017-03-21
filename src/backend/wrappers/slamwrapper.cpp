@@ -54,10 +54,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot) {
 
 SLAMWrapper::~SLAMWrapper() { }
 
-void SLAMWrapper::stop() {
-    isAlive = false;
-}
-
 /*
 void SLAMWrapper::commandRecieve(int command) {
     commandId = command;
@@ -190,7 +186,7 @@ int SLAMWrapper::control() {
             }
 
             if(indexOfFirstWaypoint == -1 && nLoop == 1) {
-                stop();
+                return -1;
             }
             break;
 

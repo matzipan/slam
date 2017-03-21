@@ -7,15 +7,16 @@
 
 
 #include "WindowPlot.h"
+#include "DataGatherer.h"
 #include <zmqpp/zmqpp.hpp>
 
 
-class PlotController : public QThread {
+class Controller : public QThread {
 Q_OBJECT
 
 public:
-    PlotController (WindowPlot *plot, QObject *parent = 0);
-    ~PlotController ();
+    Controller (WindowPlot *plot, QObject *parent = 0);
+    ~Controller ();
 
     void stop();
 
@@ -25,6 +26,7 @@ signals:
 
 protected:
     WindowPlot *plot;
+    DataGatherer *gatherer;
     zmqpp::socket *socket;
     zmqpp::context *context;
 

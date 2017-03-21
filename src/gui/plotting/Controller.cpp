@@ -2,14 +2,16 @@
 // Created by matzipan on 07/02/17.
 //
 
-#include "PlotController.h"
+#include "Controller.h"
+
 using namespace std;
 
-PlotController::PlotController(WindowPlot *plot, QObject *parent) : QThread(parent)  {
+Controller::Controller(WindowPlot *plot, QObject *parent) : QThread(parent)  {
     connect(this, SIGNAL(replot()), plot, SLOT(plot()));
     connect(this, SIGNAL(setCurrentIteration(int)), plot, SLOT(setCurrentIteration(int)));
 
     this->plot = plot;
+    gatherer = new DataGatherer();
 
     context = new zmqpp::context();
 
@@ -18,9 +20,11 @@ PlotController::PlotController(WindowPlot *plot, QObject *parent) : QThread(pare
     socket->bind("tcp://*:4242");
 }
 
-PlotController::~PlotController() {}
+Controller::~Controller() {
+    delete gatherer;
+}
 
-void PlotController::run() {
+void Controller::run() {
     zmqpp::message message;
 
     while(continuePlotting) {
@@ -160,12 +164,14 @@ void PlotController::run() {
                 message>>x>>y>>t;
 
                 plot->setCarTruePosition(x,y,t);
+                gatherer->setCarTruePosition(x,y,t);
             } else if(text == "setCarEstimatedPosition") {
                 double x, y, t;
 
                 message>>x>>y>>t;
 
                 plot->setCarEstimatedPosition(x,y,t);
+                gatherer->setCarEstimatedPosition(x,y,t);
             } else if(text == "setPlotRange") {
                 double xmin, xmax, ymin, ymax;
 
@@ -175,13 +181,15 @@ void PlotController::run() {
             } else if(text == "clear") {
                 plot->clear();
             } else if(text == "plot") {
+                gatherer->nextTurn();
                 emit replot();
-            } else if(text == "setScreenshotFilename") {
-                std::string filename;
+            } else if(text == "setSimulationName") {
+                std::string name;
 
-                message>>filename;
+                message>>name;
 
-                plot->setScreenshotFilename(filename);
+                gatherer->setSimulationName(name);
+                //plot->setScreenshotFilename(name);
             } else if(text == "setCurrentIteration") {
                 int32_t iteration;
 
@@ -193,11 +201,13 @@ void PlotController::run() {
                 message>>n;
 
                 plot->covEllipseAdd(n);
+            } else if(text == "endPlot") {
+                gatherer->saveData();
             }
         }
     }
 }
 
-void PlotController::stop() {
+void Controller::stop() {
     continuePlotting  = false;
 }

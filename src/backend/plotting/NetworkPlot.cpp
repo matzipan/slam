@@ -162,10 +162,10 @@ void NetworkPlot::clear() {
     socket->send(message);
 }
 
-void NetworkPlot::setScreenshotFilename(std::string filename) {
+void NetworkPlot::setSimulationName(std::string filename) {
     zmqpp::message message;
 
-    message<<"setScreenshotFilename"<<filename;
+    message<<"setSimulationName"<<filename;
 
     socket->send(message);
 }
@@ -194,6 +194,14 @@ void NetworkPlot::covEllipseAdd(int n) {
     zmqpp::message message;
 
     message<<"covEllipseAdd"<<n;
+
+    socket->send(message);
+}
+
+void NetworkPlot::endPlot() {
+    zmqpp::message message;
+
+    message<<"endPlot";
 
     socket->send(message);
 }

@@ -2,7 +2,7 @@
 // Created by matzipan on 06/02/17.
 //
 
-#include <src/gui/plotting/PlotController.h>
+#include <src/gui/plotting/Controller.h>
 #include "src/gui/plotting/WindowPlot.h"
 
 int main(int argc, char *argv[]) {
@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     plot.setGeometry(10, 10, 1024, 768);
     plot.plot();
 
-    PlotController controller(&plot);
+    Controller controller(&plot);
 
     controller.start();
 

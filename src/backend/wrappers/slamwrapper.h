@@ -26,8 +26,6 @@ public:
 
     ~SLAMWrapper();
 
-    void stop(void);
-
     /// Set run mode
     void setRunMode(RunMode mode);
     /// Set map filename
@@ -68,9 +66,6 @@ protected:
 
     Conf *conf;
     NetworkPlot *plot;
-
-    /// Is finished?
-    bool isAlive = true;
 
     int commandId;
     /// Timestamp when command was recieved

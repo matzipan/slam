@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
-#include <iterator>
 
 #include <Eigen/Dense>
 #include <src/backend/plotting/NetworkPlot.h>
 
 #include "src/backend/core.h"
-#include "src/backend/Particle.h"
 #include "src/backend/algorithms/fastslam2.h"
 #include "fastslam2wrapper.h"
+
+#include <sys/time.h>
 
 using namespace std;
 using namespace Eigen;
@@ -49,8 +49,10 @@ void FastSLAM2Wrapper::run() {
     vector<VectorXf> zf;
     vector<VectorXf> zn;
 
+    long oldmicrosec = 0;
+
     // Main loop
-    while (isAlive) {
+    while (true) {
         int controlStatus = control();
 
         if(controlStatus == -1) {
@@ -93,6 +95,16 @@ void FastSLAM2Wrapper::run() {
         // Update status bar
         currentIteration++;
 
+        struct timeval time;
+        gettimeofday(&time, NULL);
+        long microsec = ((unsigned long long)time.tv_sec * 1000000) + time.tv_usec;
+        if(oldmicrosec == 0) {
+            oldmicrosec = microsec;
+        } else {
+            printf("%lu\n", microsec-oldmicrosec);
+            oldmicrosec = microsec;
+        }
+
         // Accelate drawing speed
         if (currentIteration % drawSkip != 0) {
             continue;
@@ -119,4 +131,6 @@ void FastSLAM2Wrapper::run() {
 
         plot->plot();
     }
+
+    plot->endPlot();
 }

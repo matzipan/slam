@@ -42,7 +42,7 @@ void FastSLAM1Wrapper::run() {
     vector<VectorXf> zn;
 
     // Main loop
-    while (isAlive) {
+    while (true) {
         int controlStatus = control();
 
         if(controlStatus == -1) {
@@ -109,4 +109,6 @@ void FastSLAM1Wrapper::run() {
 
         plot->plot();
     }
+
+    plot->endPlot();
 }
