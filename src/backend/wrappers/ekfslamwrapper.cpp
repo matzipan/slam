@@ -46,6 +46,8 @@ void EKFSLAMWrapper::run() {
 
     // Main loop
     while (true) {
+        updateMicrotimeMark();
+
         int controlStatus = control();
 
         if(controlStatus == -1) {
@@ -83,10 +85,7 @@ void EKFSLAMWrapper::run() {
         // Update status bar
         currentIteration++;
 
-        // Accelate drawing speed
-        if (currentIteration % drawSkip != 0) {
-            continue;
-        }
+        plot->loopTime(updateMicrotimeMark());
 
         plot->setCurrentIteration(currentIteration);
 

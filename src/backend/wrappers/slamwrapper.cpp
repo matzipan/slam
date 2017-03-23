@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "core.h"
+#include <sys/time.h>
 
 #include "slamwrapper.h"
 
@@ -43,9 +44,6 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot) {
 
     xEstimated = VectorXf(3);
     xEstimated.setZero(3);
-
-    drawSkip = 4;
-    conf->i("drawSkip", drawSkip);
 
     if (conf->SWITCH_SEED_RANDOM != 0) {
         srand(conf->SWITCH_SEED_RANDOM);
@@ -235,4 +233,20 @@ int SLAMWrapper::control() {
     }
 
     return 1;
+}
+
+uint32_t SLAMWrapper::updateMicrotimeMark() {
+    long currentMicrotime = getCurrentMicrotime();
+
+    uint32_t timeDifference = (uint32_t) currentMicrotime - microtimeMark;
+
+    microtimeMark = currentMicrotime;
+
+    return timeDifference;
+}
+
+long SLAMWrapper::getCurrentMicrotime() {
+    struct timeval time;
+    gettimeofday(&time, NULL);
+    return ((unsigned long long)time.tv_sec * 1000000) + time.tv_usec;
 }

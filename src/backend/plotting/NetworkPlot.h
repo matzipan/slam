@@ -47,6 +47,8 @@ public:
     void addCovEllipse(int n);*/
 
 
+    void loopTime(uint32_t time);
+
 protected:
     zmqpp::socket *socket;
     zmqpp::context *context;

@@ -17,28 +17,68 @@ void DataGatherer::setSimulationName(std::string name) {
     simulationName = name;
 }
 
+void DataGatherer::outputErrorsStats(std::vector<double> &v, std::ostream &output) {
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    double mean = sum / v.size();
+
+    double sq_sum = std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
+    double stdev = std::sqrt(sq_sum / v.size() - mean * mean);
+
+    double minimum = *std::min_element(v.begin(), v.end());
+    double maximum = *std::max_element(v.begin(), v.end());
+
+    output<<"Errors:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum<<"\n";
+    std::cout<<"Errors:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum<<"\n";
+}
+
+void DataGatherer::outputTimesStats(std::vector<uint32_t> &v, std::ostream &output) {
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    double mean = sum / v.size();
+
+    double sq_sum = std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
+    double stdev = std::sqrt(sq_sum / v.size() - mean * mean);
+
+    double minimum = *std::min_element(v.begin(), v.end());
+    double maximum = *std::max_element(v.begin(), v.end());
+
+    output<<"Times:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum<<"\n";
+    std::cout<<"Times:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum<<"\n";
+}
+
 void DataGatherer::saveData() {
-    std::ofstream out(simulationName + "_results.txt");
+    std::ofstream resultsSynthesisOutput(simulationName + "_results.txt");
+    std::ofstream errorsOutput(simulationName + "_errors.txt");
+    std::ofstream timesOutput(simulationName + "_times.txt");
 
-    double sum = std::accumulate(errors.begin(), errors.end(), 0.0);
-    double mean = sum / errors.size();
+    outputErrorsStats(errors, resultsSynthesisOutput);
+    outputTimesStats(times, resultsSynthesisOutput);
 
-    double sq_sum = std::inner_product(errors.begin(), errors.end(), errors.begin(), 0.0);
-    double stdev = std::sqrt(sq_sum / errors.size() - mean * mean);
+    for(double x : errors) {
+        errorsOutput<<x<<"\n";
+    }
 
-    double minimum = *std::min_element(errors.begin(), errors.end());
-    double maximum = *std::max_element(errors.begin(), errors.end());
+    for(uint32_t x : times) {
+        timesOutput<<x<<"\n";
+    }
 
+    resultsSynthesisOutput.close();
+    errorsOutput.close();
+    timesOutput.close();
+}
 
-    out<<"Stats:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum;
-    std::cout<<"Stats:\nMean: "<<mean<<" Std: "<<stdev<<" Min: "<<minimum<<" Max: "<<maximum;
-
-    out.close();
+void DataGatherer::cleanup() {
     errors.clear();
+    times.clear();
 }
 
 void DataGatherer::nextTurn() {
     errors.push_back(sqrt(pow(truePositionX-estimatedPositionX, 2) + pow(truePositionY-estimatedPositionY, 2)));
+
+    turn++;
+
+    if(turn % 100 == 0) {
+        saveData();
+    }
 }
 
 void DataGatherer::setCarTruePosition(double x, double y, double t) {
@@ -51,4 +91,8 @@ void DataGatherer::setCarEstimatedPosition(double x, double y, double t) {
     estimatedPositionX = x;
     estimatedPositionY = y;
     estimatedPositionT = t;
+}
+
+void DataGatherer::loopTime(uint32_t time) {
+    times.push_back(time);
 }

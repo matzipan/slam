@@ -203,6 +203,13 @@ void Controller::run() {
                 plot->covEllipseAdd(n);
             } else if(text == "endPlot") {
                 gatherer->saveData();
+                gatherer->cleanup();
+            } else if(text == "loopTime") {
+                uint32_t time;
+
+                message>>time;
+
+                gatherer->loopTime(time);
             }
         }
     }

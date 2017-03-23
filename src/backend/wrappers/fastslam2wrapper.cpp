@@ -9,8 +9,6 @@
 #include "src/backend/algorithms/fastslam2.h"
 #include "fastslam2wrapper.h"
 
-#include <sys/time.h>
-
 using namespace std;
 using namespace Eigen;
 
@@ -49,10 +47,10 @@ void FastSLAM2Wrapper::run() {
     vector<VectorXf> zf;
     vector<VectorXf> zn;
 
-    long oldmicrosec = 0;
-
     // Main loop
     while (true) {
+        updateMicrotimeMark();
+
         int controlStatus = control();
 
         if(controlStatus == -1) {
@@ -95,20 +93,7 @@ void FastSLAM2Wrapper::run() {
         // Update status bar
         currentIteration++;
 
-        struct timeval time;
-        gettimeofday(&time, NULL);
-        long microsec = ((unsigned long long)time.tv_sec * 1000000) + time.tv_usec;
-        if(oldmicrosec == 0) {
-            oldmicrosec = microsec;
-        } else {
-            printf("%lu\n", microsec-oldmicrosec);
-            oldmicrosec = microsec;
-        }
-
-        // Accelate drawing speed
-        if (currentIteration % drawSkip != 0) {
-            continue;
-        }
+        plot->loopTime(updateMicrotimeMark());
 
         plot->setCurrentIteration(currentIteration);
 
@@ -133,4 +118,5 @@ void FastSLAM2Wrapper::run() {
     }
 
     plot->endPlot();
+
 }

@@ -14,7 +14,7 @@ NetworkPlot::NetworkPlot() {
     printf("Connected to plotting server\n");
 }
 
-NetworkPlot::~NetworkPlot() {}
+NetworkPlot::~NetworkPlot() { }
 
 void NetworkPlot::sendXYArrays(zmqpp::message &message, std::vector<double> &xs, std::vector<double> &ys) {
     message<<(int32_t) xs.size();
@@ -202,6 +202,14 @@ void NetworkPlot::endPlot() {
     zmqpp::message message;
 
     message<<"endPlot";
+
+    socket->send(message);
+}
+
+void NetworkPlot::loopTime(uint32_t time) {
+    zmqpp::message message;
+
+    message<<"loopTime"<<time;
 
     socket->send(message);
 }

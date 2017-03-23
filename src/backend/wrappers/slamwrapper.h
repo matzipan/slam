@@ -108,13 +108,19 @@ protected:
     float dt;
     /// Change in time since last observation
     float dtSum = 0;
-    int drawSkip;
+
     /// Identifier for each landmark
     vector<int> landmarkIdentifiers;
     MatrixXf plines; // Old comment: will later change to list of point
 
     /// Range and bearing for each of the observed landmarks
     vector<VectorXf> landmarksRangeBearing;
+
+    uint32_t updateMicrotimeMark();
+
+    long getCurrentMicrotime();
+
+    long microtimeMark;
 };
 
 #endif // SLAM_THREAD_H

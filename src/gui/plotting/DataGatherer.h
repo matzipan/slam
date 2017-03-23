@@ -19,6 +19,9 @@ public:
     void setCarEstimatedPosition(double x, double y, double t);
     void nextTurn();
 
+    void cleanup();
+
+    void loopTime(uint32_t time);
 
 private:
     double truePositionX;
@@ -31,6 +34,13 @@ private:
 
     std::vector<double> errors;
     std::string simulationName;
+    std::vector<uint32_t> times;
+
+    void outputErrorsStats(std::vector<double> &v, std::ostream &output);
+
+    void outputTimesStats(std::vector<uint32_t> &v, std::ostream &output);
+
+    int turn;
 };
 
 
