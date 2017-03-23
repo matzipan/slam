@@ -70,7 +70,7 @@ void NetworkPlot::setLaserLines(Eigen::MatrixXf &lnes) {
 
     message<<"setLaserLines";
 
-    message<<(int32_t) lnes.rows()<<(int32_t) lnes.cols();
+    message<<(uint32_t) lnes.rows()<<(uint32_t) lnes.cols();
     for (int i = 0; i < lnes.rows(); i++) {
         for (int j = 0; j < lnes.cols(); j++) {
             message << lnes(i, j);
@@ -85,7 +85,7 @@ void NetworkPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
 
     message<<"setCovEllipse";
 
-    message<<(int32_t) lnes.rows()<<(int32_t) lnes.cols();
+    message<<(uint32_t) lnes.rows()<<(uint32_t) lnes.cols();
     for (int i = 0; i < lnes.rows(); i++) {
         for (int j = 0; j < lnes.cols(); j++) {
             message << lnes(i, j);
@@ -117,12 +117,12 @@ void NetworkPlot::addEstimatedPosition(double x, double y) {
     socket->send(message);
 }
 
-void NetworkPlot::setCarSize(double s, int id) {
+void NetworkPlot::setCarSize(double s, uint32_t id) {
     zmqpp::message message;
 
     message<<"setCarSize";
 
-    message<<s<<(int32_t) id;
+    message<<s<<id;
 
     socket->send(message);
 }
@@ -173,7 +173,7 @@ void NetworkPlot::setSimulationName(std::string filename) {
     socket->send(message);
 }
 
-void NetworkPlot::setCurrentIteration(int iteration) {
+void NetworkPlot::setCurrentIteration(uint32_t iteration) {
     if(true) {
         // TODO: this function triggers a race condition with zeroMQ and haven't been able to track it down, so I'm just gonna disable it
         return;
@@ -193,7 +193,7 @@ void NetworkPlot::plot() {
     socket->send(message);
 }
 
-void NetworkPlot::covEllipseAdd(int n) {
+void NetworkPlot::covEllipseAdd(uint32_t n) {
     zmqpp::message message;
 
     message<<"covEllipseAdd"<<n;

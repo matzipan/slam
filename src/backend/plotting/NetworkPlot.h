@@ -24,7 +24,7 @@ public:
     void setCovEllipse(Eigen::MatrixXf &lnes, int idx);
     void addTruePosition(double x, double y);
     void addEstimatedPosition(double x, double y);
-    void setCarSize(double s, int id = 0);
+    void setCarSize(double s, uint32_t id = 0);
     void setCarTruePosition(double x, double y, double t);
     void setCarEstimatedPosition(double x, double y, double t);
     void setPlotRange(double xmin, double xmax, double ymin, double ymax);
@@ -36,8 +36,8 @@ public:
 
     void plot();
     void endPlot();
-    void setCurrentIteration(int iteration);
-    void covEllipseAdd(int n);
+    void setCurrentIteration(uint32_t iteration);
+    void covEllipseAdd(uint32_t n);
 
 /*    void canvasMousePressEvent(QMouseEvent *event);
 

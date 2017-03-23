@@ -33,18 +33,18 @@ void Controller::run() {
             message>>text;
 
             if(text == "setLandmarks") {
-                int32_t xSize, ySize;
+                uint32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int32_t i = 0; i < xSize; i++) {
+                for (uint32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int32_t i = 0; i < ySize; i++) {
+                for (uint32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -52,18 +52,18 @@ void Controller::run() {
 
                 plot->setLandmarks(xs, ys);
             } else if(text == "setWaypoints") {
-                int32_t xSize, ySize;
+                uint32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int32_t i = 0; i < xSize; i++) {
+                for (uint32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int32_t i = 0; i < ySize; i++) {
+                for (uint32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -71,18 +71,18 @@ void Controller::run() {
 
                 plot->setWaypoints(xs, ys);
             } else if(text == "setParticles") {
-                int32_t xSize, ySize;
+                uint32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int32_t i = 0; i < xSize; i++) {
+                for (uint32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int32_t i = 0; i < ySize; i++) {
+                for (uint32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -90,18 +90,18 @@ void Controller::run() {
 
                 plot->setParticles(xs, ys);
             } else if(text == "setFeatureParticles") {
-                int32_t xSize, ySize;
+                uint32_t xSize, ySize;
                 QVector<double> xs, ys;
 
                 message>>xSize;
-                for (int32_t i = 0; i < xSize; i++) {
+                for (uint32_t i = 0; i < xSize; i++) {
                     double aux;
                     message>>aux;
                     xs.push_back(aux);
                 }
 
                 message>>ySize;
-                for (int32_t i = 0; i < ySize; i++) {
+                for (uint32_t i = 0; i < ySize; i++) {
                     double aux;
                     message>>aux;
                     ys.push_back(aux);
@@ -109,12 +109,12 @@ void Controller::run() {
 
                 plot->setFeatureParticles(xs, ys);
             } else if(text == "setLaserLines") {
-                int32_t rows, cols;
+                uint32_t rows, cols;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
-                for (int32_t i = 0; i < rows; i++) {
-                    for (int32_t j = 0; j < cols; j++) {
+                for (uint32_t i = 0; i < rows; i++) {
+                    for (uint32_t j = 0; j < cols; j++) {
                         float aux;
                         message >> aux;
                         lnes(i, j) = aux;
@@ -123,12 +123,12 @@ void Controller::run() {
 
                 plot->setLaserLines(lnes);
             } else if(text == "setCovEllipse") {
-                int32_t rows, cols;
-                int32_t idx;
+                uint32_t rows, cols;
+                uint32_t idx;
 
                 message>>rows>>cols;
                 Eigen::MatrixXf lnes(rows, cols);
-                for (int32_t i = 0; i < rows; i++) {
+                for (uint32_t i = 0; i < rows; i++) {
                     for (int32_t j = 0; j < cols; j++) {
                         float aux;
                         message >> aux;
@@ -153,7 +153,7 @@ void Controller::run() {
                 plot->addEstimatedPosition(x,y);
             } else if(text == "setCarSize") {
                 double s;
-                int32_t id;
+                uint32_t id;
 
                 message>>s>>id;
 
@@ -191,13 +191,14 @@ void Controller::run() {
                 gatherer->setSimulationName(name);
                 //plot->setScreenshotFilename(name);
             } else if(text == "setCurrentIteration") {
-                int32_t iteration;
+                uint32_t iteration;
 
                 message>>iteration;
 
                 emit setCurrentIteration(iteration);
             } else if(text == "covEllipseAdd") {
-                int32_t n;
+                uint32_t n;
+
                 message>>n;
 
                 plot->covEllipseAdd(n);
