@@ -37,12 +37,18 @@ public:
     void setLandmarkX(unsigned long i, VectorXf &vec);
     void setLandmarkP(unsigned long i, MatrixXf &m);
 
+#ifdef MULTIPARTICLE_ACCELERATOR
+    float tempLikelihoodGivenXv;
+#endif
+
 private:
     float _w;
     VectorXf _xv;
     MatrixXf _Pv;
     vector<VectorXf> _landmarkXs;
     vector<MatrixXf> _landmarkPs;
+
+
 };
 
 #endif //SLAM_GUI_PARTICLE_H

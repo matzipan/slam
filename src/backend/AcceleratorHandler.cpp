@@ -46,9 +46,15 @@ void* AcceleratorHandler::getMemoryPointer() {
     return ocm;
 }
 
-void AcceleratorHandler::setN(uint n) {
+#ifdef MULTIPARTICLE_ACCELERATOR
+void AcceleratorHandler::setParticlesCount(uint32_t particles_count) {
+    XToplevel_Set_particles_count_V(&xToplevelInstance, particles_count);
+}
+#else
+void AcceleratorHandler::setN(uint32_t n) {
     XToplevel_Set_n_V(&xToplevelInstance, n);
 }
+#endif
 
 void AcceleratorHandler::start() {
     XToplevel_Start(&xToplevelInstance);

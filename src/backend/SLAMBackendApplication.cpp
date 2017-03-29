@@ -8,7 +8,7 @@
 #include <wrappers/ekfslamwrapper.h>
 #include "SLAMBackendApplication.h"
 
-#ifdef JACOBIAN_ACCELERATOR
+#if defined(JACOBIAN_ACCELERATOR) || defined(MULTIPARTICLE_ACCELERATOR)
     /// Pointer to zynq handler to link against using extern
     AcceleratorHandler* acceleratorHandler;
 #endif
@@ -19,7 +19,7 @@ SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
 
     plot.setSimulationName(conf.s("simulation_name"));
 
-#ifdef JACOBIAN_ACCELERATOR
+#if defined(JACOBIAN_ACCELERATOR) || defined(MULTIPARTICLE_ACCELERATOR)
     acceleratorHandler = new AcceleratorHandler();
 #endif
 
@@ -32,7 +32,7 @@ SLAMBackendApplication::SLAMBackendApplication(int &argc, char **argv)  {
 
 SLAMBackendApplication::~SLAMBackendApplication () {
     delete slamThread;
-#ifdef JACOBIAN_ACCELERATOR
+#if defined(JACOBIAN_ACCELERATOR) || defined(MULTIPARTICLE_ACCELERATOR)
     delete acceleratorHandler;
 #endif
 }

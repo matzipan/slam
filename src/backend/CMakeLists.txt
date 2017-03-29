@@ -2,6 +2,7 @@ project(slam-backend)
 
 option(PROFILING "profiling" OFF)
 option(JACOBIAN_ACCELERATOR "jacobian accelerator" OFF)
+option(MULTIPARTICLE_ACCELERATOR "multiparticle jacobian accelerator" OFF)
 
 include_directories(../../libs/eigen3)
 
@@ -21,7 +22,7 @@ set(BACKEND_FILES
         wrappers/fastslam2wrapper.cpp
         wrappers/ParticleSLAMWrapper.cpp)
 
-if(JACOBIAN_ACCELERATOR)
+if(JACOBIAN_ACCELERATOR OR MULTIPARTICLE_ACCELERATOR)
     set(BACKEND_FILES
             ${BACKEND_FILES}
             AcceleratorHandler.cpp
@@ -44,4 +45,9 @@ endif()
 if(JACOBIAN_ACCELERATOR)
     add_definitions(-DJACOBIAN_ACCELERATOR=1)
 endif()
+
+if(MULTIPARTICLE_ACCELERATOR)
+    add_definitions(-DMULTIPARTICLE_ACCELERATOR=1)
+endif()
+
 

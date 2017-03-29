@@ -34,6 +34,10 @@ protected:
 
     VectorXf deltaXv(VectorXf &xv1, VectorXf &xv2);
 
+#ifdef MULTIPARTICLE_ACCELERATOR
+    void precomputeAllLikelihoodGivenXv(vector<Particle> &particles, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+#endif
+
     void sampleProposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
     float likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
@@ -44,7 +48,7 @@ protected:
 
     float gaussEvaluate(VectorXf &v, MatrixXf &S, int logflag);
 
-    float computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
+//    float computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R);
 
 };
 

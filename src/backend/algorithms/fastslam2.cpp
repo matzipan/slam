@@ -3,6 +3,9 @@
 //
 
 #include <Eigen/Dense>
+#ifdef MULTIPARTICLE_ACCELERATOR
+#include <AcceleratorHandler.h>
+#endif
 
 #include "fastslam2.h"
 
@@ -17,6 +20,9 @@ FastSLAM2::~FastSLAM2() { }
 
 void FastSLAM2::update(vector<Particle> &particles, vector<VectorXf> &zf, vector<VectorXf> &zn, vector<int> &idf,
                        vector<VectorXf> &z, VectorXf &dataAssociationTable, MatrixXf &R) {
+#ifdef MULTIPARTICLE_ACCELERATOR
+    precomputeAllLikelihoodGivenXv(particles, zf, idf, R);
+#endif
     for (int i = 0; i < particles.size(); i++) {
         // Observe map features
         if (!zf.empty()) {
@@ -155,35 +161,124 @@ float FastSLAM2::gaussEvaluate(VectorXf &v, MatrixXf &S, int logflag) {
     }
     return w;
 }
-
 /// Compute particle weight for sampling
-float FastSLAM2::computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
-    vector<MatrixXf> Hv;
-    vector<MatrixXf> Hf;
-    vector<MatrixXf> Sf;
-    vector<VectorXf> zp;
+/// NOT USED: WEIGHT IS COMPUTED IN SAMPLE PROPOSAL
+//float FastSLAM2::computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+//}
 
-    // Process each feature, incrementally refine proposal distribution
-    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+#ifdef MULTIPARTICLE_ACCELERATOR
 
-    vector<VectorXf> v;
+extern AcceleratorHandler* acceleratorHandler;
 
-    for (unsigned long j = 0; j < z.size(); j++) {
-        VectorXf v_j = z[j] - zp[j];
-        v_j[1] = trigonometricOffset(v_j[1]);
-        v.push_back(v_j);
+void FastSLAM2::precomputeAllLikelihoodGivenXv(vector<Particle> &particles, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+    uint currentMemoryWritePosition = 0;
+    uint currentMemoryReadPosition = 0;
+    uint32_t particlesCount = 0;
+
+    float* acceleratorData = (float*) acceleratorHandler->getMemoryPointer();
+
+    for (Particle particle : particles) {
+
+        VectorXf xv = particle.xv();
+
+        for (unsigned i = 0; i < idf.size(); i++) {
+            vector<int> idfi;
+            idfi.push_back(idf[i]);
+
+            acceleratorData[currentMemoryWritePosition++] = idfi.size();
+
+            for (int i = 0; i < 3; i++) {
+                acceleratorData[currentMemoryWritePosition++] = xv(i);
+            }
+
+            for (int i = 0; i < 4; i++) {
+                acceleratorData[currentMemoryWritePosition++] = R(i);	// R[i][j]
+            }
+
+            vector<VectorXf> landmarkXs = particle.landmarkXs();
+            vector<MatrixXf> landmarkPs = particle.landmarkPs();
+
+
+            for (int i = 0; i < idfi.size(); i++) {
+                for (int j = 0; j < 2; j++) {
+                    acceleratorData[currentMemoryWritePosition++] = landmarkXs[idfi[i]](j);	// xf[i]
+                }
+
+                for (int j = 0; j < 4; j++) {
+                    acceleratorData[currentMemoryWritePosition++] = landmarkPs[idfi[i]](j);	// Pf[i][j]
+                }
+
+            }
+
+            particlesCount++;
+
+            currentMemoryWritePosition += (2+4+6+4)*idfi.size();
+        }
     }
 
-    float w = 1.0;
+    acceleratorHandler->setParticlesCount(particlesCount);
+    acceleratorHandler->start();
 
-    for (unsigned long i = 0; i < z.size(); i++) {
-        MatrixXf S = Sf[i];
-        float denoninator = 2 * M_PI * sqrt(S.determinant());
-        float numerator = std::exp(-0.5 * v[i].transpose() * S.inverse() * v[i]);
-        w = w * numerator / denoninator;
+    while (!acceleratorHandler->isDone());
+
+    for (Particle particle : particles) {
+        float w = 1;
+
+        for (unsigned i = 0; i < idf.size(); i++) {
+            vector<MatrixXf> Hv;
+            vector<MatrixXf> Hf;
+            vector<MatrixXf> Sf;
+
+            vector<VectorXf> zp;
+            VectorXf v(z[0].rows());
+
+            uint n = (uint) acceleratorData[currentMemoryReadPosition++];
+
+            currentMemoryReadPosition += 3+4+(2+4)*n;
+
+            for (int i = 0; i < n; i++) {
+                MatrixXf HvMat(2, 3);
+                MatrixXf HfMat(2, 2);
+                MatrixXf SfMat(2, 2);
+                VectorXf zpVec(2);
+
+                HfMat << acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++];
+
+                // Jacobian wrt. vehicle states
+                HvMat << acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++];
+
+                SfMat << acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++];
+
+                zp.push_back(zpVec);
+                Hv.push_back(HvMat);
+                Hf.push_back(HfMat);
+                Sf.push_back(SfMat);
+            }
+
+            for (unsigned k = 0; k < z[0].rows(); k++) {
+                v(k) = z[i][k] - zp[0][k];
+            }
+            v(1) = trigonometricOffset(v(1));
+
+            w = w * gaussEvaluate(v, Sf[i], 0);
+        }
+
+
+        particle.tempLikelihoodGivenXv = w;
     }
-    return w;
 }
+#endif
 
 /// Compute proposal distribution, then sample from it, and compute new particle weight
 void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
@@ -255,6 +350,9 @@ void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<i
 }
 
 float FastSLAM2::likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
+#ifdef MULTIPARTICLE_ACCELERATOR
+    return particle.tempLikelihoodGivenXv;
+#else
     float w = 1;
     vector<int> idfi;
 
@@ -277,9 +375,12 @@ float FastSLAM2::likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vect
         }
         v(1) = trigonometricOffset(v(1));
 
-        w = w * gaussEvaluate(v, Sf[0], 0);
+        w = w * gaussEvaluate(v, Sf[i], 0);
+
     }
     return w;
+
+#endif
 }
 
 VectorXf FastSLAM2::deltaXv(VectorXf &xv1, VectorXf &xv2) {
@@ -288,4 +389,3 @@ VectorXf FastSLAM2::deltaXv(VectorXf &xv1, VectorXf &xv2) {
     dx(2) = trigonometricOffset(dx(2));
     return dx;
 }
-

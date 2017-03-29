@@ -13,7 +13,12 @@ public:
     ~AcceleratorHandler();
 
     void *getMemoryPointer();
-    void setN(uint n);
+
+#ifdef MULTIPARTICLE_ACCELERATOR
+    void setParticlesCount(uint32_t particles_count);
+#else
+    void setN(uint32_t n);
+#endif
     void start();
     uint isDone();
 

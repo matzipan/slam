@@ -529,22 +529,23 @@ extern AcceleratorHandler* acceleratorHandler;
 
 void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv,
                       vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
+
 #ifdef JACOBIAN_ACCELERATOR
     VectorXf xv = particle.xv();
 
-    int current_memory_write_position = 0;
-    int current_memory_read_position = 0;
+    uint currentMemoryWritePosition = 0;
+    uint currentMemoryReadPosition = 0;
     uint32_t n = idf.size();
 
     float* acceleratorData = (float*) acceleratorHandler->getMemoryPointer();
 
 
      for (int i = 0; i < 3; i++) {
-         acceleratorData[current_memory_write_position++] = xv(i);
+         acceleratorData[currentMemoryWritePosition++] = xv(i);
      }
 
     for (int i = 0; i < 4; i++) {
-        acceleratorData[current_memory_write_position++] = R(i);	// R[i][j]
+        acceleratorData[currentMemoryWritePosition++] = R(i);	// R[i][j]
     }
 
     vector<VectorXf> landmarkXs = particle.landmarkXs();
@@ -553,11 +554,11 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
 
     for (int i = 0; i < n; i++) {
     	for (int j = 0; j < 2; j++) {
-            acceleratorData[current_memory_write_position++] = landmarkXs[idf[i]](j);	// xf[i]
+            acceleratorData[currentMemoryWritePosition++] = landmarkXs[idf[i]](j);	// xf[i]
     	}
 
     	for (int j = 0; j < 4; j++) {
-            acceleratorData[current_memory_write_position++] = landmarkPs[idf[i]](j);	// Pf[i][j]
+            acceleratorData[currentMemoryWritePosition++] = landmarkPs[idf[i]](j);	// Pf[i][j]
 		}
 
     }
@@ -567,7 +568,7 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
 
     while (!acceleratorHandler->isDone());
 
-    current_memory_read_position = 3+4+(2+4)*n;
+    currentMemoryReadPosition = 3+4+(2+4)*n;
 
     MatrixXf HvMat(2, 3);
     MatrixXf HfMat(2, 2);
@@ -575,23 +576,23 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
     VectorXf zpVec(2);
 
     for (int i = 0; i < n; i++) {
-        HfMat << acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++];
+        HfMat << acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++];
 
         // Jacobian wrt. vehicle states
-        HvMat << acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++];
+        HvMat << acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++];
 
-        SfMat << acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++],
-                acceleratorData[current_memory_read_position++];
+        SfMat << acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++];
 
         zp.push_back(zpVec);
         Hv->push_back(HvMat);

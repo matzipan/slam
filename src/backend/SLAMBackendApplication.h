@@ -9,7 +9,7 @@
 #include "plotting/NetworkPlot.h"
 #include "wrappers/slamwrapper.h"
 
-#ifdef JACOBIAN_ACCELERATOR
+#if defined(JACOBIAN_ACCELERATOR) || defined(MULTIPARTICLE_ACCELERATOR)
     #include "AcceleratorHandler.h"
 #endif
 
