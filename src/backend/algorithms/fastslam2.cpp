@@ -313,9 +313,9 @@ void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<i
 
         computeJacobians(particle, j, R, zp, &Hv, &Hf, &Sf);
 
-        Hvi = Hv[0];
-        Hfi = Hf[0];
-        Sfi = Sf[0].inverse();
+        Hvi = Hv[i];
+        Hfi = Hf[i];
+        Sfi = Sf[i].inverse();
 
         vi = z[i] - zp[0];
         vi[1] = trigonometricOffset(vi[1]);
