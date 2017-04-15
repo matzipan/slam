@@ -77,7 +77,7 @@ void NetworkPlot::setLaserLines(Eigen::MatrixXf &lnes) {
         }
     }
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
@@ -94,7 +94,7 @@ void NetworkPlot::setCovEllipse(Eigen::MatrixXf &lnes, int idx) {
 
     message<<idx;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::addTruePosition(double x, double y) {
@@ -104,7 +104,7 @@ void NetworkPlot::addTruePosition(double x, double y) {
 
     message<<x<<y;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::addEstimatedPosition(double x, double y) {
@@ -114,7 +114,7 @@ void NetworkPlot::addEstimatedPosition(double x, double y) {
 
     message<<x<<y;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setCarSize(double s, uint32_t id) {
@@ -124,7 +124,7 @@ void NetworkPlot::setCarSize(double s, uint32_t id) {
 
     message<<s<<id;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setCarTruePosition(double x, double y, double t) {
@@ -134,7 +134,7 @@ void NetworkPlot::setCarTruePosition(double x, double y, double t) {
 
     message<<x<<y<<t;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setCarEstimatedPosition(double x, double y, double t) {
@@ -144,7 +144,7 @@ void NetworkPlot::setCarEstimatedPosition(double x, double y, double t) {
 
     message<<x<<y<<t;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setPlotRange(double xmin, double xmax, double ymin, double ymax) {
@@ -154,7 +154,7 @@ void NetworkPlot::setPlotRange(double xmin, double xmax, double ymin, double yma
 
     message<<xmin<<xmax<<ymin<<ymax;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::clear() {
@@ -162,7 +162,7 @@ void NetworkPlot::clear() {
 
     message<<"clear";
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setSimulationName(std::string filename) {
@@ -170,7 +170,7 @@ void NetworkPlot::setSimulationName(std::string filename) {
 
     message<<"setSimulationName"<<filename;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::setCurrentIteration(uint32_t iteration) {
@@ -190,7 +190,7 @@ void NetworkPlot::plot() {
 
     message<<"plot";
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::covEllipseAdd(uint32_t n) {
@@ -198,7 +198,7 @@ void NetworkPlot::covEllipseAdd(uint32_t n) {
 
     message<<"covEllipseAdd"<<n;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::endPlot() {
@@ -206,7 +206,7 @@ void NetworkPlot::endPlot() {
 
     message<<"endPlot";
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 void NetworkPlot::loopTime(uint32_t time) {
@@ -214,7 +214,7 @@ void NetworkPlot::loopTime(uint32_t time) {
 
     message<<"loopTime"<<time;
 
-    socket->send(message);
+    socket->send(message, true);
 }
 
 /*// @TODO These unimplemented functions can be used to send messages from WindowPlot to NetworkPlot when an event happens
