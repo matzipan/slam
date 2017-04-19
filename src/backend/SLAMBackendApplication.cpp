@@ -44,6 +44,7 @@ void SLAMBackendApplication::run() {
 void SLAMBackendApplication::printUsage(char **argv) {
     printf("%s\n", argv[0]);
     printf("    -m                  [s] input map file name\n");
+    printf("    -n                  [s] experiment name\n");
     printf("    -mode               [s] running mode\n");
     printf("        waypoints   : following given waypoints\n");
     printf("        interactive : use keyboard to control movement\n");
@@ -81,7 +82,7 @@ void SLAMBackendApplication::loadConfiguration(int &argc, char **argv) {
     conf.set_args(argc, argv);              // Set input arguments
     conf.parse();                           // Parse input arguments
 
-    conf.s("simulation_name", simulationName);
+    conf.set_s("simulation_name", simulationName);
 
     // Print parameters
     conf.print();
