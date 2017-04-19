@@ -100,9 +100,9 @@ protected:
     MatrixXf Q;
     /// Observation covariance
     MatrixXf R;
-    /// Used for inflated control covariance
+    /// Noise covariance matrix. Used for inflated control covariance.
     MatrixXf Qe;
-    /// Used for inflated observation covariance
+    /// Noise covariance matrix. Used for inflated observation covariance.
     MatrixXf Re;
     /// Change in time between predicts
     float dt;
