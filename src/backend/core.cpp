@@ -147,7 +147,7 @@ void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, Ma
     vector<MatrixXf> Hf;
     vector<MatrixXf> Sf;
 
-    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+    computeJacobians(particle, idf, R, &zp, &Hv, &Hf, &Sf);
 
     // Difference between two measurements (used to update mean)
     vector<VectorXf> v;
@@ -168,13 +168,9 @@ void featureUpdate(Particle &particle, vector<VectorXf> &z, vector<int> &idf, Ma
         Pfi = Pf[i];
         xfi = xf[i];
         choleskyUpdate(xfi, Pfi, vi, R, Hfi);
-        xf[i] = xfi;
-        Pf[i] = Pfi;
-    }
 
-    for (unsigned long i = 0; i < idf.size(); i++) {
-        particle.setLandmarkX(idf[i], xf[i]);
-        particle.setLandmarkP(idf[i], Pf[i]);
+        particle.setLandmarkX(idf[i], xfi);
+        particle.setLandmarkP(idf[i], Pfi);
     }
 }
 
@@ -512,23 +508,80 @@ void addFeature(Particle &particle, vector<VectorXf> &z, MatrixXf &R) {
     }
 }
 
+
+void computeJacobiansDataDump(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> *zp, vector<MatrixXf> *Hv,
+                      vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
+    VectorXf xv = particle.xv();
+
+    printf("-----------\nxv %.10f %.10f %.10f\n", xv[0], xv[1], xv[2]);
+    printf("R %.10f %.10f %.10f %.10f\n", R(0,0),R(0,1), R(1,0), R(1,1));
+    printf("idf.size %u\n", idf.size());
+
+    vector<VectorXf> xf;
+    // Particle Pf is a array of matrices
+    vector<MatrixXf> Pf;
+
+    for (unsigned int i = 0; i < idf.size(); i++) {
+        xf.push_back(particle.landmarkXs()[idf[i]]);
+        Pf.push_back(particle.landmarkPs()[idf[i]]);
+        printf("xf %.10f %.10f\n", particle.landmarkXs()[idf[i]][0], particle.landmarkXs()[idf[i]][1]);
+        printf("Pf %.10f %.10f %.10f %.10f\n", particle.landmarkPs()[idf[i]](0, 0), particle.landmarkPs()[idf[i]](0, 1), particle.landmarkPs()[idf[i]](1, 0), particle.landmarkPs()[idf[i]](1,1));
+    }
+
+    float dx, dy, d2, d;
+    MatrixXf HvMat(2, 3);
+    MatrixXf HfMat(2, 2);
+    VectorXf zpVec(2);
+
+    for (unsigned int i = 0; i < idf.size(); i++) {
+        dx = xf[i](0) - xv(0); // maximum for d is observation range
+        dy = xf[i](1) - xv(1); // maximum for d is observation range
+        d2 = pow(dx, 2) + pow(dy, 2); // I believe maximum for d2 is (observation range)^2
+        d = sqrt(d2); // maximum for d is observation range
+
+        // Predicted observation
+        zpVec[0] = d;
+        zpVec[1] = trigonometricOffset(atan2(dy, dx) - xv(2)); // [0, 6.28) range
+
+        // Jacobian wrt vehicle states
+        HvMat << -dx / d, -dy / d, 0, dy / d2, -dx / d2, -1;
+
+        // Jacobian wrt feature states
+        HfMat << dx / d, dy / d, -dy / d2, dx / d2;
+
+        // Innovation covariance of feature observation given the vehicle'
+        MatrixXf SfMat = HfMat * Pf[i] * HfMat.transpose() + R;
+        MatrixXf ScMat = SfMat.llt().matrixL();
+
+        printf("x dx %.10f dy %.10f d2 %.10f d %.10f\n", dx, dy, d2, d);
+        printf("x zp %.10f %.10f\n", zpVec[0], zpVec[1]);
+        printf("x Hf %.10f %.10f %.10f %.10f\n", HfMat(0,0), HfMat(0,1), HfMat(1,0), HfMat(1,1));
+        printf("x Hv %.10f %.10f %.10f %.10f %.10f %.10f\n", HvMat(0,0), HvMat(0,1), HvMat(0,2), HvMat(1,0), HvMat(1,1), HvMat(1,2));
+        printf("x Sf %.10f %.10f %.10f %.10f\n", SfMat(0,0), SfMat(0,1), SfMat(1,0), SfMat(1,1));
+        printf("x Sc %.10f %.10f %.10f %.10f\n", ScMat(0,0), ScMat(0,1), ScMat(1,0), ScMat(1,1));
+    }
+}
 /**
  *
  * @param particle
  * @param idf
- * @param R
+ * @param R - Observation noise covariance matrix
  * @param zp - measurement (range, bearing)
  * @param Hv - Jacobians of function h (derivative of h wrt pose)
  * @param Hf - Jacobians of function h (derivative of h wrt mean)
- * @param Sf - measurement covariance
+ * @param Sf - Innovation (or residual) measurement covariance
  */
 
 #ifdef JACOBIAN_ACCELERATOR
 extern AcceleratorHandler* acceleratorHandler;
 #endif
 
-void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv,
+void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> *zp, vector<MatrixXf> *Hv,
                       vector<MatrixXf> *Hf, vector<MatrixXf> *Sf) {
+
+#ifdef DATA_DUMP
+computeJacobiansDataDump(particle, idf, R, zp, Hv, Hf, Sf);
+#endif
 
 #ifdef JACOBIAN_ACCELERATOR
     VectorXf xv = particle.xv();
@@ -576,6 +629,9 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
     VectorXf zpVec(2);
 
     for (int i = 0; i < n; i++) {
+        zpVec << acceleratorData[currentMemoryReadPosition++],
+                acceleratorData[currentMemoryReadPosition++];
+
         HfMat << acceleratorData[currentMemoryReadPosition++],
                 acceleratorData[currentMemoryReadPosition++],
                 acceleratorData[currentMemoryReadPosition++],
@@ -594,7 +650,14 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
                 acceleratorData[currentMemoryReadPosition++],
                 acceleratorData[currentMemoryReadPosition++];
 
-        zp.push_back(zpVec);
+#ifdef DATA_DUMP
+        printf("zp %.10f %.10f\n", zpVec[0], zpVec[1]);
+        printf("Hf %.10f %.10f %.10f %.10f\n", HfMat(0,0), HfMat(0,1), HfMat(1,0), HfMat(1,1));
+        printf("Hv %.10f %.10f %.10f %.10f %.10f %.10f\n", HvMat(0,0), HvMat(0,1), HvMat(0,2), HvMat(1,0), HvMat(1,1), HvMat(1,2));
+        printf("Sf %.10f %.10f %.10f %.10f\n", SfMat(0,0), SfMat(0,1), SfMat(1,0), SfMat(1,1));
+#endif
+
+        zp->push_back(zpVec);
         Hv->push_back(HvMat);
         Hf->push_back(HfMat);
         Sf->push_back(SfMat);
@@ -602,24 +665,13 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
 #else
     VectorXf xv = particle.xv();
 
-#ifdef DATA_DUMP
-    printf("-----------\nxv %.10f %.10f %.10f\n", xv[0], xv[1], xv[2]);
-    printf("R %.10f %.10f %.10f %.10f\n", R(0,0),R(0,1), R(1,0), R(1,1));
-    printf("idf.size %u\n", idf.size());
-#endif
-
     vector<VectorXf> xf;
     // Particle Pf is a array of matrices
     vector<MatrixXf> Pf;
 
     for (unsigned int i = 0; i < idf.size(); i++) {
-#ifdef DATA_DUMP
-        printf("xf %.10f %.10f\n", particle.landmarkXs()[idf[i]][0], particle.landmarkXs()[idf[i]][1]);
-        printf("Pf %.10f %.10f %.10f %.10f\n", particle.landmarkPs()[idf[i]](0, 0), particle.landmarkPs()[idf[i]](0, 1), particle.landmarkPs()[idf[i]](1, 0), particle.landmarkPs()[idf[i]](1,1));
-#endif
-
         xf.push_back(particle.landmarkXs()[idf[i]]);
-        Pf.push_back((particle.landmarkPs())[idf[i]]);
+        Pf.push_back(particle.landmarkPs()[idf[i]]);
     }
 
     float dx, dy, d2, d;
@@ -636,7 +688,7 @@ void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<
         // Predicted observation
         zpVec[0] = d;
         zpVec[1] = trigonometricOffset(atan2(dy, dx) - xv(2)); // [0, 6.28) range
-        zp.push_back(zpVec);
+        zp->push_back(zpVec);
 
         // Jacobian wrt vehicle states
         HvMat << -dx / d, -dy / d, 0, dy / d2, -dx / d2, -1;

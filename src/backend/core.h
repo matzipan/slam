@@ -125,7 +125,7 @@ void choleskyUpdate(VectorXf &x, MatrixXf &P, VectorXf &v, MatrixXf &R, MatrixXf
 ////////////////////////////////////////////////////////////////////////////////
 // FastSLAM functions
 ////////////////////////////////////////////////////////////////////////////////
-void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> &zp, vector<MatrixXf> *Hv,
+void computeJacobians(Particle &particle, vector<int> &idf, MatrixXf &R, vector<VectorXf> *zp, vector<MatrixXf> *Hv,
                       vector<MatrixXf> *Hf, vector<MatrixXf> *Sf);
 
 void resampleParticles(vector<Particle> &particles, int nMin, bool doResample);

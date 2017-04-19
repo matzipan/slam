@@ -95,7 +95,7 @@ float FastSLAM1::computeWeight(Particle &particle, vector<VectorXf> &z, vector<i
     vector<VectorXf> zp;
 
     // Process each feature, incrementally refine proposal distribution
-    computeJacobians(particle, idf, R, zp, &Hv, &Hf, &Sf);
+    computeJacobians(particle, idf, R, &zp, &Hv, &Hf, &Sf);
 
     vector<VectorXf> v;
 

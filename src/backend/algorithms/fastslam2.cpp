@@ -311,7 +311,7 @@ void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<i
         j.push_back(idf[i]);
         zp.clear();
 
-        computeJacobians(particle, j, R, zp, &Hv, &Hf, &Sf);
+        computeJacobians(particle, j, R, &zp, &Hv, &Hf, &Sf);
 
         Hvi = Hv[i];
         Hfi = Hf[i];
@@ -356,28 +356,26 @@ float FastSLAM2::likelihoodGivenXv(Particle &particle, vector<VectorXf> &z, vect
     float w = 1;
     vector<int> idfi;
 
-    vector<MatrixXf> Hv;
-    vector<MatrixXf> Hf;
-    vector<MatrixXf> Sf;
-
-    vector<VectorXf> zp;
-    VectorXf v(z[0].rows());
-
     for (unsigned i = 0; i < idf.size(); i++) {
+        VectorXf v(z[0].rows());
+        vector<MatrixXf> Hv;
+        vector<MatrixXf> Hf;
+        vector<MatrixXf> Sf;
+        vector<VectorXf> zp;
+
         idfi.clear();
         idfi.push_back(idf[i]);
-        zp.clear();
 
-        computeJacobians(particle, idfi, R, zp, &Hv, &Hf, &Sf);
+        computeJacobians(particle, idfi, R, &zp, &Hv, &Hf, &Sf);
 
         for (unsigned k = 0; k < z[0].rows(); k++) {
             v(k) = z[i][k] - zp[0][k];
         }
         v(1) = trigonometricOffset(v(1));
 
-        w = w * gaussEvaluate(v, Sf[i], 0);
-
+        w = w * gaussEvaluate(v, Sf[0], 0);
     }
+
     return w;
 
 #endif
