@@ -56,13 +56,13 @@ void ParticleSLAMWrapper::drawFeatureParticles() {
 void ParticleSLAMWrapper::computeEstimatedPosition(double &x, double &y, double &t) {
     // Compute xEstimated and y as the mean of xEstimated and y over all the particles and the t is the angle corresponding to the particle
     // with the highest weight.
-    double wMax;
-
+#define ESTIMATE_WITH_WEIGHTS
+#if !defined(ESTIMATE_WITH_MEDIAN) && !defined(ESTIMATE_WITH_WEIGHTS)
     x = 0;
     y = 0;
     t = 0;
 
-    wMax = -1e30;
+    double wMax = -1e30;
     for (int i = 0; i < particles.size(); i++) {
         if (particles[i].w() > wMax) {
             wMax = particles[i].w();
@@ -74,4 +74,51 @@ void ParticleSLAMWrapper::computeEstimatedPosition(double &x, double &y, double 
 
     x = x / particles.size();
     y = y / particles.size();
+#endif
+#ifdef ESTIMATE_WITH_MEDIAN
+    x = 0;
+    y = 0;
+    t = 0;
+
+    std::vector<double> xVec;
+    std::vector<double> yVec;
+
+    double wMax = -1e30;
+    for (int i = 0; i < particles.size(); i++) {
+        if (particles[i].w() > wMax) {
+            wMax = particles[i].w();
+            t = particles[i].xv()(2);
+        }
+
+        insert_sorted(xVec, particles[i].xv()(0));
+        insert_sorted(yVec, particles[i].xv()(1));
+    }
+
+    x = xVec[xVec.size()/2];
+    y = yVec[yVec.size()/2];
+
+#endif
+#ifdef ESTIMATE_WITH_WEIGHTS
+    x = 0;
+    y = 0;
+    t = 0;
+
+    double wMax = -1e30;
+    for (int i = 0; i < particles.size(); i++) {
+        double w = particles[i].w();
+
+        if (w > wMax) {
+            wMax = w;
+            t = particles[i].xv()(2);
+        }
+
+        x += particles[i].xv()(0) * w;
+        y += particles[i].xv()(1) * w;
+    }
+#endif
 }
+
+void ParticleSLAMWrapper::insert_sorted(std::vector<double> & vec, double item) {
+    vec.insert(std::upper_bound(vec.begin(), vec.end(), item), item);
+}
+

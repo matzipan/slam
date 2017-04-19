@@ -33,6 +33,7 @@ protected:
     vector<Particle> particles;
     VectorXf dataAssociationTable;
 
+    void insert_sorted(vector<double> &vec, double item);
 };
 
 #endif //SLAM_GUI_PARTICLESLAMWRAPPER_H
