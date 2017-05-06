@@ -47,6 +47,8 @@ SLAMWrapper::SLAMWrapper(Conf *conf, NetworkPlot *plot) {
 
     if (conf->SWITCH_SEED_RANDOM != 0) {
         srand(conf->SWITCH_SEED_RANDOM);
+    } else {
+        srand(time(NULL));
     }
 }
 
