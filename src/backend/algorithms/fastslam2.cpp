@@ -165,7 +165,6 @@ float FastSLAM2::gaussEvaluate(VectorXf &v, MatrixXf &S, int logflag) {
 /// NOT USED: WEIGHT IS COMPUTED IN SAMPLE PROPOSAL
 //float FastSLAM2::computeWeight(Particle &particle, vector<VectorXf> &z, vector<int> &idf, MatrixXf &R) {
 //}
-
 #ifdef MULTIPARTICLE_ACCELERATOR
 
 extern AcceleratorHandler* acceleratorHandler;
@@ -185,7 +184,7 @@ void FastSLAM2::precomputeAllLikelihoodGivenXv(vector<Particle> &particles, vect
             vector<int> idfi;
             idfi.push_back(idf[i]);
 
-            acceleratorData[currentMemoryWritePosition++] = idfi.size();
+            acceleratorData[currentMemoryWritePosition++] = (float) idfi.size();
 
             for (int i = 0; i < 3; i++) {
                 acceleratorData[currentMemoryWritePosition++] = xv(i);
@@ -216,6 +215,11 @@ void FastSLAM2::precomputeAllLikelihoodGivenXv(vector<Particle> &particles, vect
         }
     }
 
+    if(particlesCount == 0) {
+        return;
+    }
+
+
     acceleratorHandler->setParticlesCount(particlesCount);
     acceleratorHandler->start();
 
@@ -234,13 +238,15 @@ void FastSLAM2::precomputeAllLikelihoodGivenXv(vector<Particle> &particles, vect
 
             uint n = (uint) acceleratorData[currentMemoryReadPosition++];
 
-            currentMemoryReadPosition += 3+4+(2+4)*n;
+            currentMemoryReadPosition += 1+3+4+(2+4)*n;
 
             for (int i = 0; i < n; i++) {
                 MatrixXf HvMat(2, 3);
                 MatrixXf HfMat(2, 2);
                 MatrixXf SfMat(2, 2);
                 VectorXf zpVec(2);
+                zpVec << acceleratorData[currentMemoryReadPosition++],
+                        acceleratorData[currentMemoryReadPosition++];
 
                 HfMat << acceleratorData[currentMemoryReadPosition++],
                         acceleratorData[currentMemoryReadPosition++],
@@ -317,16 +323,28 @@ void FastSLAM2::sampleProposal(Particle &particle, vector<VectorXf> &z, vector<i
         Hfi = Hf[i];
         Sfi = Sf[i].inverse();
 
+//        printf("x Sf %.10f %.10f %.10f %.10f\n", Sf[i](0,0), Sf[i](0,1), Sf[i](1,0), Sf[i](1,1));
+//        printf("x Sfi %.10f %.10f %.10f %.10f\n", Sfi(0,0), Sfi(0,1), Sfi(1,0), Sfi(1,1));
+//        printf("x Hf %.10f %.10f %.10f %.10f\n", Hfi(0,0), Hfi(0,1), Hfi(1,0), Hfi(1,1));
+//        printf("x Hv %.10f %.10f %.10f %.10f %.10f %.10f\n", Hvi(0,0), Hvi(0,1), Hvi(0,2), Hvi(1,0), Hvi(1,1), Hvi(1,2));
+
         vi = z[i] - zp[0];
         vi[1] = trigonometricOffset(vi[1]);
 
         // Proposal covariance
         MatrixXf Pv_inv = Pv.llt().solve(MatrixXf::Identity(Pv.rows(), Pv.cols()));
+//        printf("x Pv_inv %.10f %.10f %.10f %.10f\n", Pv_inv(0,0), Pv_inv(0,1), Pv_inv(1,0), Pv_inv(1,1));
+
         Pv = Hvi.transpose() * Sfi * Hvi + Pv_inv;
+//        printf("x Pv %.10f %.10f %.10f %.10f\n", Pv(0,0), Pv(0,1), Pv(1,0), Pv(1,1));
+
         Pv = Pv.llt().solve(MatrixXf::Identity(Pv.rows(), Pv.cols()));
+//        printf("x Pv %.10f %.10f %.10f %.10f\n", Pv(0,0), Pv(0,1), Pv(1,0), Pv(1,1));
 
         // Proposal mean
         xv = xv + Pv * Hvi.transpose() * Sfi * vi;
+
+//        printf("xv %.10f %.10f\n", xv[0], xv[1]);
         particle.setXv(xv);
         particle.setPv(Pv);
     }
