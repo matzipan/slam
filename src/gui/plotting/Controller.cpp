@@ -121,7 +121,19 @@ void Controller::run() {
                     }
                 }
 
+                float sumlens = 0;
+
+                for (int i = 0; i < lnes.cols(); i++) {
+                    float xlen = lnes(0, i) - lnes(2, i);
+                    float ylen = lnes(1, i) - lnes(3, i);
+
+                    sumlens += sqrt(xlen*xlen+ylen*ylen);
+                }
+
+
                 plot->setLaserLines(lnes);
+                gatherer->averageLandmarkLength(sumlens/lnes.cols());
+                gatherer->landmarksObservedCount(lnes.cols());
             } else if(text == "setCovEllipse") {
                 uint32_t rows, cols;
                 uint32_t idx;
@@ -189,6 +201,7 @@ void Controller::run() {
                 message>>name;
 
                 gatherer->setSimulationName(name);
+                gatherer->cleanup();
                 //plot->setScreenshotFilename(name);
             } else if(text == "setCurrentIteration") {
                 uint32_t iteration;

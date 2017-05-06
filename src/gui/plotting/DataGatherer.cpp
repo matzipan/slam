@@ -7,6 +7,8 @@
 #include <numeric>
 #include <algorithm>
 #include <iostream>
+#include <sys/stat.h>
+#include <iomanip>
 #include "DataGatherer.h"
 
 DataGatherer::DataGatherer() {}
@@ -46,33 +48,64 @@ void DataGatherer::outputTimesStats(std::vector<uint32_t> &v, std::ostream &outp
 }
 
 void DataGatherer::saveData() {
-    std::ofstream resultsSynthesisOutput(simulationName + "_results.txt");
-    std::ofstream errorsOutput(simulationName + "_errors.txt");
-    std::ofstream timesOutput(simulationName + "_times.txt");
+    mkdir(simulationName.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    std::ofstream resultsSynthesisOutput(simulationName + "/results.txt");
+    std::ofstream errorsOutput(simulationName + "/errors.txt");
+    std::ofstream timesOutput(simulationName + "/times.txt");
+    std::ofstream positionsOutput(simulationName + "/positions.txt");
+    std::ofstream observedCountsOutput(simulationName + "/observedCounts.txt");
+    std::ofstream averageLengthLandmarkOutput(simulationName + "/averageLengthLandmark.txt");
 
     outputErrorsStats(errors, resultsSynthesisOutput);
     outputTimesStats(times, resultsSynthesisOutput);
 
     for(double x : errors) {
-        errorsOutput<<x<<"\n";
+        errorsOutput<<std::setprecision(10)<<x<<"\n";
     }
 
     for(uint32_t x : times) {
-        timesOutput<<x<<"\n";
+        timesOutput<<std::setprecision(10)<<x<<"\n";
+    }
+
+    for(long x : observedCounts) {
+        observedCountsOutput<<x<<"\n";
+    }
+
+
+    for(float x : averageLengthLandmark) {
+        averageLengthLandmarkOutput<<x<<"\n";
+    }
+
+    for(int i = 0; i < estimatedPositionsX.size(); i++) {
+        positionsOutput<<std::setprecision(10)<<truePositionsX[i]<<", "<<truePositionsY[i]<<", "<<estimatedPositionsX[i]<<", "<<estimatedPositionsY[i]<<"\n";
     }
 
     resultsSynthesisOutput.close();
     errorsOutput.close();
     timesOutput.close();
+    positionsOutput.close();
+    observedCountsOutput.close();
+    averageLengthLandmarkOutput.close();
 }
 
 void DataGatherer::cleanup() {
     errors.clear();
     times.clear();
+    estimatedPositionsX.clear();
+    estimatedPositionsY.clear();
+    truePositionsX.clear();
+    truePositionsY.clear();
+    observedCounts.clear();
+    averageLengthLandmark.clear();
 }
 
 void DataGatherer::nextTurn() {
     errors.push_back(sqrt(pow(truePositionX-estimatedPositionX, 2) + pow(truePositionY-estimatedPositionY, 2)));
+    estimatedPositionsX.push_back(estimatedPositionX);
+    estimatedPositionsY.push_back(estimatedPositionY);
+    truePositionsX.push_back(truePositionX);
+    truePositionsY.push_back(truePositionY);
 
     turn++;
 
@@ -95,4 +128,12 @@ void DataGatherer::setCarEstimatedPosition(double x, double y, double t) {
 
 void DataGatherer::loopTime(uint32_t time) {
     times.push_back(time);
+}
+
+void DataGatherer::landmarksObservedCount(long observedCount) {
+    observedCounts.push_back(observedCount);
+}
+
+void DataGatherer::averageLandmarkLength(float average) {
+    averageLengthLandmark.push_back(average);
 }

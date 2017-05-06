@@ -23,6 +23,10 @@ public:
 
     void loopTime(uint32_t time);
 
+    void landmarksObservedCount(long observedCount);
+
+    void averageLandmarkLength(float d);
+
 private:
     double truePositionX;
     double truePositionY;
@@ -33,14 +37,22 @@ private:
     double estimatedPositionT;
 
     std::vector<double> errors;
+    std::vector<double> estimatedPositionsX;
+    std::vector<double> estimatedPositionsY;
+    std::vector<double> truePositionsX;
+    std::vector<double> truePositionsY;
+
     std::string simulationName;
     std::vector<uint32_t> times;
+    std::vector<long> observedCounts;
+    std::vector<float> averageLengthLandmark;
+
 
     void outputErrorsStats(std::vector<double> &v, std::ostream &output);
 
     void outputTimesStats(std::vector<uint32_t> &v, std::ostream &output);
 
-    int turn;
+    int turn=0;
 };
 
 
